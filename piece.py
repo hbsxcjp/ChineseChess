@@ -1,5 +1,5 @@
 ﻿'''
-中国象棋棋子类型
+中国象棋棋子类型 by-cjp
 '''
 
 from crossbase import *
