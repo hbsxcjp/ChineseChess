@@ -30,16 +30,14 @@ class Walk(object):
 
 class Walks(Model):
     # 棋谱着法类
-    StartNumber = -1 
-        
+    
     def __init__(self):
         super().__init__()
-        self.currentside = RED_SIDE
-        self.number = self.StartNumber  # 着法序号 范围：0 ~ length
         self.__lineboutnum = 3  # 生成pgn文件的着法文本每行回合数
         self.clear()
         
     def clear(self):
+        self.cursor = -1  # 着法序号 范围：0 ~ length        
         self.__walks = []
         
     def __str__(self):
@@ -77,9 +75,6 @@ class Walks(Model):
 
     def setcurrentside(self, side):
         self.currentside = side
-        
-    def getremark(self, number):
-        return self.__walks[number].remark.strip()
             
     @property
     def descriptiones(self):
@@ -94,50 +89,49 @@ class Walks(Model):
         return len(self.__walks)
         
     @property
+    def isempty(self):
+        return self.length == 0
+
+    @property
     def isstart(self):
-        return self.number == Walks.StartNumber
+        return self.cursor < 0
 
     @property
     def islast(self):
-        return self.number == self.length - 1
+        return self.cursor == self.length - 1
 
-    @property
+    def getremark(self, n):
+        return self.__walks[n].remark.strip()
+        
     def currentwalk(self):
-        if self.length > 0:
-            return self.__walks[self.number]        
+        if not self.isempty and not self.isstart:
+            return self.__walks[self.cursor]
       
     def moverowcols(self):
         return [(walk.fromrowcol, walk.torowcol) for walk in self.__walks]
         
-    def forward(self, refresh=True):
-        if self.length == 0 or self.islast:
-            return
-        self.number += 1
-        self.currentwalk.go()
-        if refresh:
-            self.notifyviews()  # 更新视图
-            
-    def backward(self, refresh=True):
-        if self.isstart:
-            return
-        self.currentwalk.back()
-        self.number -= 1
-        if refresh:
-            self.notifyviews()
-            
     def append(self, walk):
         self.__walks.append(walk)
         
     def cutfollow(self):
-        self.__walks = self.__walks[:self.number + 1]
+        self.__walks = self.__walks[:self.cursor + 1]
         
-    def location(self, number, refresh=True):
-        if number < self.StartNumber:
-            number = self.StartNumber
-        elif number >= self.length:
-            number = self.length - 1
-        function = self.forward if number > self.number else self.backward
-        [function(False) for _ in range(abs(number-self.number))]
+    def location(self, inc, refresh=True):
+                
+        def __forward():
+            if self.isempty or self.islast:
+                return
+            self.cursor += 1
+            self.currentwalk().go()
+                
+        def __backward():
+            if self.isstart:
+                return
+            self.currentwalk().back()
+            self.cursor -= 1            
+
+        function = __forward if inc > 0 else __backward
+        [function() for _ in range(abs(inc))]       
         if refresh:
             self.notifyviews()
             

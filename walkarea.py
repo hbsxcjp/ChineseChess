@@ -45,24 +45,22 @@ class WalkArea(View, ttk.Frame):
                 self.walklistbox = walklistbox
         
             def create_midrightfrm(midfrm): 
-                midrightfrm = ttk.Frame(midfrm, padding=2)
-                Button(midrightfrm, text='最后局面', width=8,
-                       command=lambda: self.onEndKey(None)).pack(side=BOTTOM)
-                Button(midrightfrm, text='下一着', width=8,
-                       command=lambda: self.onDownKey(None)).pack(side=BOTTOM)
-                Button(midrightfrm, text='上一着', width=8,
-                       command=lambda: self.onUpKey(None)).pack(side=BOTTOM)
-                Button(midrightfrm, text='起始局面', width=8,
-                       command=lambda: self.onHomeKey(None)).pack(side=BOTTOM)
-                Label(midrightfrm, text='-------------').pack(side=BOTTOM)
-                Button(midrightfrm, text='对换位置', width=8,
-                       command=lambda: self.chessboard.changeside('rotate')).pack(side=BOTTOM)
-                Button(midrightfrm, text='左右对称', width=8,
-                       command=lambda: self.chessboard.changeside('symmetry')).pack(side=BOTTOM)       
-                Button(midrightfrm, text='对换棋局', width=8,
-                       command=lambda: self.chessboard.changeside()).pack(side=BOTTOM)           
-                Button(midrightfrm, text='打印棋局', width=8,
-                       command=lambda: print(self.board)).pack(side=BOTTOM)           
+            
+                def __button(master, name, wid, com, sid):
+                    Button(master, text=name, width=wid, command=com).pack(side=sid)
+                       
+                midrightfrm = ttk.Frame(midfrm, padding=2)                
+                buttdate = [('最后局面', 8, lambda: self.onEndKey(None), BOTTOM),
+                            ('下一着', 8, lambda: self.onDownKey(None), BOTTOM),
+                            ('上一着', 8, lambda: self.onUpKey(None), BOTTOM),
+                            ('起始局面', 8, lambda: self.onHomeKey(None), BOTTOM),
+                            ('-------------', 8, lambda: None, BOTTOM),
+                            ('对换位置', 8, lambda: self.chessboard.changeside('rotate'), BOTTOM),
+                            ('左右对称', 8, lambda: self.chessboard.changeside('symmetry'), BOTTOM),
+                            ('对换棋局', 8, lambda: self.chessboard.changeside(), BOTTOM),
+                            ('打印棋局', 8, lambda: print(self.board), BOTTOM)]                
+                for name, wid, com, sid in buttdate:
+                    __button(midrightfrm, name, wid, com, sid)
                 midrightfrm.pack(side=RIGHT, expand=YES) #, fill=BOTH
             
             self.listvar = StringVar()
@@ -89,39 +87,35 @@ class WalkArea(View, ttk.Frame):
         self.bind('<Up>', self.onUpKey) 
         self.bind('<Down>', self.onDownKey) 
         self.bind('<Prior>', self.onPgupKey) 
-        self.bind('<Next>', self.onPgdnKey) 
+        self.bind('<Next>', self.onPgdnKey)
         self.bind('<Home>', self.onHomeKey) 
         self.bind('<End>', self.onEndKey) 
-        self.walklistbox.bind('<Double-1>', self.onMouseLeftclick) # 用buttom-1不成功！        
+        self.walklistbox.bind('<Double-1>', self.onMouseLeftclick) # 用buttom-1不成功！
 
     def onUpKey(self, event): 
-        self.move_walk(-1)
+        self.walks.location(-1)
         
     def onDownKey(self, event): 
-        self.move_walk(1)
+        self.walks.location(1)
 
     def onPgupKey(self, event): 
-        self.move_walk(-20)
+        self.walks.location(-20)
         
     def onPgdnKey(self, event): 
-        self.move_walk(20)
+        self.walks.location(20)
 
     def onHomeKey(self, event): 
-        self.walks.location(Walks.StartNumber)
+        self.walks.location(-self.walks.length)
         
     def onEndKey(self, event): 
-        self.walks.location(self.walks.length-1)
+        self.walks.location(self.walks.length)
 
     def onMouseLeftclick(self, event):
         # 接收点击信息
         self.focus_set()
-        self.move_walk()
-
-    def move_walk(self, inc=0):
-        # 移动至某步着法
         selections = self.walklistbox.curselection()
         if selections:
-            self.walks.location(int(selections[0]) - 1 + inc)
+            self.walks.location(int(selections[0]) - 1 - self.walks.cursor)
 
     def updateview(self):
         # 更新视图
@@ -131,7 +125,7 @@ class WalkArea(View, ttk.Frame):
             self.listvar.set(boutstr)
         
         def __selection():
-            no = self.walks.number + 1 
+            no = self.walks.cursor + 1 
             wklb = self.walklistbox
             wklb.selection_clear(0, wklb.size())
             wklb.selection_set(no)
@@ -140,11 +134,10 @@ class WalkArea(View, ttk.Frame):
         def __setremark():
             self.remarktext.delete('1.0', END)
             if not self.walks.isstart:
-                self.remarktext.insert('1.0', self.walks.getremark(self.walks.number))
+                self.remarktext.insert('1.0', self.walks.getremark(self.walks.cursor))
 
         __setboutstr()
         __selection()
         __setremark()
-
-
+        
         

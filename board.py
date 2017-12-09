@@ -10,8 +10,8 @@ class Board(Model):
     
     def __init__(self):
         super().__init__()
-        self.__crosses = dict.fromkeys(all_rowcols, BlankPie)
-        self.__pieces = Pieces()
+        self.crosses = dict.fromkeys(all_rowcols, BlankPie)
+        self.pieces = Pieces()
         self.bottomside = BLACK_SIDE
         
     def __str__(self):
@@ -51,15 +51,7 @@ class Board(Model):
             return [''.join(line) for line in linestr]
 
         frontstr = '\n　　　　'
-        return '{}{}{}'.format(frontstr, frontstr.join(__fillingname()), '\n')
-    
-    @property
-    def pieces(self):
-        return self.__pieces
-    
-    @property
-    def crosses(self):
-        return self.__crosses
+        return '{}{}{}'.format(frontstr, frontstr.join(__fillingname()), '\n')    
     
     def getboardside(self, side):
         return BOTTOM_SIDE if self.bottomside == side else TOP_SIDE
@@ -71,10 +63,10 @@ class Board(Model):
         return BOTTOM_SIDE == self.getboardside(side)
     
     def isblank(self, rowcol):
-        return self.__crosses[rowcol] is BlankPie
+        return self.crosses[rowcol] is BlankPie
               
     def getpiece(self, rowcol):
-        return self.__crosses[rowcol]
+        return self.crosses[rowcol]
     
     def getside(self, rowcol):
         return self.getpiece(rowcol).side
@@ -86,30 +78,32 @@ class Board(Model):
         #assert False, '没有发现棋子：{}'.format(str(self))
     
     def getkingrowcol(self, side):    
-        return self.getrowcol(self.__pieces.getkingpiece(side))
+        return self.getrowcol(self.pieces.getkingpiece(side))
     
     def setpiece(self, rowcol, piece):
-        self.__crosses[rowcol] = piece
+        self.crosses[rowcol] = piece
 
     def movepiece(self, fromrowcol, torowcol, backpiece=BlankPie):
-        eatpiece = self.__crosses[torowcol]
-        self.setpiece(torowcol, self.__crosses[fromrowcol])
+        eatpiece = self.crosses[torowcol]
+        self.setpiece(torowcol, self.crosses[fromrowcol])
         self.setpiece(fromrowcol, backpiece)
         return eatpiece
+        
+    def clear(self):
+        [self.setpiece(rowcol, BlankPie) for rowcol in self.crosses.keys()]
     
     def setpieces(self, charls):
-        [self.setpiece(rowcol, BlankPie) for rowcol in self.__crosses.keys()]
+        self.clear()
         for n, char in enumerate(charls):
-            self.setpiece(CrossTrans.getrowcol(n),
-                self.__pieces.getpiece(char, self))
+            self.setpiece(CrossTrans.getrowcol(n), self.pieces.getpiece(char, self))
         self.setbottomside()
             
     def getlivecrosses(self):
-        return {rowcol: piece for rowcol, piece in self.__crosses.items()
+        return {rowcol: piece for rowcol, piece in self.crosses.items()
                 if piece is not BlankPie}
     
     def geteatedpieces(self):
-        return set(self.__pieces.pieces) - set(self.getlivecrosses().values())
+        return set(self.pieces.pieces) - set(self.getlivecrosses().values())
     
     def getlivesidecrosses(self, side):
         return {rowcol: piece for rowcol, piece in self.getlivecrosses().items()
@@ -192,7 +186,7 @@ class Board(Model):
         
         assert __isvalid(charls)[0], __isvalid(charls)[1]
         
-        self.setpieces(charls) 
+        self.setpieces(charls)
 
         
         

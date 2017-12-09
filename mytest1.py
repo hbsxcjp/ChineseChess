@@ -28,7 +28,7 @@ class Test(unittest.TestCase):
     def test_form(self):        
         
         user = User(1, 'cjp')
-        user.loadmanual('聂许战.pgn') #  '兵的着法.pgn'  ''          
+        user.loadmanual('./pgn/兵的着法.pgn') #  './pgn/聂许战.pgn'  ''          
         #print(user.chessboard)        
         user.application.mainloop()       
         pass      

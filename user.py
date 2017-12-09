@@ -12,8 +12,7 @@ class User(object):
     def __init__(self, sn=1, name='cjp'):
         self.sn = sn
         self.name = name
-        self.chessboard = ChessBoard()
-        self.__chessboards = [self.chessboard]        
+        self.chessboard = ChessBoard()        
         self.creatwin()
     
     def loadmanual(self, filename=''):
@@ -35,5 +34,6 @@ class User(object):
         #        os.path.dirname(os.path.realpath(__file__)), "images"))
         self.mainform = MainForm(self.application, self.name,
                 [self.chessboard, self.chessboard.board, self.chessboard.walks])
-            
-            
+                
+                
+                

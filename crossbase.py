@@ -210,8 +210,8 @@ def multrepl(text, xdict):
         
 class Model(object):
     # 数据模型基类
-    def __init__(self, views=[]):
-        self.loadviews(views)
+    #def __init__(self, views=[]):
+    #    self.loadviews(views)
         
     def loadviews(self, views):
         self.__views = views
@@ -220,16 +220,16 @@ class Model(object):
         # 通知视图更新
         for view in self.__views:
             view.updateview()
-        
+            #print(type(self))
  
 class View(object):
 
-    def __init__(self, models):
+    def __init__(self, models):        
         self.chessboard, self.board, self.walks = models
         
     def updateview(self):
         # 更新视图（由数据模型发起）
-        pass        
-
+        pass
+        
 
         

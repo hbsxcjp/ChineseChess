@@ -5,6 +5,10 @@
 from walkarea import *
 from bdcanvas import *
 
+pgndir = './pgn/'
+pgnext = '.pgn'
+pgntitle = 'pgn棋谱文件'
+
         
 class MainForm(View, ttk.Frame):
     # 棋盘与棋子视图类  
@@ -15,11 +19,12 @@ class MainForm(View, ttk.Frame):
         
         self.config = Config_ET(name)
         self.create_widgets(models)
-        for model in models:
-            model.loadviews([self._bdcanvas, self._walkarea])        
         self.create_layout()
         self.create_bindings()
+        for model in models:
+            model.loadviews([self, self._bdcanvas, self._walkarea])        
         self.makemenu()
+        self.master.protocol('WM_DELETE_WINDOW', self.quitmain)
         
     def create_widgets(self, models):
         self._bdcanvas = BdCanvas(self, models, imgpath + bdimgnames['栎木'], 
@@ -33,7 +38,7 @@ class MainForm(View, ttk.Frame):
         self.bind_all('<Tab>', self.notdone)
         self.bind_all('<Control_L>', self.onCtrlleftKey)
         self.bind_all('<Control_R>', self.onCtrlrightKey)
-        #self.onCtrlleftKey(None)    
+        self.onCtrlleftKey(None)    
         
     def onCtrlleftKey(self, event):
         self._bdcanvas.focus_set()
@@ -47,48 +52,52 @@ class MainForm(View, ttk.Frame):
     def pastefen(self):
         self.chessboard.setfen(pyperclip.paste())
     
-    def getfilename(self, gettype='open'):
-        extension = '.pgn'
-        types = [('pgn棋谱文件', '.pgn')]
-        if gettype == 'open':
-            return basename(askopenfilename(defaultextension=extension, filetypes=types))
-        elif gettype == 'saveas':
-            return basename(asksaveasfilename(defaultextension=extension, filetypes=types))
+    def __asksavepgn(self, title):
+        result = askyesnocancel(title, '是否需要保存当前的棋局？')
+        if result == True:
+            self.savethispgn()
+        return result
+            
+    def __getopenfilename(self):
+        return basename(askopenfilename(initialdir=pgndir, title='打开棋局文件',
+                    defaultextension=pgnext, filetypes=[(pgntitle, pgnext)]))     
         
-    def openpgn(self, isnew=False):
-        def __asksave(): # True, False非取消, None取消
-            return askyesnocancel('开始另一个对局',
-                                '是否需要保存当前的棋局？')
+    def __getsaveasfilename(self):
+        return basename(asksaveasfilename(initialdir=pgndir, title='保存棋局文件',
+                    defaultextension=pgnext, filetypes=[(pgntitle, pgnext)]))        
         
-        save = __asksave()
-        if save is None:
-            return
-        elif save: 
-            self.savepgn()
-        
-        filename = 'new.pgn' if isnew else self.getfilename('open')
-        if filename is None:
-            return
-        try:
-            with open(filename, 'r') as file:
-                self.chessboard.setpgn(file.read())
-        except:
-            pass
-        
-    def savepgn(self, isother=False):
-    
-        if isother:
-            filename = self.getfilename('saveas')
-            if filename is None:
-                return
-            self.config.getelement('lastname').text = filename
-        else:
-            filename = self.config.getelement('lastname').text 
-
-        with open(filename, 'w') as file:
+    def __openpgn(self, filename):        
+        self.__asksavepgn('打开棋局文件')
+        with open(pgndir + filename, 'r') as file:
+            self.chessboard.setpgn(file.read())        
+            
+    def __savepgn(self, filename):
+        with open(pgndir + filename, 'w') as file:
             file.write(self.chessboard.getpgn())
+        self.config.setelement('lastname', filename)
         self.master.title('中国象棋_by cjp : %s ' % filename)
         #self.makemenu(self.win)
+    
+    def opennewpgn(self):
+        self.__openpgn('new.pgn')
+            
+    def openotherpgn(self):
+        filename = self.__getopenfilename()
+        if filename is not None:
+            self.__openpgn(filename)
+            self.config.setelement('lastname', filename)
+            
+    def savethispgn(self):
+        filename = self.config.getelement('lastname').text
+        if filename == 'new.pgn':
+            self.saveotherpgn()
+        else:
+            self.__savepgn(filename)
+        
+    def saveotherpgn(self):
+        filename = self.__getsaveasfilename()
+        if filename is not None:
+            self.__savepgn(filename)
             
     def trimlastpgn(self):
         #PgnfileForm('整理近期pgn文件', self.config.filenames)
@@ -181,11 +190,11 @@ class MainForm(View, ttk.Frame):
         
         menuBar = [
             ('文件(F)', 
-                   [('新的对局(N)', lambda :self.openpgn(True), 5),
-                    ('打开(O)...', lambda :self.openpgn(), 3),
+                   [('新的对局(N)', lambda :self.opennewpgn(), 5),
+                    ('打开(O)...', lambda :self.openotherpgn(), 3),
                     ('近期文件...', self.notdone, 3),
-                    ('保存(S)', lambda :self.savepgn(), 3),
-                    ('另存为(A)...', lambda :self.savepgn(True), 4),
+                    ('保存(S)', lambda :self.savethispgn(), 3),
+                    ('另存为(A)...', lambda :self.saveotherpgn(), 4),
                     'separator',
                     ('查看文本棋谱(V)', self.lookpgn, 7),
                     ('编辑标签(A)', self.edittag, 5),
@@ -246,9 +255,13 @@ class MainForm(View, ttk.Frame):
         pass
         
     def quitmain(self):
-        sys.exit()   
+        result = self.__asksavepgn('退出对局')
+        if result is not None:
+            self.config.save()
+            self.quit()
         
     def updateview(self):
+        # 更新视图（由数据模型发起）
         pass
         
         

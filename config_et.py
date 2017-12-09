@@ -74,7 +74,7 @@ class Config_ET(object):
     userdata = [
         ('file', 
                [('pgnfile', [('lastname', 'text_new.pgn')])]),
-        ('option', 'text_option.text',
+        ('option', #'text_option.text',
                [('action', [('openlastpgn', 'text_yes')]),
                 ('sound', [('isopen', 'text_yes')]),
                 ('cartoon', [('isopen', 'text_no')]),
@@ -87,7 +87,7 @@ class Config_ET(object):
         self.username = username
         try:
             self.etree = ET.ElementTree(file='.\\config.xml')
-        except :       
+        except:       
             self.etree = ET.ElementTree(ET.Element('root'))
             self.iniconfig('所有用户', Config_ET.publicdata)
         if self.etree.find(self.username) is None:
@@ -98,6 +98,9 @@ class Config_ET(object):
   
     def getallelement(self, tag):
         return self.etree.findall('{}//{}'.format(self.username, tag)) 
+  
+    def setelement(self, tag, value):
+        self.getelement(tag).text = value
   
     def indent(self, elem, islast=False, level=0):
         # Get pretty look 取得漂亮的外观

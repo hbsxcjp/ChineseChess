@@ -46,8 +46,7 @@ class BdCanvas(View, Canvas):
         self.init_sel()
         
     def init_sel(self):
-        self.sel_rowcol = (0 if self.board.isbottomside(self.walks.currentside)
-                else MaxRowNo_T, 0)
+        self.sel_rowcol = (0, 0)
         self.selfrom_rowcol = None    
 
     def __canvas_texts(self):
@@ -226,7 +225,7 @@ class BdCanvas(View, Canvas):
             if torowcol in self.board.canmoverowcols(fromrowcol):
                 if self.walks.islast or __change():
                     self.walks.append(self.chessboard.createwalk(fromrowcol, torowcol))
-                    self.walks.forward()  # 更新视图
+                    self.walks.location(1)  # 更新视图
                     self.selfrom_rowcol = None                    
             else:
                 playsound('ILLEGAL') # 点击位置不正确声音
@@ -243,10 +242,9 @@ class BdCanvas(View, Canvas):
 
     def updateview(self):
         def __drawallpies():
-            self.move('pie', OutsideXY[0], OutsideXY[1])
             livecrosses = self.board.getlivecrosses()
             [self.coords(pie.imgid, self.rowcol_xy(rowcol)) for rowcol, pie
-                    in livecrosses.items()]                
+                    in livecrosses.items()]
             eatpies = set(self.board.pieces.pieces) - set(livecrosses.values())          
             for side in [RED_SIDE, BLACK_SIDE]:
                 eatpieimgids = sorted([pie.imgid for pie in eatpies if pie.side == side])
@@ -254,11 +252,10 @@ class BdCanvas(View, Canvas):
                         for n, imgid in enumerate(eatpieimgids)]
             
         def __drawtraces():
-            #self.init_sel()
             if self.walks.isstart:
                 fromxy, toxy = OutsideXY, OutsideXY
             else:
-                fromrowcol, torowcol = self.walks.currentwalk.moverowcol
+                fromrowcol, torowcol = self.walks.currentwalk().moverowcol
                 fromxy, toxy = self.rowcol_xy(fromrowcol), self.rowcol_xy(torowcol)
             self.delete('walk')
             self.coords('from', fromxy)
@@ -278,7 +275,7 @@ class BdCanvas(View, Canvas):
                         outline=color, fill=color, tag='walk') # , width=4
                 playsound('CHECK2')
             elif not self.walks.isstart:
-                eatpiece = self.walks.currentwalk.eatpiece
+                eatpiece = self.walks.currentwalk().eatpiece
                 playsound('MOVE' if eatpiece is BlankPie else
                             ('CAPTURE2' if eatpiece.isStronge else 'CAPTURE')) 
             
