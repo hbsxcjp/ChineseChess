@@ -134,7 +134,13 @@ class Walks(Model):
         [function() for _ in range(abs(inc))]       
         if refresh:
             self.notifyviews()
-            
+ 
+    def locat_start(self, refresh=True):
+        self.location(-self.length, refresh)
+
+    def locat_last(self, refresh=True):
+        self.location(self.length, refresh)
+        
 
 class WalkConvert(object):
     # 着法记录转换类

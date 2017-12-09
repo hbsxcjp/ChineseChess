@@ -70,7 +70,7 @@ class ChessBoard(Model):
     def getpgn(self):
         # 将一个棋局着棋过程，写入pgn字符串
         cursor = self.walks.cursor        
-        self.walks.location(-self.walks.length, False)
+        self.walks.locat_start(False)
         
         strinfo = '\n'.join(['[{} "{}"]'.format(key, self.info[key])
                     for key in self.info])
@@ -78,8 +78,8 @@ class ChessBoard(Model):
         if sfen:
             assert sfen.split()[0] == gfen.split()[0], '\n棋谱FEN：%s, \n生成FEN: %s' % (sfen.split()[0], gfen.split()[0])                        
         self.info['FEN'] = gfen        
-        self.walks.location(cursor+1, False)        
-        return '%s\n%s\n%s\n' % (strinfo, self.remark, str(self.walks))      
+        self.walks.locat_last(False)
+        return '{}\n{}\n{}\n'.format(strinfo, self.remark, str(self.walks))      
         
     def setpgn(self, pgn=''):
         # 将一个pgn棋局文件载入棋局 
@@ -115,13 +115,13 @@ class ChessBoard(Model):
                 self.walks.append(self.createwalk(fromrowcol, torowcol,
                         des, walkremarks[n]))
                 self.walks.location(1, False)
-        self.walks.location(-self.walks.length, False)
+        self.walks.locat_start(False)
         self.notifyviews()
     
     def changeside(self, changetype='exchange'):
         cursor = self.walks.cursor        
         remarkes = self.walks.remarkes  # 备注里如有棋子走法，则未作更改？        
-        self.walks.location(-self.walks.length, False)
+        self.walks.locat_start(False)
         
         if changetype == 'rotate': # 交换场地
             crosses = {CrossTrans.getrotaterowcol(rowcol): piece

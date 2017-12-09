@@ -20,11 +20,12 @@ class MainForm(View, ttk.Frame):
         self.config = Config_ET(name)
         self.create_widgets(models)
         self.create_layout()
-        self.create_bindings()
+        self.create_bindings()        
         for model in models:
             model.loadviews([self, self._bdcanvas, self._walkarea])        
         self.makemenu()
-        self.master.protocol('WM_DELETE_WINDOW', self.quitmain)
+        self.master.protocol('WM_DELETE_WINDOW', self.quitmain)        
+        self.loadinitconfig()
         
     def create_widgets(self, models):
         self._bdcanvas = BdCanvas(self, models, imgpath + bdimgnames['栎木'], 
@@ -38,7 +39,13 @@ class MainForm(View, ttk.Frame):
         self.bind_all('<Tab>', self.notdone)
         self.bind_all('<Control_L>', self.onCtrlleftKey)
         self.bind_all('<Control_R>', self.onCtrlrightKey)
-        self.onCtrlleftKey(None)    
+        self.onCtrlleftKey(None)
+        
+    def loadinitconfig(self):
+        filename = self.config.getelement('lastname').text
+        if not filename:
+            filename = 'new.pgn'
+        self.__openpgn(filename)
         
     def onCtrlleftKey(self, event):
         self._bdcanvas.focus_set()
@@ -65,27 +72,32 @@ class MainForm(View, ttk.Frame):
     def __getsaveasfilename(self):
         return basename(asksaveasfilename(initialdir=pgndir, title='保存棋局文件',
                     defaultextension=pgnext, filetypes=[(pgntitle, pgnext)]))        
+    
+    def __settitle(self, title):
+        self.master.title('{}{}'.format(title, ' --中国象棋'))
         
     def __openpgn(self, filename):        
-        self.__asksavepgn('打开棋局文件')
         with open(pgndir + filename, 'r') as file:
             self.chessboard.setpgn(file.read())        
-            
+            self.__settitle(filename)
+        
     def __savepgn(self, filename):
         with open(pgndir + filename, 'w') as file:
             file.write(self.chessboard.getpgn())
         self.config.setelement('lastname', filename)
-        self.master.title('中国象棋_by cjp : %s ' % filename)
+        self.__settitle(filename)
         #self.makemenu(self.win)
     
     def opennewpgn(self):
-        self.__openpgn('new.pgn')
+        if self.__asksavepgn('打开棋局文件') is not None:
+            self.__openpgn('new.pgn')
             
     def openotherpgn(self):
-        filename = self.__getopenfilename()
-        if filename is not None:
-            self.__openpgn(filename)
-            self.config.setelement('lastname', filename)
+        if self.__asksavepgn('打开棋局文件') is not None:
+            filename = self.__getopenfilename()
+            if filename:
+                self.__openpgn(filename)
+                self.config.setelement('lastname', filename)
             
     def savethispgn(self):
         filename = self.config.getelement('lastname').text
@@ -96,7 +108,7 @@ class MainForm(View, ttk.Frame):
         
     def saveotherpgn(self):
         filename = self.__getsaveasfilename()
-        if filename is not None:
+        if filename:
             self.__savepgn(filename)
             
     def trimlastpgn(self):
@@ -255,8 +267,7 @@ class MainForm(View, ttk.Frame):
         pass
         
     def quitmain(self):
-        result = self.__asksavepgn('退出对局')
-        if result is not None:
+        if self.__asksavepgn('退出对局') is not None:
             self.config.save()
             self.quit()
         

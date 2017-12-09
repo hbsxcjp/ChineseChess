@@ -105,10 +105,10 @@ class WalkArea(View, ttk.Frame):
         self.walks.location(20)
 
     def onHomeKey(self, event): 
-        self.walks.location(-self.walks.length)
+        self.walks.locat_start()
         
     def onEndKey(self, event): 
-        self.walks.location(self.walks.length)
+        self.walks.locat_last()
 
     def onMouseLeftclick(self, event):
         # 接收点击信息
