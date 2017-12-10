@@ -122,9 +122,10 @@ class WalkArea(View, ttk.Frame):
         # 更新视图
         def __setinfo():        
             info = self.chessboard.info
-            infotext =[info['Event'], 
-                    '{}  {}  {}'.format(info['Red'], info['Result'], info['Black']),
-                    '{} 奕于 {}'.format(info['Date'], info['Site'])]
+            infotext =[info.get('Event', ''), 
+                    '{}  {}  {}'.format(info.get('Red', ''),
+                            info.get('Result', ''), info.get('Black', '')),
+                    '{} 奕于 {}'.format(info.get('Date', ''), info.get('Site', ''))]
             for n, label in enumerate(self.infolabel):
                 label.config(text=infotext[n])
         

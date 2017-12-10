@@ -36,11 +36,11 @@ EatpieEndX = EatpieStartXY + 3 * EatpieStepX
                     
 class BdCanvas(View, Canvas):
     # 棋盘与棋子
-    def __init__(self, master, models, bdimgname, pimgpath):
+    def __init__(self, master, models):
         View.__init__(self, models)
         Canvas.__init__(self, master, width=CanvasWidth, height=CanvasHeight)
         
-        self.create_widgets(bdimgname, pimgpath)
+        self.create_widgets()
         self.create_layout()
         self.create_bindings()
         self.init_sel()
@@ -70,7 +70,7 @@ class BdCanvas(View, Canvas):
         for x, y, astr in __textxys(self.board.bottomside):
             self.create_text(x, y, font=('Consolas', '10'), text=astr, tag='side_tag')
             
-    def create_widgets(self, bdimgname, pimgpath):                  
+    def create_widgets(self):                  
                 
         def __canvas_rects():
             def __rectxys():
@@ -113,8 +113,10 @@ class BdCanvas(View, Canvas):
             for side, char in {RED_SIDE: 'KK', BLACK_SIDE: 'kk'}.items():
                 self.imgs.append(PhotoImage(file = pimgpath + imgflnames[char]))
                 self.board.pieces.getkingpiece(side).eatimgid = self.create_image(OutsideXY,
-                        image=self.imgs[-1], tag='pie')                    
-        
+                        image=self.imgs[-1], tag='pie')
+                        
+        bdimgname = self.master.config.getelement('bdimgname').text
+        pimgpath = self.master.config.getelement('pimgpath').text        
         __canvas_rects()
         __create_imgs(bdimgname, pimgpath)
         

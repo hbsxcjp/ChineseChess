@@ -20,13 +20,8 @@ from tkinter.messagebox import *
 from PIL.ImageTk import PhotoImage
 
 
-imgpath = '.\\IMAGES_L\\' 
-pimgpath = '.\\IMAGES_L\\WOOD\\'
-bdimgname = '.\\IMAGES_L\\WOOD.JPG'
-# 默认的图像目录、文件
-                            
-pimgpaths = {'木刻': 'WOOD\\', '精致': 'POLISH\\',
-             '光泽': 'DELICATE\\', '卡通': 'COMIC\\'} 
+pimgpaths = {'木刻': 'WOOD/', '精致': 'POLISH/',
+             '光泽': 'DELICATE/', '卡通': 'COMIC/'} 
             # 棋子图像目录                                                
 bdimgnames = {'栎木': 'WOOD.JPG', '白色大理石': 'WHITE.JPG', 
               '再生纸': 'SHEET.JPG', '画布': 'CANVAS.JPG', 
@@ -57,7 +52,7 @@ def set_application_icons(application, path):
 
 def playsound(soundname):
     # 播放声音
-    soundpath = '.\\SOUNDS\\' # 声音文件目录
+    soundpath = './SOUNDS/' # 声音文件目录
     winsound.PlaySound(soundpath + soundname + '.WAV', winsound.SND_ASYNC)
     
 
@@ -74,13 +69,13 @@ class Config_ET(object):
     userdata = [
         ('file', 
                [('pgnfile', [('lastname', )])]),
-        ('option', #'text_option.text',
+        ('option', 
                [('action', [('openlastpgn', 'text_yes')]),
                 ('sound', [('isopen', 'text_yes')]),
                 ('cartoon', [('isopen', 'text_no')]),
-                ('face', [('imgpath', 'text_' + imgpath)],
-                        [('pimgpath', 'text_' + pimgpath)],
-                        [('bdimgname', 'text_' + bdimgname)])])]
+                ('face', [('imgpath', 'text_./IMAGES_L/')],
+                        [('pimgpath', 'text_./IMAGES_L/WOOD/')],
+                        [('bdimgname', 'text_./IMAGES_L/WOOD.JPG')])])]
     # 条目格式：[('str', 'text_xxx', {}, [], 'tail_xxx')，...], 'str'必须在第一个位置
     
     def __init__(self, username):
@@ -91,7 +86,7 @@ class Config_ET(object):
             self.etree = ET.ElementTree(ET.Element('root'))
             self.iniconfig('所有用户', Config_ET.publicdata)
         if self.etree.find(self.username) is None:
-            self.iniconfig(self.username, Config_ET.userdata)            
+            self.iniconfig(self.username, Config_ET.userdata)          
             
     def getelement(self, tag):
         return self.etree.find('{}//{}'.format(self.username, tag))

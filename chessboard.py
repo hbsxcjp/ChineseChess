@@ -116,7 +116,8 @@ class ChessBoard(Model):
                         des, walkremarks[n]))
                 self.walks.move(1, False)
         self.walks.movestart(False)
-        self.notifyviews()
+        if hasattr(self, 'views'):
+            self.notifyviews()
     
     def changeside(self, changetype='exchange'):
     
@@ -127,7 +128,7 @@ class ChessBoard(Model):
                     for fromrowcol, torowcol in self.walks.moverowcols()]
             return crosses, moverowcols
                     
-        cursor = self.walks.cursor        
+        offset = self.walks.cursor + 1 - self.walks.length 
         remarkes = self.walks.remarkes  # 备注里如有棋子走法，则未作更改？        
         self.walks.movestart(False)        
         if changetype == 'rotate': # 交换场地
@@ -147,7 +148,7 @@ class ChessBoard(Model):
         for n, (fromrowcol, torowcol) in enumerate(moverowcols):        
             self.walks.append(self.createwalk(fromrowcol, torowcol, '', remarkes[n]))
             self.walks.move(1, False)
-        self.walks.move(cursor+1, False)
+        self.walks.move(offset, False)
         self.notifyviews()
 
 

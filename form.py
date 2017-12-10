@@ -20,16 +20,16 @@ class MainForm(View, ttk.Frame):
         self.config = Config_ET(name)
         self.create_widgets(models)
         self.create_layout()
-        self.create_bindings()        
+        self.create_bindings()
         for model in models:
             model.loadviews([self, self._bdcanvas, self._walkarea])        
         self.makemenu()
         self.master.protocol('WM_DELETE_WINDOW', self.quitmain)        
-        self.loadinitconfig()
+        
+        self.__openpgn(self.config.getelement('lastname').text)
         
     def create_widgets(self, models):
-        self._bdcanvas = BdCanvas(self, models, imgpath + bdimgnames['栎木'], 
-                                imgpath + pimgpaths['木刻']) # 
+        self._bdcanvas = BdCanvas(self, models)
         self._walkarea = WalkArea(self, models)
         
     def create_layout(self):        
@@ -40,9 +40,6 @@ class MainForm(View, ttk.Frame):
         self.bind_all('<Control_L>', self.onCtrlleftKey)
         self.bind_all('<Control_R>', self.onCtrlrightKey)
         self.onCtrlleftKey(None)
-        
-    def loadinitconfig(self):
-        self.__openpgn(self.config.getelement('lastname').text)
         
     def onCtrlleftKey(self, event):
         self._bdcanvas.focus_set()
@@ -214,9 +211,9 @@ class MainForm(View, ttk.Frame):
                     ('退出(X)', lambda :self.quitmain(), 3)],
              3),
             ('局面(B)', 
-                   [('对换位置(F)', self.notdone, 5),
-                    ('左右对称(M)', self.notdone, 5),
-                    ('对换棋局(D)', self.notdone, 5),
+                   [('对换位置(F)', lambda: self.chessboard.changeside('rotate'), 5),
+                    ('左右对称(M)', lambda: self.chessboard.changeside('symmetry'), 5),
+                    ('对换棋局(D)', lambda: self.chessboard.changeside(), 5),
                     'separator',
                     ('新窗口推演(A)', self.notdone, 6),
                     ('编辑局面(E)', self.notdone, 5),
@@ -225,10 +222,10 @@ class MainForm(View, ttk.Frame):
                     ('粘贴局面(P)', self.pastefen, 5)],
              3),
             ('着法(M)', 
-                   [('起始局面(S)', lambda :self.notdone, 5),
-                    ('上一着(B)', lambda :self.notdone, 4),
-                    ('下一着(F)', lambda :self.notdone, 4),
-                    ('最后局面(E)', lambda :self.notdone, 5)],
+                   [('起始局面(S)', lambda: self._walkarea.onHomeKey(None), 5),
+                    ('上一着(B)', lambda: self._walkarea.onUpKey(None), 4),
+                    ('下一着(F)', lambda: self._walkarea.onDownKey(None), 4),
+                    ('最后局面(E)', lambda: self._walkarea.onEndKey(None), 5)],
              3),
             ('选项(O)', 
                    [('设置(O)...', self.setoption, 3),

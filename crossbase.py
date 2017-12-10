@@ -186,11 +186,11 @@ class CrossTuple(object):
 class Model(object):
         
     def loadviews(self, views):
-        self.__views = views
+        self.views = views
         
     def notifyviews(self):
         # 通知视图更新
-        for view in self.__views:
+        for view in self.views:
             view.updateview()
  
 class View(object):

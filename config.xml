@@ -3,19 +3,19 @@
 		<option>
 			<face>
 				<pimg>
-					<卡通>COMIC\</卡通>
-					<木刻>WOOD\</木刻>
-					<精致>POLISH\</精致>
-					<光泽>DELICATE\</光泽>
+					<木刻>WOOD/</木刻>
+					<光泽>DELICATE/</光泽>
+					<卡通>COMIC/</卡通>
+					<精致>POLISH/</精致>
 				</pimg>
 				<bdimg>
+					<白色大理石>WHITE.JPG</白色大理石>
+					<再生纸>SHEET.JPG</再生纸>
+					<栎木>WOOD.JPG</栎木>
+					<画布>CANVAS.JPG</画布>
 					<水滴>DROPS.JPG</水滴>
 					<浅红象棋>QIANHONG.GIF</浅红象棋>
-					<白色大理石>WHITE.JPG</白色大理石>
-					<栎木>WOOD.JPG</栎木>
-					<再生纸>SHEET.JPG</再生纸>
 					<绿色大理石>GREEN.JPG</绿色大理石>
-					<画布>CANVAS.JPG</画布>
 				</bdimg>
 			</face>
 		</option>
@@ -23,7 +23,7 @@
 	<cjp>
 		<file>
 			<pgnfile>
-				<lastname>C:/cc/pgn/“象棋南北国手团体对抗赛” - 北方队赵国荣 (先胜) 南方队胡荣华.PGN</lastname>
+				<lastname>C:/cc/pgn/兵的着法.pgn</lastname>
 			</pgnfile>
 		</file>
 		<option>
@@ -37,9 +37,9 @@
 				<isopen>no</isopen>
 			</cartoon>
 			<face>
-				<imgpath>.\IMAGES_L\</imgpath>
-				<pimgpath>.\IMAGES_L\WOOD\</pimgpath>
-				<bdimgname>.\IMAGES_L\WOOD.JPG</bdimgname>
+				<imgpath>./IMAGES_L/</imgpath>
+				<pimgpath>./IMAGES_L/WOOD/</pimgpath>
+				<bdimgname>./IMAGES_L/WOOD.JPG</bdimgname>
 			</face>
 		</option>
 	</cjp>
