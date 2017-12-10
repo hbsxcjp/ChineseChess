@@ -32,6 +32,7 @@ class User(object):
         #self.application.title('中国象棋')
         #TkUtil.set_application_icons(application, os.path.join(
         #        os.path.dirname(os.path.realpath(__file__)), "images"))
+        
         self.mainform = MainForm(self.application, self.name,
                 [self.chessboard, self.chessboard.board, self.chessboard.walks])
                 

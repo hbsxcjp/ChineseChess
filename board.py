@@ -10,7 +10,7 @@ class Board(Model):
     
     def __init__(self):
         super().__init__()
-        self.crosses = dict.fromkeys(all_rowcols, BlankPie)
+        self.crosses = dict.fromkeys(Cross.allrowcols, BlankPie)
         self.pieces = Pieces()
         self.bottomside = BLACK_SIDE
         
@@ -71,39 +71,41 @@ class Board(Model):
     def getside(self, rowcol):
         return self.getpiece(rowcol).side
     
-    def getrowcol(self, piece):
-        for rowcol, pie in self.getlivecrosses().items():
-            if pie is piece:
-                return rowcol
-        #assert False, '没有发现棋子：{}'.format(str(self))
+    @classmethod
+    def getotherside(cls, side):        
+        return TOP_SIDE if side == BOTTOM_SIDE else BOTTOM_SIDE
     
     def getkingrowcol(self, side):    
-        return self.getrowcol(self.pieces.getkingpiece(side))
+        kingpie = self.pieces.getkingpiece(side) 
+        for rowcol, pie in self.getlivesidecrosses(side).items():
+            if pie is kingpie:
+                return rowcol
+        #assert False, '没有发现棋子：{}'.format(str(self))
+        
+    def clear(self):
+        [self.setpiece(rowcol, BlankPie) for rowcol in self.crosses.keys()]
     
     def setpiece(self, rowcol, piece):
         self.crosses[rowcol] = piece
 
+    def setpieces(self, charls):
+        self.clear()
+        [self.setpiece(Cross.getrowcol(n), self.pieces.getpiece(char, self)) 
+                for n, char in enumerate(charls)]
+        self.setbottomside()
+            
     def movepiece(self, fromrowcol, torowcol, backpiece=BlankPie):
         eatpiece = self.crosses[torowcol]
         self.setpiece(torowcol, self.crosses[fromrowcol])
         self.setpiece(fromrowcol, backpiece)
         return eatpiece
         
-    def clear(self):
-        [self.setpiece(rowcol, BlankPie) for rowcol in self.crosses.keys()]
-    
-    def setpieces(self, charls):
-        self.clear()
-        for n, char in enumerate(charls):
-            self.setpiece(CrossTrans.getrowcol(n), self.pieces.getpiece(char, self))
-        self.setbottomside()
-            
     def getlivecrosses(self):
         return {rowcol: piece for rowcol, piece in self.crosses.items()
                 if piece is not BlankPie}
     
     def geteatedpieces(self):
-        return set(self.pieces.pieces) - set(self.getlivecrosses().values())
+        return self.pieces.getotherpieces(self.getlivecrosses().values())
     
     def getlivesidecrosses(self, side):
         return {rowcol: piece for rowcol, piece in self.getlivecrosses().items()
@@ -115,10 +117,7 @@ class Board(Model):
                 
     def getlivesidenamecolcrosses(self, side, name, col):
         return {rowcol: piece for rowcol, piece in
-                self.getlivesidenamecrosses(side, name).items() if rowcol[1] == col}
-                
-    def canmovepiece(self, rowcol, piece):
-        return self.getpiece(rowcol).side != piece.side
+            self.getlivesidenamecrosses(side, name).items() if rowcol[1] == col}
         
     def iskilled(self, side):
         def __isfaced():
@@ -130,12 +129,12 @@ class Board(Model):
                     
         def __iskilled():
             for rowcol, piece in self.getlivesidecrosses(otherside).items():
-                if (piece.isStronge() and (kingrow, kingcol)
+                if (piece.isStronge and (kingrow, kingcol)
                     in piece.getmoverowcols(rowcol, self)):
                     return True
             return False 
             
-        otherside = CrossTrans.getotherside(side)
+        otherside = Piece.getotherside(side)
         kingrow, kingcol = self.getkingrowcol(side)
         otherrow, othercol = self.getkingrowcol(otherside)
         return __isfaced() or __iskilled()
@@ -176,7 +175,7 @@ class Board(Model):
             if len(chars) > 32:
                 return False, '全部的棋子个数大于32个，有误！'
             for c in chars:
-                if chars.count(c) > Chars.count(c):
+                if chars.count(c) > Pieces.Chars.count(c):
                     return False, '棋子: %s 的个数大于规定个数，有误！' % c
             return True, ''           
         

@@ -54,14 +54,14 @@ class BdCanvas(View, Canvas):
             # 图形框内文字坐标
             PondTopTextX, PondTopTextY = ImgBdStartX // 2, CanvasHeight // 2 - PieHeight // 2
             PondBottomTextX, PondBottomTextY = ImgBdStartX // 2, CanvasHeight // 2 + PieHeight // 2
-            PondTopText = PondText[CrossTrans.gettopside(bottomside)]
+            PondTopText = PondText[Board.getotherside(bottomside)]
             PondBottomText = PondText[bottomside]
             textxys = [(PondTopTextX, PondTopTextY, PondTopText), 
                         (PondBottomTextX, PondBottomTextY, PondBottomText)]
             for i in range(NumCols):
                 textx = ImgBdStartX + i * (TagLength + PieBdWidth) + TagLength // 2
                 textxys.append((textx, ImgBdStartY // 2,
-                    WalkConvert.NumToChinese[CrossTrans.gettopside(bottomside)][i+1]))
+                    WalkConvert.NumToChinese[Board.getotherside(bottomside)][i+1]))
                 textxys.append((textx, CanvasHeight - ImgBdStartY // 2, 
                         WalkConvert.NumToChinese[bottomside][NumCols-i]))
             return textxys
@@ -103,9 +103,12 @@ class BdCanvas(View, Canvas):
             self.create_image(OutsideXY, image=self.imgs[-1], tag='from')
             self.create_image(OutsideXY, image=self.imgs[-1], tag='to')
             
-            for pie in self.board.pieces.pieces:
-                self.imgs.append(PhotoImage(file = pimgpath + imgflnames[pie.char]))
-                pie.imgid = self.create_image(OutsideXY, image=self.imgs[-1], tag='pie')
+            pieimgids = []
+            for char in Pieces.Chars:
+                self.imgs.append(PhotoImage(file = pimgpath + imgflnames[char]))
+                pieimgids.append(self.create_image(OutsideXY,
+                        image=self.imgs[-1], tag='pie'))
+            self.board.pieces.setpieimgids(pieimgids) 
                 
             for side, char in {RED_SIDE: 'KK', BLACK_SIDE: 'kk'}.items():
                 self.imgs.append(PhotoImage(file = pimgpath + imgflnames[char]))
@@ -114,7 +117,6 @@ class BdCanvas(View, Canvas):
         
         __canvas_rects()
         __create_imgs(bdimgname, pimgpath)
-        #print([(str(pie), pie.imgid) for pie in self.board.pieces.pieces])
         
         
     def create_layout(self):
@@ -225,7 +227,7 @@ class BdCanvas(View, Canvas):
             if torowcol in self.board.canmoverowcols(fromrowcol):
                 if self.walks.islast or __change():
                     self.walks.append(self.chessboard.createwalk(fromrowcol, torowcol))
-                    self.walks.location(1)  # 更新视图
+                    self.walks.move(1)  # 更新视图
                     self.selfrom_rowcol = None                    
             else:
                 playsound('ILLEGAL') # 点击位置不正确声音
@@ -245,10 +247,10 @@ class BdCanvas(View, Canvas):
             livecrosses = self.board.getlivecrosses()
             [self.coords(pie.imgid, self.rowcol_xy(rowcol)) for rowcol, pie
                     in livecrosses.items()]
-            eatpies = set(self.board.pieces.pieces) - set(livecrosses.values())          
+            eatpies = self.board.geteatedpieces()
             for side in [RED_SIDE, BLACK_SIDE]:
                 eatpieimgids = sorted([pie.imgid for pie in eatpies if pie.side == side])
-                [self.coords(imgid, self.geteatpie_xy(CrossTrans.getotherside(side), n))
+                [self.coords(imgid, self.geteatpie_xy(Piece.getotherside(side), n))
                         for n, imgid in enumerate(eatpieimgids)]
             
         def __drawtraces():

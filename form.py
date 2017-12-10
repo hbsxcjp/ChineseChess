@@ -42,10 +42,7 @@ class MainForm(View, ttk.Frame):
         self.onCtrlleftKey(None)
         
     def loadinitconfig(self):
-        filename = self.config.getelement('lastname').text
-        if not filename:
-            filename = 'new.pgn'
-        self.__openpgn(filename)
+        self.__openpgn(self.config.getelement('lastname').text)
         
     def onCtrlleftKey(self, event):
         self._bdcanvas.focus_set()
@@ -66,23 +63,26 @@ class MainForm(View, ttk.Frame):
         return result
             
     def __getopenfilename(self):
-        return basename(askopenfilename(initialdir=pgndir, title='打开棋局文件',
+        return (askopenfilename(initialdir=pgndir, title='打开棋局文件',
                     defaultextension=pgnext, filetypes=[(pgntitle, pgnext)]))     
         
     def __getsaveasfilename(self):
-        return basename(asksaveasfilename(initialdir=pgndir, title='保存棋局文件',
-                    defaultextension=pgnext, filetypes=[(pgntitle, pgnext)]))        
+        return (asksaveasfilename(initialdir=pgndir, title='保存棋局文件',
+                    defaultextension=pgnext, filetypes=[(pgntitle, pgnext)]))      
     
     def __settitle(self, title):
         self.master.title('{}{}'.format(title, ' --中国象棋'))
         
-    def __openpgn(self, filename):        
-        with open(pgndir + filename, 'r') as file:
-            self.chessboard.setpgn(file.read())        
-            self.__settitle(filename)
+    def __openpgn(self, filename=''):
+        pgn = ''
+        if filename:
+            with open(filename, 'r') as file:
+                pgn = file.read()
+        self.chessboard.setpgn(pgn)
+        self.__settitle(filename)
         
     def __savepgn(self, filename):
-        with open(pgndir + filename, 'w') as file:
+        with open(filename, 'w') as file:
             file.write(self.chessboard.getpgn())
         self.config.setelement('lastname', filename)
         self.__settitle(filename)
@@ -90,7 +90,7 @@ class MainForm(View, ttk.Frame):
     
     def opennewpgn(self):
         if self.__asksavepgn('打开棋局文件') is not None:
-            self.__openpgn('new.pgn')
+            self.__openpgn()
             
     def openotherpgn(self):
         if self.__asksavepgn('打开棋局文件') is not None:
@@ -101,10 +101,10 @@ class MainForm(View, ttk.Frame):
             
     def savethispgn(self):
         filename = self.config.getelement('lastname').text
-        if filename == 'new.pgn':
-            self.saveotherpgn()
-        else:
+        if filename:
             self.__savepgn(filename)
+        else:
+            self.saveotherpgn()
         
     def saveotherpgn(self):
         filename = self.__getsaveasfilename()

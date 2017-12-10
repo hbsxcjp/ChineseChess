@@ -12,9 +12,9 @@ class Test(unittest.TestCase):
 
     def test_crossbase(self):            
 
-        crolist = [all_rowcols]
-        for cro in [side_rowcols, king_rowcols, advisor_rowcols, bishop_rowcols, 
-                    pawn_rowcols]:
+        crolist = [Cross.allrowcols]
+        for cro in [Cross.siderowcols, Cross.kingrowcols,
+                    Cross.advisorrowcols, Cross.bishoprowcols, Cross.pawnrowcols]:
             for f in [True, False]:        
                 crolist.append(cro[f])                
         for cro in crolist:
@@ -24,7 +24,6 @@ class Test(unittest.TestCase):
     def test_Piece(self):
     
         pieces = Pieces()
-        #print([str(pie) for pie in pieces.pieces])
         
         blackkingpie = pieces.getkingpiece(BLACK_SIDE)
         redkingpie = pieces.getkingpiece(RED_SIDE)

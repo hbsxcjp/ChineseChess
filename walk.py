@@ -116,7 +116,7 @@ class Walks(Model):
     def cutfollow(self):
         self.__walks = self.__walks[:self.cursor + 1]
         
-    def location(self, inc, refresh=True):
+    def move(self, inc, refresh=True):
                 
         def __forward():
             if self.isempty or self.islast:
@@ -135,11 +135,11 @@ class Walks(Model):
         if refresh:
             self.notifyviews()
  
-    def locat_start(self, refresh=True):
-        self.location(-self.length, refresh)
+    def movestart(self, refresh=True):
+        self.move(-self.length, refresh)
 
-    def locat_last(self, refresh=True):
-        self.location(self.length, refresh)
+    def movelast(self, refresh=True):
+        self.move(self.length, refresh)
         
 
 class WalkConvert(object):
@@ -280,8 +280,8 @@ class WalkConvert(object):
         return '{}{}{}{}'.format(self.ColChars[fromcol], str(fromrow),
                     self.ColChars[tocol], str(torow))
 
-
                     
 WalkConvert = WalkConvert()
 # 全局唯一的着法转换对象
+                
                 

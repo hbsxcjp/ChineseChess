@@ -73,7 +73,7 @@ class Config_ET(object):
     
     userdata = [
         ('file', 
-               [('pgnfile', [('lastname', 'text_new.pgn')])]),
+               [('pgnfile', [('lastname', )])]),
         ('option', #'text_option.text',
                [('action', [('openlastpgn', 'text_yes')]),
                 ('sound', [('isopen', 'text_yes')]),

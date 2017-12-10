@@ -33,11 +33,11 @@ class ChessBoard(Model):
             
             back.eatpiece = self.board.movepiece(fromrowcol, torowcol)
             # 给函数back添加一个属性:被吃棋子!
-            self.walks.setcurrentside(CrossTrans.getotherside(self.walks.currentside))
+            self.walks.setcurrentside(Piece.getotherside(self.walks.currentside))
             
         def back():
             self.board.movepiece(torowcol, fromrowcol, back.eatpiece)
-            self.walks.setcurrentside(CrossTrans.getotherside(self.walks.currentside))
+            self.walks.setcurrentside(Piece.getotherside(self.walks.currentside))
             
         if not description:
             description = WalkConvert.moverowcols_chinese(fromrowcol,
@@ -70,7 +70,7 @@ class ChessBoard(Model):
     def getpgn(self):
         # 将一个棋局着棋过程，写入pgn字符串
         cursor = self.walks.cursor        
-        self.walks.locat_start(False)
+        self.walks.movestart(False)
         
         strinfo = '\n'.join(['[{} "{}"]'.format(key, self.info[key])
                     for key in self.info])
@@ -78,7 +78,7 @@ class ChessBoard(Model):
         if sfen:
             assert sfen.split()[0] == gfen.split()[0], '\n棋谱FEN：%s, \n生成FEN: %s' % (sfen.split()[0], gfen.split()[0])                        
         self.info['FEN'] = gfen        
-        self.walks.locat_last(False)
+        self.walks.movelast(False)
         return '{}\n{}\n{}\n'.format(strinfo, self.remark, str(self.walks))      
         
     def setpgn(self, pgn=''):
@@ -114,41 +114,40 @@ class ChessBoard(Model):
                         self.walks.currentside, des, self.board)
                 self.walks.append(self.createwalk(fromrowcol, torowcol,
                         des, walkremarks[n]))
-                self.walks.location(1, False)
-        self.walks.locat_start(False)
+                self.walks.move(1, False)
+        self.walks.movestart(False)
         self.notifyviews()
     
     def changeside(self, changetype='exchange'):
+    
+        def __crosses_moverowcols(transrowcolfun):
+            crosses = {transrowcolfun(rowcol): piece
+                    for rowcol, piece in self.board.getlivecrosses().items()}
+            moverowcols = [(transrowcolfun(fromrowcol), transrowcolfun(torowcol))
+                    for fromrowcol, torowcol in self.walks.moverowcols()]
+            return crosses, moverowcols
+                    
         cursor = self.walks.cursor        
         remarkes = self.walks.remarkes  # 备注里如有棋子走法，则未作更改？        
-        self.walks.locat_start(False)
-        
+        self.walks.movestart(False)        
         if changetype == 'rotate': # 交换场地
-            crosses = {CrossTrans.getrotaterowcol(rowcol): piece
-                    for rowcol, piece in self.board.getlivecrosses().items()}
-            moverowcols = [(CrossTrans.getrotaterowcol(fromrowcol),
-                            CrossTrans.getrotaterowcol(torowcol))
-                            for fromrowcol, torowcol in self.walks.moverowcols()]
+            crosses, moverowcols = __crosses_moverowcols(Cross.getrotaterowcol)
         elif changetype == 'symmetry': # 左右交换
-            crosses = {CrossTrans.getsymmetryrowcol(rowcol): piece
-                for rowcol, piece in self.board.getlivecrosses().items()}
-            moverowcols = [(CrossTrans.getsymmetryrowcol(fromrowcol),
-                            CrossTrans.getsymmetryrowcol(torowcol))
-                            for fromrowcol, torowcol in self.walks.moverowcols()]
+            crosses, moverowcols = __crosses_moverowcols(Cross.getsymmetryrowcol)
         else: # 对换棋局
-            self.walks.currentside = CrossTuple.getotherside(self.walks.currentside)
+            self.walks.currentside = Piece.getotherside(self.walks.currentside)
             crosses = {rowcol: self.board.pieces.getothersidepiece(piece)
-                for rowcol, piece in self.board.getlivecrosses().items()}
+                    for rowcol, piece in self.board.getlivecrosses().items()}
             moverowcols = self.walks.moverowcols()
-        [self.board.setpiece(rowcol, BlankPie) for rowcol in self.board.crosses.keys()]
+        self.board.clear()
         [self.board.setpiece(rowcol, piece) for rowcol, piece in crosses.items()]
         self.board.setbottomside()
         
         self.walks.clear()
         for n, (fromrowcol, torowcol) in enumerate(moverowcols):        
             self.walks.append(self.createwalk(fromrowcol, torowcol, '', remarkes[n]))
-            self.walks.location(1, False)
-        self.walks.location(cursor+1, False)
+            self.walks.move(1, False)
+        self.walks.move(cursor+1, False)
         self.notifyviews()
 
 
