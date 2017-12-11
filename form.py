@@ -17,25 +17,25 @@ class MainForm(View, ttk.Frame):
         View.__init__(self, models)
         ttk.Frame.__init__(self, master, padding=2)
         
-        self.config = Config_ET(name)
-        self.create_widgets(models)
-        self.create_layout()
-        self.create_bindings()
+        self.config = Config(name)
+        self.createwidgets(models)
+        self.createlayout()
+        self.createbindings()
+        
         for model in models:
             model.loadviews([self, self._bdcanvas, self._walkarea])        
         self.makemenu()
-        self.master.protocol('WM_DELETE_WINDOW', self.quitmain)        
-        
+        self.master.protocol('WM_DELETE_WINDOW', self.quitmain)
         self.__openpgn(self.config.getelement('lastname').text)
         
-    def create_widgets(self, models):
+    def createwidgets(self, models):
         self._bdcanvas = BdCanvas(self, models)
         self._walkarea = WalkArea(self, models)
         
-    def create_layout(self):        
+    def createlayout(self):        
         self.pack()
 
-    def create_bindings(self):
+    def createbindings(self):
         self.bind_all('<Tab>', self.notdone)
         self.bind_all('<Control_L>', self.onCtrlleftKey)
         self.bind_all('<Control_R>', self.onCtrlrightKey)
@@ -83,7 +83,6 @@ class MainForm(View, ttk.Frame):
             file.write(self.chessboard.getpgn())
         self.config.setelement('lastname', filename)
         self.__settitle(filename)
-        #self.makemenu(self.win)
     
     def opennewpgn(self):
         if self.__asksavepgn('打开棋局文件') is not None:
@@ -121,81 +120,11 @@ class MainForm(View, ttk.Frame):
         pass
     
     def setoption(self):
-        '''
-        def saveoption():
-            self.et.bdimgname = self.bdvar.get()
-            self.et.pimgpath = self.pvar.get()
-            if self.others[0].get():
-                self.et.sound = 'yes'
-            else:
-                self.et.sound = 'no'
-            if self.others[1].get():
-                self.et.cartoon = 'yes'
-            else:
-                self.et.cartoon = 'no'
-            self.et.saveconfig(self.et.configfilename)
-            self.loadimgs(self.et.bdimgname, self.et.pimgpath) # 载入图像
-            self.repgn(self.et.pgnfilename) 
-            tp.destroy    
-
-        def __displayoption():
         
-            frms, lfrm = [], []        
-            tp = Toplevel(self.win)                    
-            tp.title('选项设置') 
-            for i, sd in enumerate([TOP, BOTTOM]):
-                frms.append(Frame(tp))
-                frms[i].pack(side=sd, padx=5, pady=5)         
-            frm0 = Frame(frms[0])
-            frm0.pack(side=TOP) #, padx=2, pady=2
-            for i, sd in enumerate([LEFT, RIGHT]):
-                lfrm.append(LabelFrame(frm0, relief=GROOVE, text=['棋盘', '棋子'][i], labelanchor='nw'))
-                lfrm[i].pack(side=sd, padx=5, pady=5, expand=YES, fill=BOTH)      
-
-            self.bdvar = StringVar()
-            for bf in bdimgnames:
-                Radiobutton(lfrm[0], text=bf+'      ', variable=self.bdvar,
-                    value=bdimgnames[bf]).pack(anchor=NW)
-            self.bdvar.set(self.et.bdimgname)
-            self.pvar = StringVar()
-            for pf in pimgpaths:
-                Radiobutton(lfrm[1], text=pf+'       ', variable=self.pvar,
-                    value=pimgpaths[pf]).pack(anchor=NW)
-            self.pvar.set(self.et.pimgpath)        
-                    
-            lfrm1 = LabelFrame(frms[0], relief=GROOVE, text='其他',labelanchor='nw')
-            lfrm1.pack(side=BOTTOM, padx=5, pady=5, expand=YES, fill=BOTH)        
-            self.others = []
-            for i, t in enumerate(['声音', '走棋动画']):
-                var = IntVar()
-                Checkbutton(lfrm1, text=t, variable=var).pack(anchor=NW)
-                self.others.append(var)
-            if self.et.opensound == 'yes':
-                self.others[0].set(1) 
-            if self.et.opencartoon == 'yes':
-                self.others[1].set(1)
-                
-            Button(frms[1], text='关闭', width=8, command=tp.destroy).pack(side=RIGHT)
-            Button(frms[1], text='确定', width=8, command=saveoption).pack(side=RIGHT)
-            tp.focus_set()
-            tp.grab_set()
-            tp.wait_window()  
-
-        __displayoption()
-        '''
         pass
 
     def makemenu(self):
         # 生成主菜单
-        '''
-        lastpgns = []
-        pgnfs = self.et.getpgnfs()
-        for pgnf in pgnfs:
-            lastpgns.append((pgnf, lambda f=pgnf: self.openpgn(False, f), 3))
-        lastpgns.append('separator')
-        lastpgns.append(('整理近期文件...', lambda :self.trimlastpgn(), 3))
-        #for x in lastpgns: print(x)
-        '''
         
         menuBar = [
             ('文件(F)', 

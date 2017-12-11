@@ -12,12 +12,12 @@ from form import *
 
 class Test(unittest.TestCase):
 
-    def test_config_et(self):          
-        cc1 = Config_ET('cjp')
+    def xtest_config_et(self):          
+        cc1 = Config('cjp')
         cc1.save()                
         pass       
     
-    def test_crossbase(self):            
+    def xtest_crossbase(self):            
         crolist = [Cross.allrowcols]
         for cro in [Cross.siderowcols, Cross.kingrowcols,
                     Cross.advisorrowcols, Cross.bishoprowcols, Cross.pawnrowcols]:
@@ -27,17 +27,17 @@ class Test(unittest.TestCase):
             #print(sorted([c for c in cro]), len(cro))        
             pass          
         
-    def test_Piece(self):    
+    def xtest_Piece(self):    
         pieces = Pieces()        
         blackkingpie = pieces.getkingpiece(BLACK_SIDE)
         redkingpie = pieces.getkingpiece(RED_SIDE)
         #print(blackkingpie, redkingpie)
         
-    def test_Board(self):    
+    def xtest_Board(self):    
         board = Board() 
         #print(board)
         
-    def test_LoadPiecesToBoard(self): 
+    def xtest_LoadPiecesToBoard(self): 
         FEN = 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 1'
         board = Board()
         pieces = board.pieces        

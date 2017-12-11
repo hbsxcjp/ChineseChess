@@ -20,25 +20,6 @@ from tkinter.messagebox import *
 from PIL.ImageTk import PhotoImage
 
 
-pimgpaths = {'木刻': 'WOOD/', '精致': 'POLISH/',
-             '光泽': 'DELICATE/', '卡通': 'COMIC/'} 
-            # 棋子图像目录                                                
-bdimgnames = {'栎木': 'WOOD.JPG', '白色大理石': 'WHITE.JPG', 
-              '再生纸': 'SHEET.JPG', '画布': 'CANVAS.JPG', 
-              '水滴': 'DROPS.JPG', '绿色大理石': 'GREEN.JPG',
-              '浅红象棋': 'QIANHONG.GIF'} 
-            # 棋盘图像文件名
-imgflnames = {'P':'RP.GIF', 'N':'RN.GIF', 'C':'RC.GIF',
-              'R':'RR.GIF', 'B':'RB.GIF', 'A':'RA.GIF',
-              'K':'RK.GIF', # 95:'OO.GIF', 
-            # 红色棋子图像文件名
-              'p':'BP.GIF', 'n':'BN.GIF', 'c':'BC.GIF',
-              'r':'BR.GIF', 'b':'BB.GIF', 'a':'BA.GIF',
-              'k':'BK.GIF', 
-              'KK':'RKM.GIF', 'kk':'BKM.GIF', 'trace':'OOS.GIF'}
-            # 上一步选中痕迹图像, 将帅被将死的图像
-
-
 def set_application_icons(application, path):
     """Sets the application/window icon for all top-level windows.
     Assumes that the application has two icons in the given path,
@@ -56,7 +37,25 @@ def playsound(soundname):
     winsound.PlaySound(soundpath + soundname + '.WAV', winsound.SND_ASYNC)
     
 
-class Config_ET(object):
+class Config(object):
+
+    pimgpaths = {'木刻': 'WOOD/', '精致': 'POLISH/',
+                 '光泽': 'DELICATE/', '卡通': 'COMIC/'} 
+                # 棋子图像目录                                                
+    bdimgnames = {'栎木': 'WOOD.JPG', '白色大理石': 'WHITE.JPG', 
+                  '再生纸': 'SHEET.JPG', '画布': 'CANVAS.JPG', 
+                  '水滴': 'DROPS.JPG', '绿色大理石': 'GREEN.JPG',
+                  '浅红象棋': 'QIANHONG.GIF'} 
+                # 棋盘图像文件名
+    imgflnames = {'P':'RP.GIF', 'N':'RN.GIF', 'C':'RC.GIF',
+                  'R':'RR.GIF', 'B':'RB.GIF', 'A':'RA.GIF',
+                  'K':'RK.GIF', # 95:'OO.GIF', 
+                # 红色棋子图像文件名
+                  'p':'BP.GIF', 'n':'BN.GIF', 'c':'BC.GIF',
+                  'r':'BR.GIF', 'b':'BB.GIF', 'a':'BA.GIF',
+                  'k':'BK.GIF', 
+                  'KING':'RKM.GIF', 'king':'BKM.GIF', 'trace':'OOS.GIF'}
+                # 上一步选中痕迹图像, 将帅被将死的图像
 
     publicdata = [
             ('option', 
@@ -84,9 +83,9 @@ class Config_ET(object):
             self.etree = ET.ElementTree(file='.\\config.xml')
         except:       
             self.etree = ET.ElementTree(ET.Element('root'))
-            self.iniconfig('所有用户', Config_ET.publicdata)
+            self.iniconfig('所有用户', Config.publicdata)
         if self.etree.find(self.username) is None:
-            self.iniconfig(self.username, Config_ET.userdata)          
+            self.iniconfig(self.username, Config.userdata)          
             
     def getelement(self, tag):
         return self.etree.find('{}//{}'.format(self.username, tag))

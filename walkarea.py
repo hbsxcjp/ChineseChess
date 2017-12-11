@@ -13,16 +13,16 @@ class WalkArea(View, ttk.Frame):
         View.__init__(self, models)
         ttk.Frame.__init__(self, master, padding=2)
         
-        self.create_widgets()
-        self.create_layout()
-        self.create_bindings()    
+        self.createwidgets()
+        self.createlayout()
+        self.createbindings()    
         
-    def create_widgets(self):
+    def createwidgets(self):
 
         def create_topfrm():        
+            self.infolabel = []
             topfrm = ttk.Frame(self, padding=2)
             Label(topfrm, text='棋局信息', font='Helvetica -14 bold').pack(side=TOP)
-            self.infolabel = []
             for n in range(3):
                 self.infolabel.append(Label(topfrm))
                 self.infolabel[-1].pack(side=TOP)
@@ -30,7 +30,8 @@ class WalkArea(View, ttk.Frame):
         
         def create_midfrm(): 
         
-            def create_midleftfrm(midfrm):        
+            def create_midleftfrm(midfrm):
+                self.listvar = StringVar()            
                 midleftfrm = ttk.LabelFrame(midfrm, relief=GROOVE, text=' 着法列表 ',
                             labelanchor='nw', padding=2) # padx=6, pady=3, 
                 scrollbar = Scrollbar(midleftfrm, orient=VERTICAL)
@@ -40,11 +41,11 @@ class WalkArea(View, ttk.Frame):
                 walklistbox.config(selectmode=SINGLE, selectbackground='blue',
                             selectforeground='white', font=('Consolas', '10')) #
                             # 'gray', setgrid=1, #activestyle='dotbox', #,'underline'
+                self.walklistbox = walklistbox
                 scrollbar.pack(side=RIGHT, fill=Y)        
                 walklistbox.pack(side=LEFT, fill=BOTH)
                 midleftfrm.pack(side=LEFT, fill=BOTH)
-                self.walklistbox = walklistbox
-        
+                
             def create_midrightfrm(midfrm): 
             
                 def __button(master, name, wid, com, sid):
@@ -64,7 +65,6 @@ class WalkArea(View, ttk.Frame):
                     __button(midrightfrm, name, wid, com, sid)
                 midrightfrm.pack(side=RIGHT, expand=YES) #, fill=BOTH
             
-            self.listvar = StringVar()
             midfrm = ttk.Frame(self, padding=2)
             create_midleftfrm(midfrm)
             create_midrightfrm(midfrm)
@@ -81,10 +81,10 @@ class WalkArea(View, ttk.Frame):
         create_midfrm()
         create_bottomfrm()
         
-    def create_layout(self):
+    def createlayout(self):
         self.pack(side=RIGHT, expand=YES, fill=Y) # BOTH      
 
-    def create_bindings(self):
+    def createbindings(self):
         self.bind('<Up>', self.onUpKey) 
         self.bind('<Down>', self.onDownKey) 
         self.bind('<Prior>', self.onPgupKey) 
@@ -122,7 +122,7 @@ class WalkArea(View, ttk.Frame):
         # 更新视图
         def __setinfo():        
             info = self.chessboard.info
-            infotext =[info.get('Event', ''), 
+            infotext = [info.get('Event', ''), 
                     '{}  {}  {}'.format(info.get('Red', ''),
                             info.get('Result', ''), info.get('Black', '')),
                     '{} 奕于 {}'.format(info.get('Date', ''), info.get('Site', ''))]

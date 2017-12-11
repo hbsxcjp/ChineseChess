@@ -24,7 +24,6 @@ CanvasHeight = ImgBdStartY * 2 + BoardHeight
 OvalRadius = 8
 OutsideXY = (-1000, -1000)
 
-PondText = {BLACK_SIDE: '黑方吃子', RED_SIDE: '红方吃子'}
 TagLength = (BorderWidth - (NumCols - 1) * PieBdWidth) // NumCols
 
 EatpieStartXY = PieBdWidth * 2 + PieWidth // 2
@@ -40,16 +39,17 @@ class BdCanvas(View, Canvas):
         View.__init__(self, models)
         Canvas.__init__(self, master, width=CanvasWidth, height=CanvasHeight)
         
-        self.create_widgets()
-        self.create_layout()
-        self.create_bindings()
-        self.init_sel()
+        self.createwidgets()
+        self.createlayout()
+        self.createbindings()
+        self.initrowcol()
         
-    def init_sel(self):
-        self.sel_rowcol = (0, 0)
-        self.selfrom_rowcol = None    
+    def initrowcol(self):
+        self.locatedrowcol = (0, 0)
+        self.selectedrowcol = None    
 
-    def __canvas_texts(self):
+    def __canvastexts(self):    
+        
         def __textxys(bottomside=RED_SIDE):
             # 图形框内文字坐标
             PondTopTextX, PondTopTextY = ImgBdStartX // 2, CanvasHeight // 2 - PieHeight // 2
@@ -66,13 +66,14 @@ class BdCanvas(View, Canvas):
                         WalkConvert.NumToChinese[bottomside][NumCols-i]))
             return textxys
 
+        PondText = {BLACK_SIDE: '黑方吃子', RED_SIDE: '红方吃子'}
         self.delete('side_tag')
         for x, y, astr in __textxys(self.board.bottomside):
             self.create_text(x, y, font=('Consolas', '10'), text=astr, tag='side_tag')
             
-    def create_widgets(self):                  
+    def createwidgets(self):                  
                 
-        def __canvas_rects():
+        def __canvasrects():
             def __rectxys():
                 # 图形框坐标
                 TopPondXY = (PieBdWidth, PieBdWidth, ImgBdStartX - PieBdWidth * 2,
@@ -92,39 +93,39 @@ class BdCanvas(View, Canvas):
             for x0, y0, x1, y1 in __rectxys():
                 self.create_rectangle(x0, y0, x1, y1, outline='gray60', width=1)
                 
-        def __create_imgs(bdimgname, pimgpath):                     
+        def __createimgs(bdimgname, pimgpath):                     
             self.imgs = [] # 棋盘、棋子、痕迹图像，tag='bd','pie','from','to', 'trace', 
             self.pieimgids = {} # 存储棋子图像的imgid
             self.imgs.append(PhotoImage(file=bdimgname))
             self.create_image(ImgBdStartX, ImgBdStartY, image=self.imgs[-1],
                         anchor=NW, tag='bd')  # 载入棋盘图像 
                         
-            self.imgs.append(PhotoImage(file = pimgpath + imgflnames['trace']))
+            self.imgs.append(PhotoImage(file = pimgpath + Config.imgflnames['trace']))
             self.create_image(OutsideXY, image=self.imgs[-1], tag='from')
             self.create_image(OutsideXY, image=self.imgs[-1], tag='to')
             
             pieimgids = []
             for char in Pieces.Chars:
-                self.imgs.append(PhotoImage(file = pimgpath + imgflnames[char]))
+                self.imgs.append(PhotoImage(file = pimgpath + Config.imgflnames[char]))
                 pieimgids.append(self.create_image(OutsideXY,
-                        image=self.imgs[-1], tag='pie'))
-            self.board.pieces.setpieimgids(pieimgids) 
+                            image=self.imgs[-1], tag='pie'))
+            self.board.pieces.setpieimgids(pieimgids)
                 
-            for side, char in {RED_SIDE: 'KK', BLACK_SIDE: 'kk'}.items():
-                self.imgs.append(PhotoImage(file = pimgpath + imgflnames[char]))
+            for side, char in {RED_SIDE: 'KING', BLACK_SIDE: 'king'}.items():
+                self.imgs.append(PhotoImage(file = pimgpath + Config.imgflnames[char]))
                 self.board.pieces.getkingpiece(side).eatimgid = self.create_image(OutsideXY,
                         image=self.imgs[-1], tag='pie')
                         
         bdimgname = self.master.config.getelement('bdimgname').text
         pimgpath = self.master.config.getelement('pimgpath').text        
-        __canvas_rects()
-        __create_imgs(bdimgname, pimgpath)
+        __canvasrects()
+        __createimgs(bdimgname, pimgpath)
         
         
-    def create_layout(self):
+    def createlayout(self):
         self.pack(side=LEFT)
 
-    def create_bindings(self):
+    def createbindings(self):
         #self.bind('<FocusIn>', self.onFocusIn) 
         self.bind('<Left>', self.onLeftKey) 
         self.bind('<Right>', self.onRightKey) 
@@ -168,36 +169,36 @@ class BdCanvas(View, Canvas):
         return (x, y)
         
     def onLeftKey(self, event): 
-        self.setsel_rowcol((self.sel_rowcol[0], 
-                self.sel_rowcol[1]-1 if self.sel_rowcol[1] > MinColNo else MaxColNo))
+        self.setlocatedrowcol((self.locatedrowcol[0], 
+                self.locatedrowcol[1]-1 if self.locatedrowcol[1] > MinColNo else MaxColNo))
         
     def onRightKey(self, event): 
-        self.setsel_rowcol((self.sel_rowcol[0], 
-                self.sel_rowcol[1]+1 if self.sel_rowcol[1] < MaxColNo else MinColNo))
+        self.setlocatedrowcol((self.locatedrowcol[0], 
+                self.locatedrowcol[1]+1 if self.locatedrowcol[1] < MaxColNo else MinColNo))
        
     def onUpKey(self, event): 
-        self.setsel_rowcol((self.sel_rowcol[0]+1
-                if self.sel_rowcol[0] < MaxRowNo_T else MinRowNo_B, self.sel_rowcol[1]))
+        self.setlocatedrowcol((self.locatedrowcol[0]+1
+                if self.locatedrowcol[0] < MaxRowNo_T else MinRowNo_B, self.locatedrowcol[1]))
         
     def onDownKey(self, event): 
-        self.setsel_rowcol((self.sel_rowcol[0]-1
-                if self.sel_rowcol[0] > MinRowNo_B else MaxRowNo_T, self.sel_rowcol[1]))
+        self.setlocatedrowcol((self.locatedrowcol[0]-1
+                if self.locatedrowcol[0] > MinRowNo_B else MaxRowNo_T, self.locatedrowcol[1]))
         
     def onHomeKey(self, event): 
-        self.setsel_rowcol((MaxRowNo_T, self.sel_rowcol[1]))
+        self.setlocatedrowcol((MaxRowNo_T, self.locatedrowcol[1]))
         
     def onEndKey(self, event): 
-        self.setsel_rowcol((MinRowNo_B, self.sel_rowcol[1]))
+        self.setlocatedrowcol((MinRowNo_B, self.locatedrowcol[1]))
         
     def onDeleteKey(self, event): 
-        self.setsel_rowcol((self.sel_rowcol[0], MinColNo))
+        self.setlocatedrowcol((self.locatedrowcol[0], MinColNo))
         
     def onPgdnKey(self, event): 
-        self.setsel_rowcol((self.sel_rowcol[0], MaxColNo))
+        self.setlocatedrowcol((self.locatedrowcol[0], MaxColNo))
         
-    def setsel_rowcol(self, rowcol):
-        self.sel_rowcol = rowcol
-        self.coords('to' if self.selfrom_rowcol else 'from', self.rowcol_xy(rowcol))
+    def setlocatedrowcol(self, rowcol):
+        self.locatedrowcol = rowcol
+        self.coords('to' if self.selectedrowcol else 'from', self.rowcol_xy(rowcol))
 
     def onMouseLeftclick(self, event):
         # 接收棋盘点击信息
@@ -207,14 +208,16 @@ class BdCanvas(View, Canvas):
             return
         self.onspaceKey(event, True) # 调用空格按键函数
 
-    def onspaceKey(self, event, mouseclick=False):  
-        def __drawselfrom_rowcol():   
-            self.selfrom_rowcol = self.sel_rowcol
+    def onspaceKey(self, event, mouseclick=False):
+    
+        def __drawselectedrowcol():   
+            self.selectedrowcol = self.locatedrowcol
             self.delete('walk')
             self.coords('to', OutsideXY)
-            self.coords('from', self.rowcol_xy(self.selfrom_rowcol))
-            for rowcol in self.board.canmoverowcols(self.selfrom_rowcol):                
-                self.create_oval(self.getoval_xy(rowcol), outline='blue', fill='blue', tag='walk')
+            self.coords('from', self.rowcol_xy(self.selectedrowcol))
+            for rowcol in self.board.canmoverowcols(self.selectedrowcol):                
+                self.create_oval(self.getoval_xy(rowcol),
+                        outline='blue', fill='blue', tag='walk')
             self.tag_raise('walk', 'pie')
             playsound('CLICK') # 5: 选择声音
                     
@@ -224,13 +227,12 @@ class BdCanvas(View, Canvas):
                     '将删除原棋局的全部后续着法！\n是否删除？'):
                     self.walks.cutfollow()
                     return True
-                return False
             
             if torowcol in self.board.canmoverowcols(fromrowcol):
                 if self.walks.islast or __change():
                     self.walks.append(self.chessboard.createwalk(fromrowcol, torowcol))
                     self.walks.move(1)  # 更新视图
-                    self.selfrom_rowcol = None                    
+                    self.selectedrowcol = None                    
             else:
                 playsound('ILLEGAL') # 点击位置不正确声音
         
@@ -238,13 +240,14 @@ class BdCanvas(View, Canvas):
         if self.board.isdied(currentside): # 已被将死 
             return
         if mouseclick:
-            self.setsel_rowcol(self.xy_rowcol(event.x, event.y))
-        if self.board.getside(self.sel_rowcol) == currentside:
-            __drawselfrom_rowcol()
-        elif self.selfrom_rowcol:
-            __movepie(self.selfrom_rowcol, self.sel_rowcol)
+            self.setlocatedrowcol(self.xy_rowcol(event.x, event.y))
+        if self.board.getside(self.locatedrowcol) == currentside:
+            __drawselectedrowcol()
+        elif self.selectedrowcol:
+            __movepie(self.selectedrowcol, self.locatedrowcol)
 
     def updateview(self):
+    
         def __drawallpies():
             livecrosses = self.board.getlivecrosses()
             [self.coords(pie.imgid, self.rowcol_xy(rowcol)) for rowcol, pie
@@ -281,14 +284,13 @@ class BdCanvas(View, Canvas):
             elif not self.walks.isstart:
                 eatpiece = self.walks.currentwalk().eatpiece
                 playsound('MOVE' if eatpiece is BlankPie else
-                            ('CAPTURE2' if eatpiece.isStronge else 'CAPTURE')) 
+                            ('CAPTURE2' if eatpiece.isStronge else 'CAPTURE'))
             
-        self.__canvas_texts()
-        if self.board.getkingrowcol(RED_SIDE):
-            __drawallpies()
-            __drawtraces()
-            __moveeffect()
-        else:
-            print('将帅不在棋盘上？')
+        assert self.board.getkingrowcol(RED_SIDE), '将帅不在棋盘上？'        
+        self.__canvastexts()
+        __drawallpies()
+        __drawtraces()
+        __moveeffect()
+        
 
        

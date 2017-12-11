@@ -77,45 +77,55 @@ class ChessBoard(Model):
         sfen, gfen = self.info.get('FEN'), self.getfen()
         if sfen:
             assert sfen.split()[0] == gfen.split()[0], '\n棋谱FEN：%s, \n生成FEN: %s' % (sfen.split()[0], gfen.split()[0])                        
-        self.info['FEN'] = gfen        
+        self.info['FEN'] = gfen
+        
         self.walks.movelast(False)
         return '{}\n{}\n{}\n'.format(strinfo, self.remark, str(self.walks))      
         
     def setpgn(self, pgn=''):
-        # 将一个pgn棋局文件载入棋局 
-        walkdeses = []
-        walkremarks = []
-        if pgn:
+        # 将一个pgn棋局文件载入棋局
+        
+        def __getinfo():
             infolist = re.findall('\[(\w+) "(.*)"\]', pgn)
             for aline in infolist:
-                self.info[aline[0]] = aline[1]  # 棋局信息（pgn标签）
-                
+                self.info[aline[0]] = aline[1]  # 棋局信息（pgn标签）                
             s = re.findall('\]\s+(\{[\s\S]*\})?\s+1\. ', pgn)
             if len(s) > 0:
-                self.remark = s[0]  # 棋谱评注
-                
+                self.remark = s[0]  # 棋谱评注                
             s = re.findall('\s(1-0|0-1|1/2-1/2|\*)\s?', pgn)
             if len(s) > 0:
                 self.info['Result'] = s[0]    # 棋局结果
-                
-            s = '(\d+)\. (\S{4})\s+(\{.*\})?\s*(\S{4})?\s+(\{.*\})?'
-            walktuple = re.findall(s, pgn)  # 走棋信息, 字符串元组
+        
+        def __getwalktuple():
+            s = '(\d+)\. (\S{4})\s+(\{.*\})?\s*(\S{4})?\s+(\{.*\})?'            
+            return re.findall(s, pgn)  # 走棋信息, 字符串元组
             
-            for bout in walktuple:
-                walkdeses.extend([bout[1], bout[3]])
-                walkremarks.extend([bout[2], bout[4]])
-                
-        self.setfen(self.info.get('FEN', self.FEN))
-        self.walks.clear()
-        for n, des in enumerate(walkdeses):
-            # 生成多步着法命令列表
-            if des:
-                (fromrowcol, torowcol) = WalkConvert.chinese_moverowcols(
-                        self.walks.currentside, des, self.board)
-                self.walks.append(self.createwalk(fromrowcol, torowcol,
-                        des, walkremarks[n]))
-                self.walks.move(1, False)
-        self.walks.movestart(False)
+        def __getwalkdeses(walktuple):
+            walkdeses = []
+            walkremarks = []
+            if pgn:
+                for bout in __getwalktuple():
+                    walkdeses.extend([bout[1], bout[3]])
+                    walkremarks.extend([bout[2], bout[4]])                
+            return  walkdeses, walkremarks
+            
+        def __createwalks(walkdeses_walkremarks):
+            walkdeses, walkremarks = walkdeses_walkremarks
+            self.walks.clear()
+            for n, des in enumerate(walkdeses):
+                # 生成多步着法命令列表
+                if des:
+                    (fromrowcol, torowcol) = WalkConvert.chinese_moverowcols(
+                            self.walks.currentside, des, self.board)
+                    self.walks.append(self.createwalk(fromrowcol, torowcol,
+                            des, walkremarks[n]))
+                    self.walks.move(1, False)
+            self.walks.movestart(False)            
+        
+        __getinfo()
+        self.setfen(self.info.get('FEN', self.FEN))        
+        __createwalks(__getwalkdeses(__getwalktuple()))        
+        
         if hasattr(self, 'views'):
             self.notifyviews()
     
@@ -137,9 +147,10 @@ class ChessBoard(Model):
             crosses, moverowcols = __crosses_moverowcols(Cross.getsymmetryrowcol)
         else: # 对换棋局
             self.walks.currentside = Piece.getotherside(self.walks.currentside)
-            crosses = {rowcol: self.board.pieces.getothersidepiece(piece)
-                    for rowcol, piece in self.board.getlivecrosses().items()}
-            moverowcols = self.walks.moverowcols()
+            crosses, moverowcols = ({rowcol: self.board.pieces.getothersidepiece(piece)
+                            for rowcol, piece in self.board.getlivecrosses().items()},
+                            self.walks.moverowcols())
+            
         self.board.clear()
         [self.board.setpiece(rowcol, piece) for rowcol, piece in crosses.items()]
         self.board.setbottomside()
@@ -149,6 +160,7 @@ class ChessBoard(Model):
             self.walks.append(self.createwalk(fromrowcol, torowcol, '', remarkes[n]))
             self.walks.move(1, False)
         self.walks.move(offset, False)
+        
         self.notifyviews()
 
 
