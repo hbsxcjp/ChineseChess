@@ -88,12 +88,6 @@ class Board(Model):
     def setpiece(self, rowcol, piece):
         self.crosses[rowcol] = piece
 
-    def setpieces(self, charls):
-        self.clear()
-        [self.setpiece(Cross.getrowcol(n), self.pieces.getpiece(char, self)) 
-                for n, char in enumerate(charls)]
-        self.setbottomside()
-            
     def movepiece(self, fromrowcol, torowcol, backpiece=BlankPie):
         eatpiece = self.crosses[torowcol]
         self.setpiece(torowcol, self.crosses[fromrowcol])
@@ -157,9 +151,13 @@ class Board(Model):
                 result.append(torowcol)                 
             self.movepiece(torowcol, fromrowcol, topiece)
         return result
+
+    def loadcrosses(self, crosses):
+        self.clear()
+        [self.setpiece(rowcol, piece) for rowcol, piece in crosses.items()]
+        self.setbottomside()
         
     def loadpieces(self, fen):
-        # 将一个FEN格式串载入棋盘局面
         def __numtolines():
             # 数字字符: 下划线字符串           
             numtolines = {}
@@ -185,7 +183,11 @@ class Board(Model):
         
         assert __isvalid(charls)[0], __isvalid(charls)[1]
         
-        self.setpieces(charls)
+        self.clear()
+        [self.setpiece(Cross.getrowcol(n), self.pieces.getpiece(char, self)) 
+                for n, char in enumerate(charls)]
+        self.setbottomside()
+            
 
         
         

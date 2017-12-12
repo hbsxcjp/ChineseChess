@@ -140,7 +140,13 @@ class Walks(Model):
 
     def movelast(self, refresh=True):
         self.move(self.length, refresh)
-        
+
+    def loadmoverowcols(self, moverowcols, remarkes, chessboard):
+        self.clear()
+        for n, (fromrowcol, torowcol) in enumerate(moverowcols):        
+            self.append(chessboard.createwalk(fromrowcol, torowcol, '', remarkes[n]))
+            self.move(1, False)      
+   
 
 class WalkConvert(object):
     # 着法记录转换类
