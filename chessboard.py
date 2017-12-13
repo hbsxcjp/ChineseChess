@@ -11,12 +11,13 @@ class ChessBoard(Model):
     FEN = 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 1'
     # 新棋局 
      
-    def __init__(self):
+    def __init__(self, pgn=''):
         super().__init__()
         self.board = Board()
         self.walks = Walks()
         self.info = {}  # 信息: pgn标签...
         self.remark = ''
+        self.setpgn(pgn)
         
     def __str__(self):
         # 棋盘字符串函数
@@ -114,7 +115,6 @@ class ChessBoard(Model):
                 return  walkdeses, walkremarks
         
             walkdeses, walkremarks = __getwalkdeses()
-            self.walks.clear()
             for n, des in enumerate(walkdeses):
                 if des:
                     (fromrowcol, torowcol) = WalkConvert.chinese_moverowcols(
@@ -126,6 +126,7 @@ class ChessBoard(Model):
         
         __getinfo()
         self.setfen(self.info.get('FEN', self.FEN))
+        self.walks.clear()
         if pgn:
             __createwalks()        
         if hasattr(self, 'views'):

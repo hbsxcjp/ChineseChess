@@ -13,11 +13,11 @@ pgntitle = 'pgn棋谱文件'
 class MainForm(View, ttk.Frame):
     # 棋盘与棋子视图类  
 
-    def __init__(self, master, name, models):
+    def __init__(self, master, config, models):
         View.__init__(self, models)
         ttk.Frame.__init__(self, master, padding=2)
         
-        self.config = Config(name)
+        self.config = config
         self.createwidgets(models)
         self.createlayout()
         self.createbindings()
@@ -26,7 +26,7 @@ class MainForm(View, ttk.Frame):
             model.loadviews([self, self._bdcanvas, self._walkarea])        
         self.makemenu()
         self.master.protocol('WM_DELETE_WINDOW', self.quitmain)
-        self.__openpgn(self.config.getelement('lastname').text)
+        self.updateview()
         
     def createwidgets(self, models):
         self._bdcanvas = BdCanvas(self, models)
@@ -53,12 +53,6 @@ class MainForm(View, ttk.Frame):
     def pastefen(self):
         self.chessboard.setfen(pyperclip.paste())
     
-    def __asksavepgn(self, title):
-        result = askyesnocancel(title, '是否需要保存当前的棋局？')
-        if result == True:
-            self.savethispgn()
-        return result
-            
     def __getopenfilename(self):
         return (askopenfilename(initialdir=pgndir, title='打开棋局文件',
                     defaultextension=pgnext, filetypes=[(pgntitle, pgnext)]))     
@@ -68,52 +62,47 @@ class MainForm(View, ttk.Frame):
                     defaultextension=pgnext, filetypes=[(pgntitle, pgnext)]))      
     
     def __settitle(self, title):
-        self.master.title('{}{}'.format(title, ' --中国象棋'))
-        
-    def __openpgn(self, filename=''):
-        pgn = ''
-        if filename:
-            with open(filename, 'r') as file:
-                pgn = file.read()
-        self.chessboard.setpgn(pgn)
-        self.__settitle(filename)
-        
-    def __savepgn(self, filename):
-        with open(filename, 'w') as file:
-            file.write(self.chessboard.getpgn())
-        self.config.setelement('lastname', filename)
-        self.__settitle(filename)
-    
+        self.master.title('{}{}'.format(title, ' --中国象棋'))        
+
+    def __asksavepgn(self, title):
+        result = askyesnocancel(title, '是否需要保存当前的棋局？')
+        if result == True:            
+            self.savethispgn(self.config.getelement('lastpgnfilename').text)
+        return result
+            
     def opennewpgn(self):
-        if self.__asksavepgn('打开棋局文件') is not None:
-            self.__openpgn()
+        if self.__asksavepgn('打开棋局文件') is None:
+            return
+        self.chessboard.setpgn('')
             
     def openotherpgn(self):
-        if self.__asksavepgn('打开棋局文件') is not None:
-            filename = self.__getopenfilename()
-            if filename:
-                self.__openpgn(filename)
-                self.config.setelement('lastname', filename)
-            
-    def savethispgn(self):
-        filename = self.config.getelement('lastname').text
+        if self.__asksavepgn('打开棋局文件') is None:
+            return
+        filename = self.__getopenfilename()
         if filename:
-            self.__savepgn(filename)
+            self.config.setelement('lastpgnfilename', filename)
+            with open(filename, 'r') as file:
+                self.chessboard.setpgn(file.read())        
+                
+    def savethispgn(self, filename):
+        if filename:
+            self.config.setelement('lastpgnfilename', filename)
+            with open(filename, 'w') as file:
+                file.write(self.chessboard.getpgn())
         else:
             self.saveotherpgn()
         
     def saveotherpgn(self):
         filename = self.__getsaveasfilename()
         if filename:
-            self.__savepgn(filename)
+            self.savethispgn(filename)
             
     def trimlastpgn(self):
         #PgnfileForm('整理近期pgn文件', self.config.filenames)
         pass
 
     def lookpgn(self):
-        #PgnForm('查看当前棋面的文本棋谱', self.board.getapgn())
-        pass
+        PgnForm(self.chessboard.getpgn())
         
     def edittag(self):
         #TagForm('编辑对局信息', self.board.info) 
@@ -199,31 +188,60 @@ class MainForm(View, ttk.Frame):
         
     def updateview(self):
         # 更新视图（由数据模型发起）
-        pass
+        self.__settitle(self.config.getelement('lastpgnfilename').text)
+     
+     
         
-        
-'''             
 class PopForm(Toplevel):
 
-    def __init__(self, master, title, buttoninfos, info):
-        super().__init__(master, padding=2)
+    def __init__(self, master, title, buttoninfos):
+        super().__init__(master)
         self.title(title)
-        self.info = info
-        self.__create_buttons(buttoninfos)
-        self.__create_interfrm()
+        
+        self.__createbuttons(buttoninfos)        
+        
         self.focus_set()
         self.grab_set()
         self.wait_window()
     
-    def __create_buttons(self, buttoninfos):
+    def __createbuttons(self, buttoninfos):
         frm = Frame(self)        
-        for txt, cmd in buttoninfos:
-            Button(frm, text=txt, width=8, command=cmd).pack(side=RIGHT)
+        for txt, cmd, sid in buttoninfos:
+            Button(frm, text=txt, width=8, command=cmd).pack(side=sid)
         frm.pack(side=BOTTOM)
         
-    def __create_interfrm(self):
+    def __createinterfrm(self):
         pass
+        
 
+class PgnForm(PopForm):
+
+    def __init__(self, master=None, pgn=''):
+        buttoninfos = [['关闭', self.destroy, RIGHT], ['复制', self.copypgn, RIGHT]]
+        super().__init__(master, '查看当前棋局的文本棋谱', buttoninfos)
+        self.pgn = pgn
+        self.__createinterfrm()
+        
+    def __createinterfrm(self):
+        print('pgn:', self.pgn)
+        pgnfrm = Frame(self)        
+        sbar = Scrollbar(pgnfrm)
+        text = Text(pgnfrm, relief=SUNKEN)
+        
+        sbar.config(command=text.yview)
+        text.config(yscrollcommand=sbar.set)
+        
+        pgnfrm.pack(side=TOP, expand=YES, fill=BOTH)#
+        sbar.pack(side=RIGHT, fill=Y)
+        text.pack(side=LEFT, padx=5, pady=5, expand=YES, fill=BOTH)
+        text.insert('1.0', self.pgn)
+        
+        
+    def copypgn(self):
+        pyperclip.copy(self.pgn)
+ 
+ 
+'''             
     
 class TagForm(PopForm):
 
@@ -264,28 +282,10 @@ class TagForm(PopForm):
             self.info[tag] = var.get()
         self.destroy()
         
-        
-class PgnForm(PopForm):
-
-    def __init__(self, master, title, pgn):
-        buttoninfos = [['关闭', self.destroy, RIGHT], ['复制', self.copypgn, RIGHT]]
-        super().__init__(master, padding=2)
-        self.title(title)
-        self.pgn = pgn    
-        
-    def __create_interfrm(self):
-        sbar = Scrollbar(self)
-        text = Text(self, relief=SUNKEN)
-        sbar.config(command=text.yview)
-        text.config(yscrollcommand=sbar.set)
-        sbar.pack(side=RIGHT, fill=Y)
-        text.pack(side=TOP, padx=5, pady=5, expand=YES, fill=BOTH)
-        text.insert('1.0', self.pgn)
-        
-    def copypgn(self):
-        pyperclip.copy(self.pgn)
+'''
         
 
+'''
 class PgnfileForm(Toplevel):
 
     def __init__(self, master, filenames):

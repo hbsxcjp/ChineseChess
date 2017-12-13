@@ -15,7 +15,8 @@ class WalkArea(View, ttk.Frame):
         
         self.createwidgets()
         self.createlayout()
-        self.createbindings()    
+        self.createbindings()
+        self.updateview()        
         
     def createwidgets(self):
 

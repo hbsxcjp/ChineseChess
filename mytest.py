@@ -77,7 +77,15 @@ class Test(unittest.TestCase):
         end = time.time()
         print('usetime: %0.5f' % (end - start))
 
-    def test_form(self):
+    def test_pgnform(self):
+        pgn = '没有找到文件？'
+        with open('pgn/bbb.pgn') as f:
+            pgn = f.read()
+        root = Tk()
+        pgnfrm = PgnForm(root, pgn)
+        root.mainloop()
+
+    def xtest_form(self):
         user = User(1, 'cjp')
         user.application.mainloop()
         pass      

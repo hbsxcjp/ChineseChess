@@ -67,7 +67,7 @@ class Config(object):
     
     userdata = [
         ('file', 
-               [('pgnfile', [('lastname', )])]),
+               [('pgnfile', [('lastpgnfilename', )])]),
         ('option', 
                [('action', [('openlastpgn', 'text_yes')]),
                 ('sound', [('isopen', 'text_yes')]),
@@ -80,12 +80,14 @@ class Config(object):
     def __init__(self, username):
         self.username = username
         try:
-            self.etree = ET.ElementTree(file='.\\config.xml')
+            self.etree = ET.ElementTree(file='./config.xml')
         except:       
             self.etree = ET.ElementTree(ET.Element('root'))
-            self.iniconfig('所有用户', Config.publicdata)
-        if self.etree.find(self.username) is None:
-            self.iniconfig(self.username, Config.userdata)          
+            allusrelem = ET.SubElement(self.etree.getroot(), '所有用户')
+            self.iniconfig(allusrelem, Config.publicdata)
+        if self.etree.find(username) is None:
+            usrelem = ET.SubElement(self.etree.getroot(), username)
+            self.iniconfig(usrelem, Config.userdata)        
             
     def getelement(self, tag):
         return self.etree.find('{}//{}'.format(self.username, tag))
@@ -95,10 +97,9 @@ class Config(object):
   
     def setelement(self, tag, value):
         self.getelement(tag).text = value
-  
+        
     def indent(self, elem, islast=False, level=0):
         # Get pretty look 取得漂亮的外观
-
         def __isblank(text):
             return not text or not text.expandtabs(4).strip()
         
@@ -117,27 +118,22 @@ class Config(object):
         elem.tail = __cuttab(tabstr if __isblank(elem.tail)
                             else __addblank(elem.tail), islast)       
         
-    def iniconfig(self, username, data):
-    
-        def __addelem(elem, items):
-            for item in items:
-                subelem = ET.Element(item[0])
-                if len(item) > 1:  # 除元素名外，还有其他内容
-                    for it in item[1:]:
-                        if type(it) == str:
-                            if it[:5] == 'text_': # 元素文本
-                                subelem.text = it[5:]
-                            elif it[:5] == 'tail_': # 元素尾巴
-                                subelem.tail = it[5:]
-                        elif type(it) == dict: # 属性
-                            for name, value in it.items():
-                                subelem.set(name, value)
-                        elif type(it) == list:  # 子元素
-                            __addelem(subelem, it)
-                elem.append(subelem)
-
-        root = self.etree.getroot()
-        __addelem(ET.SubElement(root, username), data)       
+    def iniconfig(self, elem, items):
+        for item in items:
+            subelem = ET.Element(item[0])
+            if len(item) > 1:  # 除元素名外，还有其他内容
+                for it in item[1:]:
+                    if type(it) == str:
+                        if it[:5] == 'text_': # 元素文本
+                            subelem.text = it[5:]
+                        elif it[:5] == 'tail_': # 元素尾巴
+                            subelem.tail = it[5:]
+                    elif type(it) == dict: # 属性
+                        for name, value in it.items():
+                            subelem.set(name, value)
+                    elif type(it) == list:  # 子元素
+                        self.iniconfig(subelem, it)
+            elem.append(subelem)     
             
     def save(self):
         # 存储设置选项

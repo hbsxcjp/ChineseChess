@@ -43,6 +43,7 @@ class BdCanvas(View, Canvas):
         self.createlayout()
         self.createbindings()
         self.initrowcol()
+        self.updateview()
         
     def initrowcol(self):
         self.locatedrowcol = (0, 0)
@@ -96,6 +97,7 @@ class BdCanvas(View, Canvas):
         def __createimgs(bdimgname, pimgpath):                     
             self.imgs = [] # 棋盘、棋子、痕迹图像，tag='bd','pie','from','to', 'trace', 
             self.pieimgids = {} # 存储棋子图像的imgid
+            #print('棋盘图像文件：', bdimgname)
             self.imgs.append(PhotoImage(file=bdimgname))
             self.create_image(ImgBdStartX, ImgBdStartY, image=self.imgs[-1],
                         anchor=NW, tag='bd')  # 载入棋盘图像 
@@ -117,7 +119,7 @@ class BdCanvas(View, Canvas):
                         image=self.imgs[-1], tag='pie')
                         
         bdimgname = self.master.config.getelement('bdimgname').text
-        pimgpath = self.master.config.getelement('pimgpath').text        
+        pimgpath = self.master.config.getelement('pimgpath').text
         __canvasrects()
         __createimgs(bdimgname, pimgpath)
         
