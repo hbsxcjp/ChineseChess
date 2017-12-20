@@ -20,8 +20,8 @@ class Walk(object):
         return self.description
     
     @property
-    def moverowcol(self):
-        return (self.fromrowcol, self.torowcol)
+    def moveseat(self):
+        return (self.fromseat, self.toseat)
         
     @property
     def eatpiece(self):
@@ -107,8 +107,8 @@ class Walks(Model):
         if not self.isempty and not self.isstart:
             return self.__walks[self.cursor]
       
-    def moverowcols(self):
-        return [(walk.fromrowcol, walk.torowcol) for walk in self.__walks]
+    def moveseats(self):
+        return [(walk.fromseat, walk.toseat) for walk in self.__walks]
         
     def append(self, walk):
         self.__walks.append(walk)
@@ -141,10 +141,10 @@ class Walks(Model):
     def movelast(self, refresh=True):
         self.move(self.length, refresh)
 
-    def loadmoverowcols(self, moverowcols, remarkes, chessboard):
+    def loadmoveseats(self, moveseats, remarkes, chessboard):
         self.clear()
-        for n, (fromrowcol, torowcol) in enumerate(moverowcols):        
-            self.append(chessboard.createwalk(fromrowcol, torowcol, '', remarkes[n]))
+        for n, (fromseat, toseat) in enumerate(moveseats):        
+            self.append(chessboard.createwalk(fromseat, toseat, '', remarkes[n]))
             self.move(1, False)      
    
 
@@ -163,19 +163,19 @@ class WalkConvert(object):
                     '进':1, '退':-1, '平':0 }
     ColChars = 'abcdefghi'    
         
-    def __sortpawnrowcols(self, isbottomside, pawnrowcols):
+    def __sortpawnseats(self, isbottomside, pawnseats):
         # 多兵排序
         result = []
-        pawnrowcoldict = {col: [] for row, col in pawnrowcols}
-        for row, col in pawnrowcols:
-            pawnrowcoldict[col].append((row, col)) # 列内排序
-        for col, rowcols in sorted(pawnrowcoldict.items()):    
-            if len(rowcols) > 1:
-                result.extend(rowcols) # 按列排序，
+        pawnseatdict = {Cross.getcol(seat): [] for seat in pawnseats}
+        for seat in pawnseats:
+            pawnseatdict[Cross.getcol(seat)].append(seat) # 列内排序
+        for col, seats in sorted(pawnseatdict.items()):    
+            if len(seats) > 1:
+                result.extend(seats) # 按列排序，
         return result[::-1] if isbottomside else result
         
-    def chinese_moverowcols(self, side, chinese, board):
-        # 根据中文纵线着法描述取得源、目标位置: (fromrowcol, torowcol)
+    def chinese_moveseats(self, side, chinese, board):
+        # 根据中文纵线着法描述取得源、目标位置: (fromseat, toseat)
                     
         def __chcol_col(isbottomside, zhcol):
             return (NumCols-self.ChineseToNum[zhcol] if isbottomside
@@ -185,85 +185,85 @@ class WalkConvert(object):
             # 根据中文行走方向取得棋子的内部数据方向（进：1，退：-1，平：0）
             return self.ChineseToNum[movchar] * (1 if isbottomside else -1)
             
-        def __indexname_fromrowcol(index, name, rowcols, isbottomside):
+        def __indexname_fromseat(index, name, seats, isbottomside):
             if name in PawnNames: 
-                rowcols = self.__sortpawnrowcols(isbottomside, rowcols) # 获取多兵的列
-                if len(rowcols) > 3:
+                seats = self.__sortpawnseats(isbottomside, seats) # 获取多兵的列
+                if len(seats) > 3:
                     index -= 1  # 修正index
             elif isbottomside:
-                rowcols = rowcols[::-1]
-            return rowcols[index]
+                seats = seats[::-1]
+            return seats[index]
                     
-        def __linename_torowcol(fromrowcol, movdir, tocol, tochar):
-            # 获取直线走子torowcol
-            row, col = fromrowcol
-            return ((row, tocol) if movdir == 0 else
-                    (row + movdir * self.ChineseToNum[tochar], col))
+        def __linename_toseat(fromseat, movdir, tocol, tochar):
+            # 获取直线走子toseat
+            row, col = Cross.getrow(fromseat), Cross.getcol(fromseat)
+            return (Cross.mergeseat(row, tocol) if movdir == 0 else
+                    Cross.mergeseat(row + movdir * self.ChineseToNum[tochar], col))
 
-        def __obliquename_torowcol(fromrowcol, movdir, tocol, isAdvisorBishop):
-            # 获取斜线走子：仕、相、马torowcol
-            row, col = fromrowcol
+        def __obliquename_toseat(fromseat, movdir, tocol, isAdvisorBishop):
+            # 获取斜线走子：仕、相、马toseat
+            row, col = Cross.getrow(fromseat), Cross.getcol(fromseat)
             step = tocol - col  # 相距1或2列
             inc = abs(step) if isAdvisorBishop else (2 if abs(step) == 1 else 1)
-            return (row + movdir * inc, tocol)
+            return Cross.mergeseat(row + movdir * inc, tocol)
             
         isbottomside = board.isbottomside(side)
         name = chinese[0]
         if name in CharToNames.values():
-            rowcols = sorted(board.getlivesidenamecolcrosses(side, name, 
+            seats = sorted(board.getlivesidenamecolcrosses(side, name, 
                     __chcol_col(isbottomside, chinese[1])).keys())
-            assert bool(rowcols), ('没有找到棋子 => %s side:%s name: %s\n%s' % 
+            assert bool(seats), ('没有找到棋子 => %s side:%s name: %s\n%s' % 
                             (chinese, side, name, board))
 
-            index = (-1 if (len(rowcols) == 2 and name in AdvisorBishopNames
+            index = (-1 if (len(seats) == 2 and name in AdvisorBishopNames
                             and ((chinese[2] == '退') == isbottomside)) else 0)
             # 排除：士、象同列时不分前后，以进、退区分棋子
-            fromrowcol = rowcols[index] 
+            fromseat = seats[index] 
         else:
             # 未获得棋子, 查找某个排序（前后中一二三四五）某方某个名称棋子
             index, name = self.ChineseToNum[chinese[0]], chinese[1]
-            rowcols = sorted(board.getlivesidenamecrosses(side, name).keys())
-            assert len(rowcols) >= 2, 'side: %s name: %s 棋子列表少于2个! \n%s' % (
+            seats = sorted(board.getlivesidenamecrosses(side, name).keys())
+            assert len(seats) >= 2, 'side: %s name: %s 棋子列表少于2个! \n%s' % (
                         side, name, self)
             
-            fromrowcol = __indexname_fromrowcol(index, name, rowcols, isbottomside)
+            fromseat = __indexname_fromseat(index, name, seats, isbottomside)
         
         movdir = __movzh_movdir(isbottomside, chinese[2])
         tocol = __chcol_col(isbottomside, chinese[3])
-        torowcol = (__linename_torowcol(fromrowcol, movdir, tocol, chinese[3])
+        toseat = (__linename_toseat(fromseat, movdir, tocol, chinese[3])
                     if name in LineMovePieceNames else
-                        __obliquename_torowcol(fromrowcol, movdir, tocol,
+                        __obliquename_toseat(fromseat, movdir, tocol,
                         name in AdvisorBishopNames))
         
-        assert chinese == self.moverowcols_chinese(fromrowcol, torowcol, board), ('棋谱着法: %s   生成着法: %s 不等！' % (chinese, self.moverowcols_chinese(fromrowcol, torowcol, board))) 
+        #assert chinese == self.moveseats_chinese(fromseat, toseat, board), ('棋谱着法: %s   生成着法: %s 不等！' % (chinese, self.moveseats_chinese(fromseat, toseat, board))) 
 
-        return (fromrowcol, torowcol)
+        return (fromseat, toseat)
         
-    def moverowcols_chinese(self, fromrowcol, torowcol, board):
-        # 根据源、目标位置: (fromrowcol, torowcol)取得中文纵线着法描述
+    def moveseats_chinese(self, fromseat, toseat, board):
+        # 根据源、目标位置: (fromseat, toseat)取得中文纵线着法描述
         def __col_chcol(side, isbottomside, col):
             return self.NumToChinese[side][NumCols-col if isbottomside else col+1]
                 
-        frompiece = board.getpiece(fromrowcol)
+        frompiece = board.getpiece(fromseat)
         side, name = frompiece.side, frompiece.name
         isbottomside = board.isbottomside(side)
-        fromrow, fromcol = fromrowcol
-        rowcols = sorted(board.getlivesidenamecolcrosses(side, name, fromcol).keys())
-        length = len(rowcols)
+        fromrow, fromcol = Cross.getrow(fromseat), Cross.getcol(fromseat)
+        seats = sorted(board.getlivesidenamecolcrosses(side, name, fromcol).keys())
+        length = len(seats)
         if length > 1 and name in StrongePieceNames:
             if name in PawnNames:
-                rowcols = self.__sortpawnrowcols(isbottomside, 
+                seats = self.__sortpawnseats(isbottomside, 
                         sorted(board.getlivesidenamecrosses(side, name).keys()))
-                length = len(rowcols)
+                length = len(seats)
             elif isbottomside: # '车', '马', '炮'            
-                rowcols = rowcols[::-1]
+                seats = seats[::-1]
             indexstr = {2: '前后', 3: '前中后'}.get(length, '一二三四五')
-            firstStr = indexstr[rowcols.index(fromrowcol)] + name
+            firstStr = indexstr[seats.index(fromseat)] + name
         else: 
             #仕(士)和相(象)不用“前”和“后”区别，因为能退的一定在前，能进的一定在后
             firstStr = name + __col_chcol(side, isbottomside, fromcol)
         
-        torow, tocol = torowcol
+        torow, tocol = Cross.getrow(toseat), Cross.getcol(toseat)
         chcol = __col_chcol(side, isbottomside, tocol)
         tochar = ('平' if torow == fromrow else
                     ('进' if isbottomside == (torow > fromrow) else '退'))
@@ -271,18 +271,20 @@ class WalkConvert(object):
                         else self.NumToChinese[side][abs(torow - fromrow)])
         lastStr = tochar + tochcol
         
-        #assert (fromrowcol, torowcol) == self.chinese_moverowcols(side, firstStr + lastStr, board), '棋谱着法: %s 生成着法: %s 不等！' % ((fromrowcol, torowcol), self.chinese_moverowcols(side, firstStr + lastStr, board))
+        assert (fromseat, toseat) == self.chinese_moveseats(side, firstStr + lastStr, board), '棋谱着法: %s 生成着法: %s 不等！' % ((fromseat, toseat), self.chinese_moveseats(side, firstStr + lastStr, board))
         
         return '{}{}'.format(firstStr, lastStr)
         
-    def coord_moverowcol(self, coord):
+    def coord_moveseat(self, coord):
         # 根据坐标字符串取得移动位置        
         return ((int(coord[1]), self.ColChars.index(coord[0])),
                 (int(coord[3]), self.ColChars.index(coord[2])))
 
-    def moverowcol_coord(self, moverowcol):
+    def moveseat_coord(self, moveseat):
         # 根据移动位置取得坐标字符串
-        (fromrow, fromcol), (torow, tocol) = moverowcol
+        fromseat, toseat = moveseat
+        fromrow, fromcol = Cross.getrow(fromseat), Cross.getcol(fromseat)
+        torow, tocol = Cross.getrow(toseat), Cross.getcol(toseat)
         return '{}{}{}{}'.format(self.ColChars[fromcol], str(fromrow),
                     self.ColChars[tocol], str(torow))
 

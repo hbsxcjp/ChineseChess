@@ -20,6 +20,8 @@ LineMovePieceNames = {'帅', '将', '车', '炮', '兵', '卒'}
 class Piece(object):
     # 棋子类
     def __init__(self, char):
+        self.__side = (None if char == BlankChar
+                    else (BLACK_SIDE if char.islower() else RED_SIDE))
         self.__char = char
         
     def __str__(self):
@@ -27,7 +29,8 @@ class Piece(object):
         
     @property
     def side(self):
-        return BLACK_SIDE if self.__char.islower() else RED_SIDE
+        #return BLACK_SIDE if self.__char.islower() else RED_SIDE
+        return self.__side
         
     @property
     def char(self):
@@ -45,74 +48,67 @@ class Piece(object):
     def getotherside(cls, side):        
         return RED_SIDE if side == BLACK_SIDE else BLACK_SIDE
         
-    def getallrowcols(self,  board):  
+    def getallseats(self,  board):  
         # 全部活动范围集合(默认：车马炮的活动范围)
-        return Cross.allrowcols
+        return Cross.allseats
     
-    def getmoverowcols(self, rowcol, board):
+    def getmoveseats(self, seat, board):
         # 当前棋子所处位置的有效活动范围集合
         return {}
         
-        
-class BlankPie(Piece):
 
-    @property
-    def side(self):
-        return None
-
-        
 class King(Piece):
 
-    def getallrowcols(self,  board):  
-        return Cross.kingrowcols[board.getboardside(self.side)]
+    def getallseats(self,  board):  
+        return Cross.kingseats[board.getboardside(self.side)]
         
-    def getmoverowcols(self, rowcol, board):
-        return Cross.getkingmoverowcols(rowcol, self, board)
+    def getmoveseats(self, seat, board):
+        return Cross.getkingmoveseats(seat, self, board)
         
         
 class Advisor(Piece):
     
-    def getallrowcols(self,  board):  
-        return Cross.advisorrowcols[board.getboardside(self.side)]
+    def getallseats(self,  board):  
+        return Cross.advisorseats[board.getboardside(self.side)]
         
-    def getmoverowcols(self, rowcol, board):
-        return Cross.getadvisormoverowcols(rowcol, self, board)        
+    def getmoveseats(self, seat, board):
+        return Cross.getadvisormoveseats(seat, self, board)        
         
         
 class Bishop(Piece):
 
-    def getallrowcols(self,  board):  
-        return Cross.bishoprowcols[board.getboardside(self.side)]
+    def getallseats(self,  board):  
+        return Cross.bishopseats[board.getboardside(self.side)]
         
-    def getmoverowcols(self, rowcol, board):
-        return Cross.getbishopmoverowcols(rowcol, self, board)
+    def getmoveseats(self, seat, board):
+        return Cross.getbishopmoveseats(seat, self, board)
                 
         
 class Knight(Piece):
         
-    def getmoverowcols(self, rowcol, board):
-        return Cross.getknightmoverowcols(rowcol, self, board)
+    def getmoveseats(self, seat, board):
+        return Cross.getknightmoveseats(seat, self, board)
 
                 
 class Rook(Piece):
         
-    def getmoverowcols(self, rowcol, board):
-        return Cross.getrookmoverowcols(rowcol, self, board)
+    def getmoveseats(self, seat, board):
+        return Cross.getrookmoveseats(seat, self, board)
 
         
 class Cannon(Piece):
         
-    def getmoverowcols(self, rowcol, board):
-        return Cross.getcannonmoverowcols(rowcol, self, board)
+    def getmoveseats(self, seat, board):
+        return Cross.getcannonmoveseats(seat, self, board)
  
         
 class Pawn(Piece):
     
-    def getallrowcols(self,  board):  
-        return Cross.pawnrowcols[board.getboardside(self.side)]
+    def getallseats(self,  board):  
+        return Cross.pawnseats[board.getboardside(self.side)]
         
-    def getmoverowcols(self, rowcol, board):
-        return Cross.getpawnmoverowcols(rowcol, self, board)
+    def getmoveseats(self, seat, board):
+        return Cross.getpawnmoveseats(seat, self, board)
               
         
 class Pieces(object):
@@ -147,7 +143,7 @@ class Pieces(object):
         n = self.__pieces.index(piece)
         return self.__pieces[(n + 16) if n < 16 else (n - 16)]        
         
-    def getotherpieces(self, livepieces):
+    def geteatedpieces(self, livepieces):
         return set(self.__pieces) - set(livepieces)
     
     def setpieimgids(self, imgids):
@@ -155,6 +151,6 @@ class Pieces(object):
             piece.imgid = imgids[n]
             
         
-BlankPie = BlankPie(BlankChar)
+BlankPie = Piece(BlankChar)
 
  

@@ -42,12 +42,12 @@ class BdCanvas(View, Canvas):
         self.createwidgets()
         self.createlayout()
         self.createbindings()
-        self.initrowcol()
+        self.initseat()
         self.updateview()
         
-    def initrowcol(self):
-        self.locatedrowcol = (0, 0)
-        self.selectedrowcol = None    
+    def initseat(self):
+        self.locatedseat = Cross.mergeseat(0, 0)
+        self.selectedseat = None    
 
     def __canvastexts(self):    
         
@@ -141,18 +141,18 @@ class BdCanvas(View, Canvas):
         self.bind('<Return>', self.onspaceKey)
         self.bind('<ButtonPress-1>', self.onMouseLeftclick) # 绑定点击事件
         
-    def xy_rowcol(self, x, y):
+    def xy_seat(self, x, y):
         return (NumRows - abs(y + PieHeight // 2 - BoardStartY) // PieHeight - 1,
                 abs(x + PieWidth // 2 - BoardStartX) // PieWidth)
 
-    def rowcol_xy(self, rowcol):
-        row, col = rowcol
+    def seat_xy(self, seat):
+        row, col = Cross.getrow(seat), Cross.getcol(seat)
         return (BoardStartX + col * PieWidth,
                 BoardStartY + (NumRows - row - 1) * PieHeight)
 
-    def getoval_xy(self, rowcol):
+    def getoval_xy(self, seat):
         # 根据row, col取得画圆用的坐标值
-        x, y = self.rowcol_xy(rowcol)
+        x, y = self.seat_xy(seat)
         return (x - OvalRadius, y - OvalRadius, x + OvalRadius, y + OvalRadius)
         
     def geteatpie_xy(self, side, n=-1):
@@ -171,36 +171,40 @@ class BdCanvas(View, Canvas):
         return (x, y)
         
     def onLeftKey(self, event): 
-        self.setlocatedrowcol((self.locatedrowcol[0], 
-                self.locatedrowcol[1]-1 if self.locatedrowcol[1] > MinColNo else MaxColNo))
+        col = Cross.getcol(self.locatedseat)
+        self.setlocatedseat(Cross.mergeseat(Cross.getrow(self.locatedseat), 
+                col-1 if col > MinColNo else MaxColNo))
         
     def onRightKey(self, event): 
-        self.setlocatedrowcol((self.locatedrowcol[0], 
-                self.locatedrowcol[1]+1 if self.locatedrowcol[1] < MaxColNo else MinColNo))
+        col = Cross.getcol(self.locatedseat)
+        self.setlocatedseat(Cross.mergeseat(Cross.getrow(self.locatedseat), 
+                col+1 if col < MaxColNo else MinColNo))
        
     def onUpKey(self, event): 
-        self.setlocatedrowcol((self.locatedrowcol[0]+1
-                if self.locatedrowcol[0] < MaxRowNo_T else MinRowNo_B, self.locatedrowcol[1]))
+        row = Cross.getrow(self.locatedseat)
+        self.setlocatedseat(Cross.mergeseat(row+1 if row < MaxRowNo_T else MinRowNo_B,
+                Cross.getcol(self.locatedseat)))
         
-    def onDownKey(self, event): 
-        self.setlocatedrowcol((self.locatedrowcol[0]-1
-                if self.locatedrowcol[0] > MinRowNo_B else MaxRowNo_T, self.locatedrowcol[1]))
+    def onDownKey(self, event):
+        row = Cross.getrow(self.locatedseat)
+        self.setlocatedseat(Cross.mergeseat(row-1 if row > MinRowNo_B else MaxRowNo_T,
+                Cross.getcol(self.locatedseat)))
         
     def onHomeKey(self, event): 
-        self.setlocatedrowcol((MaxRowNo_T, self.locatedrowcol[1]))
+        self.setlocatedseat(Cross.mergeseat(MaxRowNo_T, Cross.getcol(self.locatedseat)))
         
     def onEndKey(self, event): 
-        self.setlocatedrowcol((MinRowNo_B, self.locatedrowcol[1]))
+        self.setlocatedseat(Cross.mergeseat(MinRowNo_B, Cross.getcol(self.locatedseat)))
         
     def onDeleteKey(self, event): 
-        self.setlocatedrowcol((self.locatedrowcol[0], MinColNo))
+        self.setlocatedseat(Cross.mergeseat(Cross.getrow(self.locatedseat), MinColNo))
         
     def onPgdnKey(self, event): 
-        self.setlocatedrowcol((self.locatedrowcol[0], MaxColNo))
+        self.setlocatedseat(Cross.mergeseat(Cross.getrow(self.locatedseat), MaxColNo))
         
-    def setlocatedrowcol(self, rowcol):
-        self.locatedrowcol = rowcol
-        self.coords('to' if self.selectedrowcol else 'from', self.rowcol_xy(rowcol))
+    def setlocatedseat(self, seat):
+        self.locatedseat = seat
+        self.coords('to' if self.selectedseat else 'from', self.seat_xy(seat))
 
     def onMouseLeftclick(self, event):
         # 接收棋盘点击信息
@@ -212,29 +216,29 @@ class BdCanvas(View, Canvas):
 
     def onspaceKey(self, event, mouseclick=False):
     
-        def __drawselectedrowcol():   
-            self.selectedrowcol = self.locatedrowcol
+        def __drawselectedseat():   
+            self.selectedseat = self.locatedseat
             self.delete('walk')
             self.coords('to', OutsideXY)
-            self.coords('from', self.rowcol_xy(self.selectedrowcol))
-            for rowcol in self.board.canmoverowcols(self.selectedrowcol):                
-                self.create_oval(self.getoval_xy(rowcol),
+            self.coords('from', self.seat_xy(self.selectedseat))
+            for seat in self.board.canmoveseats(self.selectedseat):                
+                self.create_oval(self.getoval_xy(seat),
                         outline='blue', fill='blue', tag='walk')
             self.tag_raise('walk', 'pie')
             playsound('CLICK') # 5: 选择声音
                     
-        def __movepie(fromrowcol, torowcol): 
+        def __movepie(fromseat, toseat): 
             def __change():
                 if askyesno('提示', '改变当前着法，'
                     '将删除原棋局的全部后续着法！\n是否删除？'):
                     self.walks.cutfollow()
                     return True
             
-            if torowcol in self.board.canmoverowcols(fromrowcol):
+            if toseat in self.board.canmoveseats(fromseat):
                 if self.walks.islast or __change():
-                    self.walks.append(self.chessboard.createwalk(fromrowcol, torowcol))
+                    self.walks.append(self.chessboard.createwalk(fromseat, toseat))
                     self.walks.move(1)  # 更新视图
-                    self.selectedrowcol = None                    
+                    self.selectedseat = None                    
             else:
                 playsound('ILLEGAL') # 点击位置不正确声音
         
@@ -242,17 +246,17 @@ class BdCanvas(View, Canvas):
         if self.board.isdied(currentside): # 已被将死 
             return
         if mouseclick:
-            self.setlocatedrowcol(self.xy_rowcol(event.x, event.y))
-        if self.board.getside(self.locatedrowcol) == currentside:
-            __drawselectedrowcol()
-        elif self.selectedrowcol:
-            __movepie(self.selectedrowcol, self.locatedrowcol)
+            self.setlocatedseat(self.xy_seat(event.x, event.y))
+        if self.board.getside(self.locatedseat) == currentside:
+            __drawselectedseat()
+        elif self.selectedseat:
+            __movepie(self.selectedseat, self.locatedseat)
 
     def updateview(self):
     
         def __drawallpies():
             livecrosses = self.board.getlivecrosses()
-            [self.coords(pie.imgid, self.rowcol_xy(rowcol)) for rowcol, pie
+            [self.coords(pie.imgid, self.seat_xy(seat)) for seat, pie
                     in livecrosses.items()]
             eatpies = self.board.geteatedpieces()
             for side in [RED_SIDE, BLACK_SIDE]:
@@ -264,23 +268,26 @@ class BdCanvas(View, Canvas):
             if self.walks.isstart:
                 fromxy, toxy = OutsideXY, OutsideXY
             else:
-                fromrowcol, torowcol = self.walks.currentwalk().moverowcol
-                fromxy, toxy = self.rowcol_xy(fromrowcol), self.rowcol_xy(torowcol)
+                fromseat, toseat = self.walks.currentwalk().moveseat
+                fromxy, toxy = self.seat_xy(fromseat), self.seat_xy(toseat)
             self.delete('walk')
             self.coords('from', fromxy)
             self.coords('to', toxy)
             
         def __moveeffect():
             currentside = self.walks.currentside
-            kingrowcol = self.board.getkingrowcol(currentside)
+            kingseat = self.board.getkingseat(currentside)
+            kingpie = self.board.getkingpiece(currentside)
+            otherkingpie = self.board.getkingpiece(Piece.getotherside(currentside))
+            self.coords(kingpie.eatimgid, OutsideXY)
+            self.coords(otherkingpie.eatimgid, OutsideXY)
             if self.board.isdied(currentside): # 将死后，将帅图像更改
-                kingpie = self.board.pieces.getkingpiece(currentside)
                 self.coords(kingpie.imgid, OutsideXY)
-                self.coords(kingpie.eatimgid, self.rowcol_xy(kingrowcol))
+                self.coords(kingpie.eatimgid, self.seat_xy(kingseat))
                 playsound('WIN')
             elif self.board.iskilled(currentside): # 走棋后，将军
                 color = 'black' if currentside == RED_SIDE else 'red'
-                self.create_oval(self.getoval_xy(kingrowcol),
+                self.create_oval(self.getoval_xy(kingseat),
                         outline=color, fill=color, tag='walk') # , width=4
                 playsound('CHECK2')
             elif not self.walks.isstart:
@@ -288,7 +295,7 @@ class BdCanvas(View, Canvas):
                 playsound('MOVE' if eatpiece is BlankPie else
                             ('CAPTURE2' if eatpiece.isStronge else 'CAPTURE'))
             
-        assert self.board.getkingrowcol(RED_SIDE), '将帅不在棋盘上？'        
+        assert self.board.getkingseat(RED_SIDE), '将帅不在棋盘上？'        
         self.__canvastexts()
         __drawallpies()
         __drawtraces()

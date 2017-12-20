@@ -26,25 +26,25 @@ class ChessBoard(Model):
     def __repr__(self):
         pass    
         
-    def createwalk(self, fromrowcol, torowcol, description='', remark=''):
+    def createwalk(self, fromseat, toseat, description='', remark=''):
         # 生成一步着法命令
         def go():
-            assert torowcol in self.board.canmoverowcols(fromrowcol), ('该走法不符合规则，或者可能自己被将军、将帅会面！\nfrom: %s\nto: %s\ncanmove: %s\n%s' % 
-                (fromrowcol, torowcol, sorted(self.board.canmoverowcols(fromrowcol)), self.board))
+            assert toseat in self.board.canmoveseats(fromseat), ('该走法不符合规则，或者可能自己被将军、将帅会面！\nfrom: %s\nto: %s\ncanmove: %s\n%s' % 
+                (fromseat, toseat, sorted(self.board.canmoveseats(fromseat)), self.board))
             
-            back.eatpiece = self.board.movepiece(fromrowcol, torowcol)
+            back.eatpiece = self.board.movepiece(fromseat, toseat)
             # 给函数back添加一个属性:被吃棋子!
             self.walks.setcurrentside(Piece.getotherside(self.walks.currentside))
             
         def back():
-            self.board.movepiece(torowcol, fromrowcol, back.eatpiece)
+            self.board.movepiece(toseat, fromseat, back.eatpiece)
             self.walks.setcurrentside(Piece.getotherside(self.walks.currentside))
             
         if not description:
-            description = WalkConvert.moverowcols_chinese(fromrowcol,
-                    torowcol, self.board)
+            description = WalkConvert.moveseats_chinese(fromseat,
+                    toseat, self.board)
         walk = Walk(go, back, description, remark)
-        walk.fromrowcol, walk.torowcol = fromrowcol, torowcol
+        walk.fromseat, walk.toseat = fromseat, toseat
         return walk
      
     def getfen(self):
@@ -117,9 +117,9 @@ class ChessBoard(Model):
             walkdeses, walkremarks = __getwalkdeses()
             for n, des in enumerate(walkdeses):
                 if des:
-                    (fromrowcol, torowcol) = WalkConvert.chinese_moverowcols(
+                    (fromseat, toseat) = WalkConvert.chinese_moveseats(
                             self.walks.currentside, des, self.board)
-                    self.walks.append(self.createwalk(fromrowcol, torowcol,
+                    self.walks.append(self.createwalk(fromseat, toseat,
                             des, walkremarks[n]))
                     self.walks.move(1, False)
             self.walks.movestart(False)
@@ -134,31 +134,31 @@ class ChessBoard(Model):
     
     def changeside(self, changetype='exchange'):
     
-        def __crosses_rowcols(changetype):
+        def __crosses_seats(changetype):
         
-            def __crosses_rowcols_rs(transfun):
-                return ({transfun(rowcol): piece
-                        for rowcol, piece in self.board.getlivecrosses().items()},
-                        [(transfun(fromrowcol), transfun(torowcol))
-                        for fromrowcol, torowcol in self.walks.moverowcols()])
+            def __crosses_seats_rs(transfun):
+                return ({transfun(seat): piece
+                        for seat, piece in self.board.getlivecrosses().items()},
+                        [(transfun(fromseat), transfun(toseat))
+                        for fromseat, toseat in self.walks.moveseats()])
                         
             if changetype == 'rotate':
-                return __crosses_rowcols_rs(Cross.getrotaterowcol)
+                return __crosses_seats_rs(Cross.getrotateseat)
             elif changetype == 'symmetry':
-                return __crosses_rowcols_rs(Cross.getsymmetryrowcol)
+                return __crosses_seats_rs(Cross.getsymmetryseat)
             elif changetype == 'exchange':
                 self.walks.currentside = Piece.getotherside(self.walks.currentside)
-                return ({rowcol: self.board.pieces.getothersidepiece(piece)
-                                for rowcol, piece in self.board.getlivecrosses().items()},
-                                self.walks.moverowcols())
+                return ({seat: self.board.pieces.getothersidepiece(piece)
+                                for seat, piece in self.board.getlivecrosses().items()},
+                                self.walks.moveseats())
         
         offset = self.walks.cursor + 1 - self.walks.length 
         remarkes = self.walks.remarkes  # 备注里如有棋子走法，则未作更改？        
         self.walks.movestart(False)
         
-        crosses, moverowcols = __crosses_rowcols(changetype)        
+        crosses, moveseats = __crosses_seats(changetype)        
         self.board.loadcrosses(crosses)
-        self.walks.loadmoverowcols(moverowcols, remarkes, self)
+        self.walks.loadmoveseats(moveseats, remarkes, self)
         
         self.walks.move(offset, False)
         self.notifyviews()

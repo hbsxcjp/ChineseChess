@@ -18,9 +18,9 @@ class Test(unittest.TestCase):
         pass       
     
     def xtest_crossbase(self):            
-        crolist = [Cross.allrowcols]
-        for cro in [Cross.siderowcols, Cross.kingrowcols,
-                    Cross.advisorrowcols, Cross.bishoprowcols, Cross.pawnrowcols]:
+        crolist = [Cross.allseats]
+        for cro in [Cross.sideseats, Cross.kingseats,
+                    Cross.advisorseats, Cross.bishopseats, Cross.pawnseats]:
             for f in [True, False]:        
                 crolist.append(cro[f])                
         for cro in crolist:
@@ -45,14 +45,14 @@ class Test(unittest.TestCase):
         #print(board)         
         crosses = board.getlivecrosses()
         #print(sorted(crosses), len(crosses)) 
-        pie_moverowcols = [(pie, pie.getmoverowcols(rowcol, board))
-                for rowcol, pie in crosses.items()]
-        for pie, rowcols in pie_moverowcols:
-            #print(pie, sorted(rowcols), len(rowcols))
+        pie_moveseats = [(pie, pie.getmoveseats(seat, board))
+                for seat, pie in crosses.items()]
+        for pie, seats in pie_moveseats:
+            #print(pie, sorted(seats), len(seats))
             pass
         #print(board)        
         
-    def xtest_setandgetPGN(self):
+    def test_setandgetPGN(self):
         start = time.time()        
         chessboard = ChessBoard()
         pgnfilenamel = ['“石林杯”全国象棋团体锦标赛 - 广东许银川 (先胜) 上海胡荣华.PGN',
@@ -77,7 +77,7 @@ class Test(unittest.TestCase):
         end = time.time()
         print('usetime: %0.5f' % (end - start))
 
-    def test_pgnform(self):
+    def xtest_pgnform(self):
         pgn = '没有找到文件？'
         with open('pgn/bbb.pgn') as f:
             pgn = f.read()
@@ -96,6 +96,6 @@ if __name__ == '__main__':
     unittest.main()
     
     # 测试
-    #cProfile.run('main()')
+    #cProfile.run('unittest.main()')
     
     
