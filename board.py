@@ -58,7 +58,8 @@ class Board(Model):
         return BOTTOM_SIDE if self.bottomside == side else TOP_SIDE
     
     def setbottomside(self):
-        self.bottomside = (RED_SIDE if self.getkingseat(RED_SIDE)[0] < 4 else BLACK_SIDE)
+        self.bottomside = (RED_SIDE
+                if Cross.getrow(self.getkingseat(RED_SIDE)) < MaxRowNo_B else BLACK_SIDE)
     
     def isbottomside(self, side):
         return BOTTOM_SIDE == self.getboardside(side)
@@ -118,7 +119,7 @@ class Board(Model):
             self.getlivesidenamecrosses(side, name).items() if Cross.getcol(seat) == col}
         
     def iskilled(self, side):
-        def __isfaced(kingseat, otherseat):
+        def __isfaced():
             if not Cross.issamecol(kingseat, otherseat):
                 return False
             return all([self.isblank(seat)
@@ -129,11 +130,11 @@ class Board(Model):
                 if (piece.isStronge and 
                         (kingseat in piece.getmoveseats(seat, self))):
                     return True
-            return False 
+            return False
             
         otherside = Piece.getotherside(side)
-        kingseat = self.getkingseat(side)
-        return __isfaced(kingseat, self.getkingseat(otherside)) or __iskilled()
+        kingseat, otherseat = self.getkingseat(side), self.getkingseat(otherside)
+        return __isfaced() or __iskilled()
         
     def isdied(self, side):
         for seat, piece in self.getlivesidecrosses(side).items():
