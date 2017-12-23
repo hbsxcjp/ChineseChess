@@ -38,7 +38,6 @@ class MainForm(View, ttk.Frame):
         self.pack()
 
     def createbindings(self):
-        self.bind_all('<Tab>', self.notdone)
         self.bind_all('<Control_L>', self.onCtrlleftKey)
         self.bind_all('<Control_R>', self.onCtrlrightKey)
         self.onCtrlleftKey(None)
@@ -99,18 +98,20 @@ class MainForm(View, ttk.Frame):
         if filename:
             self.savethispgn(filename)
             
-    def trimlastpgn(self):
+    def lastpgn(self):
         #PgnfileForm('整理近期pgn文件', self.config.filenames)
         pass
-
-    def lookpgn(self):
-        PgnForm(self, self.chessboard.getpgn())
         
-    def edittag(self):
-        TagForm(self, self.chessboard.info)
+    def deducepgn(self):
     
-    def setoption(self):
+        pass
         
+    def modifyfen(self):
+    
+        pass
+
+    def setoption(self):
+    
         pass
 
     def about(self):
@@ -119,49 +120,42 @@ class MainForm(View, ttk.Frame):
         else:
             self.aboutForm.deiconify()
             
-    def notdone(self, event):
-        pass
-        
     def quitmain(self):
         if self.__asksavepgn('退出对局') is not None:
             self.config.save()
             self.quit()
         
-    def updateview(self):
-        # 更新视图（由数据模型发起）
-        self.__settitle(self.config.getelement('lastpgnfilename').text)     
-
     def makemenu(self):
         # 生成主菜单        
         menuBar = [
             ('文件(F)', 
-                   [('新的对局(N)', lambda :self.opennewpgn(), 5),
-                    ('打开(O)...', lambda :self.openotherpgn(), 3),
-                    ('近期文件...', self.notdone, 3),
-                    ('保存(S)', lambda :self.savethispgn(), 3),
-                    ('另存为(A)...', lambda :self.saveotherpgn(), 4),
+                   [('新的对局(N)', self.opennewpgn, 5),
+                    ('打开(O)...', self.openotherpgn, 3),
+                    ('近期文件...', self.lastpgn, 3),
+                    ('保存(S)', self.savethispgn, 3),
+                    ('另存为(A)...', self.saveotherpgn, 4),
                     'separator',
-                    ('查看文本棋谱(V)', self.lookpgn, 7),
-                    ('编辑标签(A)', self.edittag, 5),
+                    ('查看文本棋谱(V)',lambda: PgnForm(self, self.chessboard.getpgn()), 7),
+                    ('编辑标签(A)', lambda: TagForm(self, self.chessboard.info), 5),
                     'separator',
                     ('退出(X)', self.quitmain, 3)],
              3),
             ('局面(B)', 
                    [('对换位置(F)', lambda: self.chessboard.changeside('rotate'), 5),
                     ('左右对称(M)', lambda: self.chessboard.changeside('symmetry'), 5),
-                    ('对换棋局(D)', lambda: self.chessboard.changeside(), 5),
+                    ('对换棋局(D)', self.chessboard.changeside, 5),
                     'separator',
-                    ('新窗口推演(A)', self.notdone, 6),
-                    ('编辑局面(E)', self.notdone, 5),
+                    ('新窗口推演(A)', self.deducepgn, 6),
+                    ('编辑局面(E)', self.modifyfen, 5),
                     'separator',
-                    ('复制局面(C)', self.copyfen, 5),
-                    ('粘贴局面(P)', self.pastefen, 5)],
+                    ('复制局面(C)', lambda: pyperclip.copy(self.chessboard.getpgn()), 5),
+                    ('粘贴局面(P)', lambda: self.chessboard.setpgn(pyperclip.paste()), 5)],
              3),
             ('着法(M)', 
-                   [('起始局面(S)', lambda: self._walkarea.onHomeKey(None), 5),
-                    ('上一着(B)', lambda: self._walkarea.onUpKey(None), 4),
-                    ('下一着(F)', lambda: self._walkarea.onDownKey(None), 4),
-                    ('最后局面(E)', lambda: self._walkarea.onEndKey(None), 5)],
+                   [('起始局面(S)', lambda: self.walkarea.onHomeKey(None), 5),
+                    ('上一着(B)', lambda: self.walkarea.onUpKey(None), 4),
+                    ('下一着(F)', lambda: self.walkarea.onDownKey(None), 4),
+                    ('最后局面(E)', lambda: self.walkarea.onEndKey(None), 5)],
              3),
             ('选项(O)', 
                    [('设置(O)...', self.setoption, 3),
@@ -195,4 +189,9 @@ class MainForm(View, ttk.Frame):
             addMenuItems(aMenu, item[1])
             topMenu.add_cascade(label=item[0], menu=aMenu)
        
-     
+    def updateview(self):
+        # 更新视图（由数据模型发起）
+        self.__settitle(self.config.getelement('lastpgnfilename').text)     
+
+
+        

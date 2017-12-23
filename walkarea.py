@@ -74,7 +74,7 @@ class WalkArea(View, ttk.Frame):
         def create_bottomfrm():        
             bottomfrm = LabelFrame(self, relief=GROOVE, text='评注：',
                                     padx=6, pady=6, labelanchor='nw')        
-            self.remarktext = Text(bottomfrm, padx=3, pady=3, height=12, width=25, relief=GROOVE) 
+            self.remarktext = Text(bottomfrm, padx=3, pady=3, height=12, width=25, relief=GROOVE, font=('Consolas', '10')) 
             self.remarktext.pack() # side=TOP, expand=YES, fill=BOTH
             bottomfrm.pack(side=BOTTOM) # 底部区域
             
