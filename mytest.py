@@ -52,7 +52,7 @@ class Test(unittest.TestCase):
             pass
         #print(board)        
         
-    def xtest_setandgetPGN(self):
+    def test_setandgetPGN(self):
         start = time.time()        
         chessboard = ChessBoard()
         pgnfilenamel = ['“石林杯”全国象棋团体锦标赛 - 广东许银川 (先胜) 上海胡荣华.PGN',
@@ -77,15 +77,7 @@ class Test(unittest.TestCase):
         end = time.time()
         print('usetime: %0.5f' % (end - start))
 
-    def xtest_pgnform(self):
-        pgn = '没有找到文件？'
-        with open('pgn/bbb.pgn') as f:
-            pgn = f.read()
-        root = Tk()
-        pgnfrm = PgnForm(root, pgn)
-        root.mainloop()
-
-    def test_form(self):
+    def xtest_form(self):
         user = User(1, 'cjp')
         user.application.mainloop()
         pass      

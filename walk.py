@@ -235,7 +235,7 @@ class WalkConvert(object):
                         __obliquename_toseat(fromseat, movdir, tocol,
                         name in AdvisorBishopNames))
         
-        #assert chinese == self.moveseats_chinese(fromseat, toseat, board), ('棋谱着法: %s   生成着法: %s 不等！' % (chinese, self.moveseats_chinese(fromseat, toseat, board))) 
+        assert chinese == self.moveseats_chinese(fromseat, toseat, board), ('棋谱着法: %s   生成着法: %s 不等！' % (chinese, self.moveseats_chinese(fromseat, toseat, board))) 
 
         return (fromseat, toseat)
         
@@ -271,7 +271,7 @@ class WalkConvert(object):
                         else self.NumToChinese[side][abs(torow - fromrow)])
         lastStr = tochar + tochcol
         
-        assert (fromseat, toseat) == self.chinese_moveseats(side, firstStr + lastStr, board), '棋谱着法: %s 生成着法: %s 不等！' % ((fromseat, toseat), self.chinese_moveseats(side, firstStr + lastStr, board))
+        #assert (fromseat, toseat) == self.chinese_moveseats(side, firstStr + lastStr, board), '棋谱着法: %s 生成着法: %s 不等！' % ((fromseat, toseat), self.chinese_moveseats(side, firstStr + lastStr, board))
         
         return '{}{}'.format(firstStr, lastStr)
         

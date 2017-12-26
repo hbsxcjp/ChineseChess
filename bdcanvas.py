@@ -3,7 +3,7 @@
 '''
 
 from config_et import *
-from crossbase import *
+from cross import *
 from walk import *
 
 
@@ -55,14 +55,14 @@ class BdCanvas(View, Canvas):
             # 图形框内文字坐标
             PondTopTextX, PondTopTextY = ImgBdStartX // 2, CanvasHeight // 2 - PieHeight // 2
             PondBottomTextX, PondBottomTextY = ImgBdStartX // 2, CanvasHeight // 2 + PieHeight // 2
-            PondTopText = PondText[Board.getotherside(bottomside)]
+            PondTopText = PondText[Board.otherside(bottomside)]
             PondBottomText = PondText[bottomside]
             textxys = [(PondTopTextX, PondTopTextY, PondTopText), 
                         (PondBottomTextX, PondBottomTextY, PondBottomText)]
             for i in range(NumCols):
                 textx = ImgBdStartX + i * (TagLength + PieBdWidth) + TagLength // 2
                 textxys.append((textx, ImgBdStartY // 2,
-                    WalkConvert.NumToChinese[Board.getotherside(bottomside)][i+1]))
+                    WalkConvert.NumToChinese[Board.otherside(bottomside)][i+1]))
                 textxys.append((textx, CanvasHeight - ImgBdStartY // 2, 
                         WalkConvert.NumToChinese[bottomside][NumCols-i]))
             return textxys
@@ -115,7 +115,7 @@ class BdCanvas(View, Canvas):
                 
             for side, char in {RED_SIDE: 'KING', BLACK_SIDE: 'king'}.items():
                 self.imgs.append(PhotoImage(file = pimgpath + Config.imgflnames[char]))
-                self.board.pieces.getkingpiece(side).eatimgid = self.create_image(OutsideXY,
+                self.board.getkingpiece(side).eatimgid = self.create_image(OutsideXY,
                         image=self.imgs[-1], tag='pie')
                         
         bdimgname = self.master.config.getelement('bdimgname').text
@@ -261,7 +261,7 @@ class BdCanvas(View, Canvas):
             eatpies = self.board.geteatedpieces()
             for side in [RED_SIDE, BLACK_SIDE]:
                 eatpieimgids = sorted([pie.imgid for pie in eatpies if pie.side == side])
-                [self.coords(imgid, self.geteatpie_xy(Piece.getotherside(side), n))
+                [self.coords(imgid, self.geteatpie_xy(Piece.otherside(side), n))
                         for n, imgid in enumerate(eatpieimgids)]
             
         def __drawtraces():
@@ -278,7 +278,7 @@ class BdCanvas(View, Canvas):
             currentside = self.walks.currentside
             kingseat = self.board.getkingseat(currentside)
             kingpie = self.board.getkingpiece(currentside)
-            otherkingpie = self.board.getkingpiece(Piece.getotherside(currentside))
+            otherkingpie = self.board.getkingpiece(Piece.otherside(currentside))
             self.coords(kingpie.eatimgid, OutsideXY)
             self.coords(otherkingpie.eatimgid, OutsideXY)
             if self.board.isdied(currentside): # 将死后，将帅图像更改
@@ -302,4 +302,4 @@ class BdCanvas(View, Canvas):
         __moveeffect()
         
 
-       
+#       

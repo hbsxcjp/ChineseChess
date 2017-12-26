@@ -33,5 +33,5 @@ class User(object):
         self.mainform = MainForm(self.application, self.config,
                 [self.chessboard, self.chessboard.board, self.chessboard.walks])
                 
-                
-                
+
+#                

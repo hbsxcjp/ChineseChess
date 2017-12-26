@@ -1,10 +1,9 @@
 ﻿'''
 中国象棋棋谱类型
 '''
+from walk import *
 
-from walk import *       
 
-        
 class ChessBoard(Model):
     # 棋局类（含一副棋盘、棋子、棋谱）
     
@@ -34,11 +33,11 @@ class ChessBoard(Model):
             
             back.eatpiece = self.board.movepiece(fromseat, toseat)
             # 给函数back添加一个属性:被吃棋子!
-            self.walks.setcurrentside(Piece.getotherside(self.walks.currentside))
+            self.walks.setcurrentside(Piece.otherside(self.walks.currentside))
             
         def back():
             self.board.movepiece(toseat, fromseat, back.eatpiece)
-            self.walks.setcurrentside(Piece.getotherside(self.walks.currentside))
+            self.walks.setcurrentside(Piece.otherside(self.walks.currentside))
             
         if not description:
             description = WalkConvert.moveseats_chinese(fromseat,
@@ -147,7 +146,7 @@ class ChessBoard(Model):
             elif changetype == 'symmetry':
                 return __crosses_seats_rs(Cross.getsymmetryseat)
             elif changetype == 'exchange':
-                self.walks.currentside = Piece.getotherside(self.walks.currentside)
+                self.walks.currentside = Piece.otherside(self.walks.currentside)
                 return ({seat: self.board.pieces.getothersidepiece(piece)
                                 for seat, piece in self.board.getlivecrosses().items()},
                                 self.walks.moveseats())
@@ -162,6 +161,7 @@ class ChessBoard(Model):
         
         self.walks.move(offset, False)
         self.notifyviews()
-
-
+        
+        
+#
         

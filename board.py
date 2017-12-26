@@ -4,7 +4,28 @@
 
 from piece import *
 
+   
+class Model(object):
+        
+    def loadviews(self, views):
+        self.views = views
+        
+    def notifyviews(self):
+        # 通知视图更新
+        for view in self.views:
+            view.updateview()
+            
 
+class View(object):
+
+    def __init__(self, models):        
+        self.chessboard, self.board, self.walks = models
+        
+    def updateview(self):
+        # 更新视图（由数据模型发起）
+        pass
+        
+        
 class Board(Model):
     # 棋盘类
     
@@ -71,21 +92,20 @@ class Board(Model):
         return self.crosses[seat]
     
     def getside(self, seat):
-        return self.getpiece(seat).side
+        return self.crosses[seat].side
     
     @classmethod
-    def getotherside(cls, side):        
+    def otherside(cls, side):        
         return TOP_SIDE if side == BOTTOM_SIDE else BOTTOM_SIDE
     
     def getkingpiece(self, side):    
         return self.pieces.getkingpiece(side)
         
-    def getkingseat(self, side):    
-        kingpie = self.getkingpiece(side) 
-        for seat, pie in self.getlivesidecrosses(side).items():
-            if pie is kingpie:
-                return seat
-        #assert False, '没有发现棋子：{}'.format(str(self))
+    def getkingseat(self, side):
+        for seat, pie in self.getlivesidenamecrosses(side,
+                    self.getkingpiece(side).name).items():
+            return seat
+        #assert False, '没有发现棋子：{}'.format(str(self))        
         
     def clear(self):
         [self.setpiece(seat, BlankPie) for seat in self.crosses.keys()]
@@ -132,7 +152,7 @@ class Board(Model):
                     return True
             return False
             
-        otherside = Piece.getotherside(side)
+        otherside = Piece.otherside(side)
         kingseat, otherseat = self.getkingseat(side), self.getkingseat(otherside)
         return __isfaced() or __iskilled()
         
@@ -151,7 +171,7 @@ class Board(Model):
         for toseat in piece.getmoveseats(fromseat, self):            
             topiece = self.movepiece(fromseat, toseat)            
             if not self.iskilled(side): 
-                result.append(toseat)                 
+                result.append(toseat)
             self.movepiece(toseat, fromseat, topiece)
         return result
 
@@ -187,10 +207,9 @@ class Board(Model):
         assert __isvalid(charls)[0], __isvalid(charls)[1]
         
         self.clear()
-        [self.setpiece(Cross.getseat(n), self.pieces.getpiece(char, self)) 
+        [self.setpiece(Cross.getseat(n), self.pieces.getunusedpiece(char, self)) 
                 for n, char in enumerate(charls)]
         self.setbottomside()
-            
+        
 
-        
-        
+#

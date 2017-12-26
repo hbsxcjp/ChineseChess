@@ -2,7 +2,7 @@
 中国象棋棋子类型 by-cjp
 '''
 
-from crossbase import *
+from cross import *
 
 
 BlankChar = '_' 
@@ -45,12 +45,16 @@ class Piece(object):
         return self.name in StrongePieceNames        
         
     @classmethod
-    def getotherside(cls, side):        
+    def otherside(cls, side):        
         return RED_SIDE if side == BLACK_SIDE else BLACK_SIDE
         
     def getallseats(self,  board):  
         # 全部活动范围集合(默认：车马炮的活动范围)
         return Cross.allseats
+        
+    def intersectionseats(self, moveseats, board):
+        return {seat for seat in (self.getallseats(board) & moveseats)
+                if board.getside(seat) != self.side}        
     
     def getmoveseats(self, seat, board):
         # 当前棋子所处位置的有效活动范围集合
@@ -63,7 +67,7 @@ class King(Piece):
         return Cross.kingseats[board.getboardside(self.side)]
         
     def getmoveseats(self, seat, board):
-        return Cross.getkingmoveseats(seat, self, board)
+        return self.intersectionseats(Cross.getkingmoveseats(seat), board)
         
         
 class Advisor(Piece):
@@ -72,7 +76,7 @@ class Advisor(Piece):
         return Cross.advisorseats[board.getboardside(self.side)]
         
     def getmoveseats(self, seat, board):
-        return Cross.getadvisormoveseats(seat, self, board)        
+        return self.intersectionseats(Cross.getadvisormoveseats(seat), board)     
         
         
 class Bishop(Piece):
@@ -81,35 +85,67 @@ class Bishop(Piece):
         return Cross.bishopseats[board.getboardside(self.side)]
         
     def getmoveseats(self, seat, board):
-        return Cross.getbishopmoveseats(seat, self, board)
+        move_centreseats = Cross.getbishopmove_centreseats(seat)
+        return {seat for seat in self.intersectionseats(move_centreseats.keys(), board)
+                if board.isblank(move_centreseats[seat])}
                 
         
 class Knight(Piece):
         
-    def getmoveseats(self, seat, board):
-        return Cross.getknightmoveseats(seat, self, board)
+    def getmoveseats(self, seat, board):    
+        move_legseats = Cross.getknightmove_legseats(seat)
+        return {seat for seat in self.intersectionseats(move_legseats.keys(), board)
+                if board.isblank(move_legseats[seat])}
 
-                
+        
 class Rook(Piece):
         
     def getmoveseats(self, seat, board):
-        return Cross.getrookmoveseats(seat, self, board)
-
+        result = set()
+        lines = Cross.rookcannonmove_lines(seat)
+        for seatline in lines:
+            for seat in seatline:
+                if board.isblank(seat):
+                    result.add(seat)
+                else:
+                    if board.getside(seat) != self.side:
+                        result.add(seat)
+                    break
+        return result
+        
         
 class Cannon(Piece):
         
     def getmoveseats(self, seat, board):
-        return Cross.getcannonmoveseats(seat, self, board)
- 
+        result = set()
+        lines = Cross.rookcannonmove_lines(seat)
+        for seatline in lines:
+            skip = False
+            for seat in seatline:
+                if not skip:
+                    if board.isblank(seat): 
+                        result.add(seat)                     
+                    else: # 该位置有棋子
+                        skip = True
+                elif (not board.isblank(seat) and 
+                        board.getside(seat) != self.side):
+                    result.add(seat)
+                    break
+        return result
+        
         
 class Pawn(Piece):
     
     def getallseats(self,  board):  
         return Cross.pawnseats[board.getboardside(self.side)]
         
-    def getmoveseats(self, seat, board):
-        return Cross.getpawnmoveseats(seat, self, board)
-              
+    def getmoveseats(self, seat, board):        
+        row = seat[0]
+        isbottomside = board.isbottomside(self.side)
+        return {(r, c) for r, c in
+                self.intersectionseats(Cross.getpawnmoveseats(seat), board)
+                if (isbottomside and r >= row) or (not isbottomside and r <= row)}
+                
         
 class Pieces(object):
     # 一副棋子类
@@ -128,7 +164,7 @@ class Pieces(object):
     def __str__(self):
         return str([str(piece) for piece in self.__pieces])
         
-    def getpiece(self, char, board):
+    def getunusedpiece(self, char, board):
         if char == BlankChar:
             return BlankPie
         charpieces = list({piece for piece in self.__pieces if piece.char == char}
@@ -152,5 +188,6 @@ class Pieces(object):
             
         
 BlankPie = Piece(BlankChar)
+
 
  

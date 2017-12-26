@@ -194,4 +194,4 @@ class MainForm(View, ttk.Frame):
         self.__settitle(self.config.getelement('lastpgnfilename').text)     
 
 
-        
+#        

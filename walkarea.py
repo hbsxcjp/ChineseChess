@@ -3,7 +3,7 @@
 '''
 
 from config_et import *
-from crossbase import *
+from cross import *
 from walk import *
 
        
@@ -152,4 +152,5 @@ class WalkArea(View, ttk.Frame):
         __selection()
         __setremark()
         
-        
+
+#        
