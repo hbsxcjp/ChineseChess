@@ -46,7 +46,7 @@ class BdCanvas(View, Canvas):
         self.updateview()
         
     def initseat(self):
-        self.locatedseat = Cross.mergeseat(0, 0)
+        self.locatedseat = CrossT.mergeseat(0, 0)
         self.selectedseat = None    
 
     def __canvastexts(self):    
@@ -62,9 +62,9 @@ class BdCanvas(View, Canvas):
             for i in range(NumCols):
                 textx = ImgBdStartX + i * (TagLength + PieBdWidth) + TagLength // 2
                 textxys.append((textx, ImgBdStartY // 2,
-                    WalkConvert.NumToChinese[Board.otherside(bottomside)][i+1]))
+                    NumToChinese[Board.otherside(bottomside)][i+1]))
                 textxys.append((textx, CanvasHeight - ImgBdStartY // 2, 
-                        WalkConvert.NumToChinese[bottomside][NumCols-i]))
+                        NumToChinese[bottomside][NumCols-i]))
             return textxys
 
         PondText = {BLACK_SIDE: '黑方吃子', RED_SIDE: '红方吃子'}
@@ -146,7 +146,7 @@ class BdCanvas(View, Canvas):
                 abs(x + PieWidth // 2 - BoardStartX) // PieWidth)
 
     def seat_xy(self, seat):
-        row, col = Cross.getrow(seat), Cross.getcol(seat)
+        row, col = CrossT.getrow(seat), CrossT.getcol(seat)
         return (BoardStartX + col * PieWidth,
                 BoardStartY + (NumRows - row - 1) * PieHeight)
 
@@ -171,36 +171,36 @@ class BdCanvas(View, Canvas):
         return (x, y)
         
     def onLeftKey(self, event): 
-        col = Cross.getcol(self.locatedseat)
-        self.setlocatedseat(Cross.mergeseat(Cross.getrow(self.locatedseat), 
+        col = CrossT.getcol(self.locatedseat)
+        self.setlocatedseat(CrossT.mergeseat(CrossT.getrow(self.locatedseat), 
                 col-1 if col > MinColNo else MaxColNo))
         
     def onRightKey(self, event): 
-        col = Cross.getcol(self.locatedseat)
-        self.setlocatedseat(Cross.mergeseat(Cross.getrow(self.locatedseat), 
+        col = CrossT.getcol(self.locatedseat)
+        self.setlocatedseat(CrossT.mergeseat(CrossT.getrow(self.locatedseat), 
                 col+1 if col < MaxColNo else MinColNo))
        
     def onUpKey(self, event): 
-        row = Cross.getrow(self.locatedseat)
-        self.setlocatedseat(Cross.mergeseat(row+1 if row < MaxRowNo_T else MinRowNo_B,
-                Cross.getcol(self.locatedseat)))
+        row = CrossT.getrow(self.locatedseat)
+        self.setlocatedseat(CrossT.mergeseat(row+1 if row < MaxRowNo_T else MinRowNo_B,
+                CrossT.getcol(self.locatedseat)))
         
     def onDownKey(self, event):
-        row = Cross.getrow(self.locatedseat)
-        self.setlocatedseat(Cross.mergeseat(row-1 if row > MinRowNo_B else MaxRowNo_T,
-                Cross.getcol(self.locatedseat)))
+        row = CrossT.getrow(self.locatedseat)
+        self.setlocatedseat(CrossT.mergeseat(row-1 if row > MinRowNo_B else MaxRowNo_T,
+                CrossT.getcol(self.locatedseat)))
         
     def onHomeKey(self, event): 
-        self.setlocatedseat(Cross.mergeseat(MaxRowNo_T, Cross.getcol(self.locatedseat)))
+        self.setlocatedseat(CrossT.mergeseat(MaxRowNo_T, CrossT.getcol(self.locatedseat)))
         
     def onEndKey(self, event): 
-        self.setlocatedseat(Cross.mergeseat(MinRowNo_B, Cross.getcol(self.locatedseat)))
+        self.setlocatedseat(CrossT.mergeseat(MinRowNo_B, CrossT.getcol(self.locatedseat)))
         
     def onDeleteKey(self, event): 
-        self.setlocatedseat(Cross.mergeseat(Cross.getrow(self.locatedseat), MinColNo))
+        self.setlocatedseat(CrossT.mergeseat(CrossT.getrow(self.locatedseat), MinColNo))
         
     def onPgdnKey(self, event): 
-        self.setlocatedseat(Cross.mergeseat(Cross.getrow(self.locatedseat), MaxColNo))
+        self.setlocatedseat(CrossT.mergeseat(CrossT.getrow(self.locatedseat), MaxColNo))
         
     def setlocatedseat(self, seat):
         self.locatedseat = seat
@@ -221,7 +221,7 @@ class BdCanvas(View, Canvas):
             self.delete('walk')
             self.coords('to', OutsideXY)
             self.coords('from', self.seat_xy(self.selectedseat))
-            for seat in self.board.canmoveseats(self.selectedseat):                
+            for seat in self.board.canmoveseats(self.board.getpiece(self.selectedseat)):                
                 self.create_oval(self.getoval_xy(seat),
                         outline='blue', fill='blue', tag='walk')
             self.tag_raise('walk', 'pie')
@@ -234,7 +234,7 @@ class BdCanvas(View, Canvas):
                     self.walks.cutfollow()
                     return True
             
-            if toseat in self.board.canmoveseats(fromseat):
+            if toseat in self.board.canmoveseats(self.board.getpiece(fromseat)):
                 if self.walks.islast or __change():
                     self.walks.append(self.chessboard.createwalk(fromseat, toseat))
                     self.walks.move(1)  # 更新视图
@@ -255,9 +255,10 @@ class BdCanvas(View, Canvas):
     def updateview(self):
     
         def __drawallpies():
-            livecrosses = self.board.getlivecrosses()
-            [self.coords(pie.imgid, self.seat_xy(seat)) for seat, pie
-                    in livecrosses.items()]
+            livepieces = self.board.getlivepieces()
+            #livecrosses = 
+            [self.coords(pie.imgid, self.seat_xy(pie.seat)) for pie #seat, 
+                    in livepieces]#livecrosses.items()]
             eatpies = self.board.geteatedpieces()
             for side in [RED_SIDE, BLACK_SIDE]:
                 eatpieimgids = sorted([pie.imgid for pie in eatpies if pie.side == side])

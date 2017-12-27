@@ -1,5 +1,5 @@
 ﻿'''
-中国象棋棋盘位置交叉转换类型
+中国象棋棋盘位置交叉类型
 '''
 
 import re
@@ -61,15 +61,13 @@ class CrossTuple(object):
                         for col in range(MinColNo, MaxColNo + 1, 2)})}
     
     def getindex(self, seat):
-        #return seat[0] * 9 + seat[1]
         return sorted(self.allseats).index(seat)        
     
     def getseat(self, index):
-        #return (index // 9, index % 9) 
-        return sorted(self.allseats)[index]        
+        return sorted(self.allseats)[index]
     
     def mergeseat(self, row, col): 
-        return (row, col)        
+        return (row, col)
     
     def getrow(self, seat):
         return seat[0]        
@@ -111,7 +109,7 @@ class CrossTuple(object):
         return {(r, c): ((row+r)//2, (col+c)//2) for r, c in moveseats}
     
     def getknightmove_legseats(self, seat):    
-        # 获取马腿、移动行列值字典
+        # 获取移动、马腿行列值
         def __legx(first, to):            
             x = to - first  
             return first + ((x // 2) if abs(x) == 2 else 0)
@@ -123,7 +121,7 @@ class CrossTuple(object):
                     (row - 1, col - 2), (row + 1, col - 2)}                
         return {(r, c): (__legx(row, r), __legx(col, c)) for r, c in moveseats}
     
-    def rookcannonmove_lines(self, seat):
+    def rookcannonmoveseat_lines(self, seat):
         # 车炮可走的四个方向位置        
         row, col = seat
         return ([(row, c) for c in range(col - 1, MinColNo - 1, -1)], # 左边位置列表
@@ -136,7 +134,7 @@ class CrossTuple(object):
         return {(row, col + 1), (row, col - 1), (row - 1, col), (row + 1, col)}            
 
 
-Cross = CrossTuple()
+CrossT = CrossTuple()
 # 调用交叉转换类型，可更换
 
         

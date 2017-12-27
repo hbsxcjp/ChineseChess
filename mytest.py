@@ -11,47 +11,7 @@ from form import *
 
 
 class Test(unittest.TestCase):
-
-    def xtest_config_et(self):          
-        cc1 = Config('cjp')
-        cc1.save()                
-        pass       
-    
-    def xtest_crossbase(self):            
-        crolist = [Cross.allseats]
-        for cro in [Cross.sideseats, Cross.kingseats,
-                    Cross.advisorseats, Cross.bishopseats, Cross.pawnseats]:
-            for f in [True, False]:        
-                crolist.append(cro[f])                
-        for cro in crolist:
-            #print(sorted([c for c in cro]), len(cro))        
-            pass          
-        
-    def xtest_Piece(self):    
-        pieces = Pieces()        
-        blackkingpie = pieces.getkingpiece(BLACK_SIDE)
-        redkingpie = pieces.getkingpiece(RED_SIDE)
-        #print(blackkingpie, redkingpie)
-        
-    def xtest_Board(self):    
-        board = Board() 
-        #print(board)
-        
-    def xtest_LoadPiecesToBoard(self): 
-        FEN = 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 1'
-        board = Board()
-        pieces = board.pieces        
-        board.loadpieces(FEN)
-        #print(board)         
-        crosses = board.getlivecrosses()
-        #print(sorted(crosses), len(crosses)) 
-        pie_moveseats = [(pie, pie.getmoveseats(seat, board))
-                for seat, pie in crosses.items()]
-        for pie, seats in pie_moveseats:
-            #print(pie, sorted(seats), len(seats))
-            pass
-        #print(board)        
-        
+       
     def test_setandgetPGN(self):
         start = time.time()        
         chessboard = ChessBoard()
@@ -77,7 +37,7 @@ class Test(unittest.TestCase):
         end = time.time()
         print('usetime: %0.5f' % (end - start))
 
-    def xtest_form(self):
+    def test_form(self):
         user = User(1, 'cjp')
         user.application.mainloop()
         pass      

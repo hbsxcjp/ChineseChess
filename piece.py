@@ -15,21 +15,21 @@ PawnNames = {'兵', '卒'}
 AdvisorBishopNames = {'仕', '相', '士', '象'}
 StrongePieceNames = {'车', '马', '炮', '兵', '卒'}
 LineMovePieceNames = {'帅', '将', '车', '炮', '兵', '卒'}
-
-
+    
+    
 class Piece(object):
     # 棋子类
     def __init__(self, char):
         self.__side = (None if char == BlankChar
                     else (BLACK_SIDE if char.islower() else RED_SIDE))
         self.__char = char
+        self.seat = None
         
     def __str__(self):
         return self.name
         
     @property
     def side(self):
-        #return BLACK_SIDE if self.__char.islower() else RED_SIDE
         return self.__side
         
     @property
@@ -48,61 +48,61 @@ class Piece(object):
     def otherside(cls, side):        
         return RED_SIDE if side == BLACK_SIDE else BLACK_SIDE
         
-    def getallseats(self,  board):  
+    def getallseats(self, board):  
         # 全部活动范围集合(默认：车马炮的活动范围)
-        return Cross.allseats
+        return CrossT.allseats
         
     def intersectionseats(self, moveseats, board):
         return {seat for seat in (self.getallseats(board) & moveseats)
-                if board.getside(seat) != self.side}        
+                if board.getside(seat) != self.side}
     
-    def getmoveseats(self, seat, board):
+    def getmoveseats(self, board):
         # 当前棋子所处位置的有效活动范围集合
         return {}
         
 
 class King(Piece):
 
-    def getallseats(self,  board):  
-        return Cross.kingseats[board.getboardside(self.side)]
+    def getallseats(self, board):  
+        return CrossT.kingseats[board.getboardside(self.side)]
         
-    def getmoveseats(self, seat, board):
-        return self.intersectionseats(Cross.getkingmoveseats(seat), board)
+    def getmoveseats(self, board):
+        return self.intersectionseats(CrossT.getkingmoveseats(self.seat), board)
         
         
 class Advisor(Piece):
     
-    def getallseats(self,  board):  
-        return Cross.advisorseats[board.getboardside(self.side)]
+    def getallseats(self, board):  
+        return CrossT.advisorseats[board.getboardside(self.side)]
         
-    def getmoveseats(self, seat, board):
-        return self.intersectionseats(Cross.getadvisormoveseats(seat), board)     
+    def getmoveseats(self, board):
+        return self.intersectionseats(CrossT.getadvisormoveseats(self.seat), board)     
         
         
 class Bishop(Piece):
 
-    def getallseats(self,  board):  
-        return Cross.bishopseats[board.getboardside(self.side)]
+    def getallseats(self, board):  
+        return CrossT.bishopseats[board.getboardside(self.side)]
         
-    def getmoveseats(self, seat, board):
-        move_centreseats = Cross.getbishopmove_centreseats(seat)
+    def getmoveseats(self, board):
+        move_centreseats = CrossT.getbishopmove_centreseats(self.seat)
         return {seat for seat in self.intersectionseats(move_centreseats.keys(), board)
                 if board.isblank(move_centreseats[seat])}
                 
         
 class Knight(Piece):
         
-    def getmoveseats(self, seat, board):    
-        move_legseats = Cross.getknightmove_legseats(seat)
+    def getmoveseats(self, board):    
+        move_legseats = CrossT.getknightmove_legseats(self.seat)
         return {seat for seat in self.intersectionseats(move_legseats.keys(), board)
                 if board.isblank(move_legseats[seat])}
 
         
 class Rook(Piece):
         
-    def getmoveseats(self, seat, board):
+    def getmoveseats(self, board):
         result = set()
-        lines = Cross.rookcannonmove_lines(seat)
+        lines = CrossT.rookcannonmoveseat_lines(self.seat)
         for seatline in lines:
             for seat in seatline:
                 if board.isblank(seat):
@@ -116,9 +116,9 @@ class Rook(Piece):
         
 class Cannon(Piece):
         
-    def getmoveseats(self, seat, board):
+    def getmoveseats(self, board):
         result = set()
-        lines = Cross.rookcannonmove_lines(seat)
+        lines = CrossT.rookcannonmoveseat_lines(self.seat)
         for seatline in lines:
             skip = False
             for seat in seatline:
@@ -136,14 +136,14 @@ class Cannon(Piece):
         
 class Pawn(Piece):
     
-    def getallseats(self,  board):  
-        return Cross.pawnseats[board.getboardside(self.side)]
+    def getallseats(self, board):  
+        return CrossT.pawnseats[board.getboardside(self.side)]
         
-    def getmoveseats(self, seat, board):        
-        row = seat[0]
+    def getmoveseats(self, board):        
+        row = self.seat[0]
         isbottomside = board.isbottomside(self.side)
         return {(r, c) for r, c in
-                self.intersectionseats(Cross.getpawnmoveseats(seat), board)
+                self.intersectionseats(CrossT.getpawnmoveseats(self.seat), board)
                 if (isbottomside and r >= row) or (not isbottomside and r <= row)}
                 
         
@@ -164,12 +164,16 @@ class Pieces(object):
     def __str__(self):
         return str([str(piece) for piece in self.__pieces])
         
-    def getunusedpiece(self, char, board):
+    def clear(self):
+        for piece in self.__pieces:
+            piece.seat = None
+        
+    def getunusedpiece(self, char):
         if char == BlankChar:
             return BlankPie
-        charpieces = list({piece for piece in self.__pieces if piece.char == char}
-                        - set(board.getlivecrosses().values()))
-        return charpieces[0]
+        for piece in self.__pieces:
+            if piece.char == char and piece.seat is None:
+                return piece
         #assert False, '找不到空闲的棋子: ' + char        
 
     def getkingpiece(self, side):
@@ -179,8 +183,11 @@ class Pieces(object):
         n = self.__pieces.index(piece)
         return self.__pieces[(n + 16) if n < 16 else (n - 16)]        
         
-    def geteatedpieces(self, livepieces):
-        return set(self.__pieces) - set(livepieces)
+    def getlivepieces(self):
+        return [piece for piece in self.__pieces if piece.seat is not None]
+        
+    def geteatedpieces(self):
+        return [piece for piece in self.__pieces if piece.seat is None]
     
     def setpieimgids(self, imgids):
         for n, piece in enumerate(self.__pieces):
