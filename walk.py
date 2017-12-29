@@ -104,8 +104,7 @@ class Walks(Model):
         return self.__walks[n].remark.strip()
         
     def currentwalk(self):
-        if not self.isempty and not self.isstart:
-            return self.__walks[self.cursor]
+        return self.__walks[self.cursor]
       
     def moveseats(self):
         return [(walk.fromseat, walk.toseat) for walk in self.__walks]
@@ -116,7 +115,7 @@ class Walks(Model):
     def cutfollow(self):
         self.__walks = self.__walks[:self.cursor + 1]
         
-    def move(self, inc, refresh=True):
+    def move(self, inc):
                 
         def __forward():
             if self.isempty or self.islast:
@@ -132,19 +131,10 @@ class Walks(Model):
 
         function = __forward if inc > 0 else __backward
         [function() for _ in range(abs(inc))]
-        if refresh:
-            self.notifyviews()
  
-    def movestart(self, refresh=True):
-        self.move(-self.length, refresh)
+    def move_refresh(self, inc):
+        self.move(inc)
+        self.notifyviews()
 
-    def movelast(self, refresh=True):
-        self.move(self.length, refresh)
-
-    def loadmoveseats(self, moveseats, remarkes, chessboard):
-        self.clear()
-        for n, (fromseat, toseat) in enumerate(moveseats):        
-            self.append(chessboard.createwalk(fromseat, toseat, '', remarkes[n]))
-            self.move(1, False)
 
 #            

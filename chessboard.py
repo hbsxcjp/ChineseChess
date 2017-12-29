@@ -49,7 +49,7 @@ class ChessBoard(Model):
     def getpgn(self):
         # 将一个棋局着棋过程，写入pgn字符串
         offset = self.walks.cursor + 1        
-        self.walks.movestart(False)
+        self.walks.move(-offset)
         
         strinfo = '\n'.join(['[{} "{}"]'.format(key, self.info[key])
                     for key in self.info])
@@ -58,7 +58,7 @@ class ChessBoard(Model):
             assert sfen.split()[0] == gfen.split()[0], '\n棋谱FEN：%s, \n生成FEN: %s' % (sfen.split()[0], gfen.split()[0])                        
         self.info['FEN'] = gfen
         
-        self.walks.move(offset, False)
+        self.walks.move(offset)
         return '{}\n{}\n{}\n'.format(strinfo, self.remark, str(self.walks))      
         
     def setpgn(self, pgn=''):
@@ -99,8 +99,8 @@ class ChessBoard(Model):
                             self.walks.currentside, des)
                     self.walks.append(self.createwalk(fromseat, toseat,
                             des, walkremarks[n]))
-                    self.walks.move(1, False)
-            self.walks.movestart(False)
+                    self.walks.move(1)
+            self.walks.move(-self.walks.length)
         
         __getinfo()
         self.setfen(self.info.get('FEN', self.FEN))
@@ -128,37 +128,38 @@ class ChessBoard(Model):
             description = self.board.moveseats_chinese(fromseat, toseat)
         walk = Walk(go, back, description, remark)
         walk.fromseat, walk.toseat = fromseat, toseat
-        return walk
-     
+        return walk     
+ 
     def changeside(self, changetype='exchange'):
     
-        def __crosses_seats(changetype):
-        
-            def __crosses_seats_rs(transfun):
-                return ({transfun(piece.seat): piece
-                        for piece in self.board.getlivepieces()},#.items()seat, 
-                        [(transfun(fromseat), transfun(toseat))
-                        for fromseat, toseat in self.walks.moveseats()])
-                        
-            if changetype == 'rotate':
-                return __crosses_seats_rs(CrossT.getrotateseat)
-            elif changetype == 'symmetry':
-                return __crosses_seats_rs(CrossT.getsymmetryseat)
-            elif changetype == 'exchange':
+        def __crosses_moveseats(changetype):        
+            if changetype == 'exchange':
                 self.walks.currentside = Piece.otherside(self.walks.currentside)
                 return ({piece.seat: self.board.pieces.getothersidepiece(piece)
-                                for piece in self.board.getlivepieces()},#.items()seat, 
+                                for piece in self.board.getlivepieces()},
                                 self.walks.moveseats())
-        
+            else:
+                if changetype == 'rotate':
+                    transfun = CrossT.getrotateseat
+                elif changetype == 'symmetry':
+                    transfun = CrossT.getsymmetryseat
+                return ({transfun(piece.seat): piece
+                        for piece in self.board.getlivepieces()},
+                        [(transfun(fromseat), transfun(toseat))
+                        for fromseat, toseat in self.walks.moveseats()])
+            
         offset = self.walks.cursor + 1 - self.walks.length 
         remarkes = self.walks.remarkes  # 备注里如有棋子走法，则未作更改？        
-        self.walks.movestart(False)
+        self.walks.move(-self.walks.length)
         
-        crosses, moveseats = __crosses_seats(changetype)        
+        crosses, moveseats = __crosses_moveseats(changetype)        
         self.board.loadcrosses(crosses)
-        self.walks.loadmoveseats(moveseats, remarkes, self)
+        self.walks.clear()
+        for n, (fromseat, toseat) in enumerate(moveseats):        
+            self.walks.append(self.createwalk(fromseat, toseat, '', remarkes[n]))
+            self.walks.move(1)
         
-        self.walks.move(offset, False)
-        self.notifyviews()        
+        self.walks.move(offset)
+        self.notifyviews()
         
 #        

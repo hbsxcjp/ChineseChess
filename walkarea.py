@@ -95,29 +95,29 @@ class WalkArea(View, ttk.Frame):
         self.walklistbox.bind('<Double-1>', self.onMouseLeftclick) # 用buttom-1不成功！
 
     def onUpKey(self, event): 
-        self.walks.move(-1)
+        self.walks.move_refresh(-1)
         
     def onDownKey(self, event): 
-        self.walks.move(1)
+        self.walks.move_refresh(1)
 
     def onPgupKey(self, event): 
-        self.walks.move(-20)
+        self.walks.move_refresh(-20)
         
     def onPgdnKey(self, event): 
-        self.walks.move(20)
+        self.walks.move_refresh(20)
 
     def onHomeKey(self, event): 
-        self.walks.movestart()
+        self.walks.move_refresh(-self.walks.length)
         
     def onEndKey(self, event): 
-        self.walks.movelast()
+        self.walks.move_refresh(self.walks.length)
 
     def onMouseLeftclick(self, event):
         # 接收点击信息
         self.focus_set()
         selections = self.walklistbox.curselection()
         if selections:
-            self.walks.move(int(selections[0]) - 1 - self.walks.cursor)
+            self.walks.move_refresh(int(selections[0]) - 1 - self.walks.cursor)
 
     def updateview(self):
         # 更新视图

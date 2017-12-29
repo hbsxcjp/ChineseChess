@@ -237,7 +237,7 @@ class BdCanvas(View, Canvas):
             if toseat in self.board.canmoveseats(self.board.getpiece(fromseat)):
                 if self.walks.islast or __change():
                     self.walks.append(self.chessboard.createwalk(fromseat, toseat))
-                    self.walks.move(1)  # 更新视图
+                    self.walks.move_refresh(1)  # 更新视图
                     self.selectedseat = None                    
             else:
                 playsound('ILLEGAL') # 点击位置不正确声音

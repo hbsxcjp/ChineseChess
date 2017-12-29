@@ -20,10 +20,9 @@ LineMovePieceNames = {'帅', '将', '车', '炮', '兵', '卒'}
 class Piece(object):
     # 棋子类
     def __init__(self, char):
-        self.__side = (None if char == BlankChar
-                    else (BLACK_SIDE if char.islower() else RED_SIDE))
+        self.__side = BLACK_SIDE if char.islower() else RED_SIDE
         self.__char = char
-        self.seat = None
+        self.__seat = None
         
     def __str__(self):
         return self.name
@@ -37,6 +36,10 @@ class Piece(object):
         return self.__char
      
     @property
+    def seat(self):
+        return self.__seat
+     
+    @property
     def name(self):
         return CharToNames[self.__char]
         
@@ -48,6 +51,9 @@ class Piece(object):
     def otherside(cls, side):        
         return RED_SIDE if side == BLACK_SIDE else BLACK_SIDE
         
+    def setseat(self, seat):
+        self.__seat = seat
+     
     def getallseats(self, board):  
         # 全部活动范围集合(默认：车马炮的活动范围)
         return CrossT.allseats
@@ -61,6 +67,16 @@ class Piece(object):
         return {}
         
 
+class BlankPie(Piece):
+
+    @property
+    def side(self):
+        return None
+        
+    def setseat(self, seat):
+        pass
+        
+        
 class King(Piece):
 
     def getallseats(self, board):  
@@ -165,8 +181,7 @@ class Pieces(object):
         return str([str(piece) for piece in self.__pieces])
         
     def clear(self):
-        for piece in self.__pieces:
-            piece.seat = None
+        [piece.setseat(None) for piece in self.__pieces]
         
     def getunusedpiece(self, char):
         if char == BlankChar:
@@ -194,7 +209,7 @@ class Pieces(object):
             piece.imgid = imgids[n]
             
         
-BlankPie = Piece(BlankChar)
+BlankPie = BlankPie(BlankChar)
 
 
  

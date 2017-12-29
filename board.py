@@ -96,11 +96,11 @@ class Board(Model):
         
     def setpiece(self, seat, piece):
         self.crosses[seat] = piece
-        piece.seat = seat
+        piece.setseat(seat)
 
     def movepiece(self, fromseat, toseat, backpiece=BlankPie):
         eatpiece = self.crosses[toseat]
-        eatpiece.seat = None
+        eatpiece.setseat(None)
         self.setpiece(toseat, self.crosses[fromseat])
         self.setpiece(fromseat, backpiece)
         return eatpiece
@@ -226,15 +226,15 @@ class Board(Model):
     def chinese_moveseats(self, side, chinese):
         # 根据中文纵线着法描述取得源、目标位置: (fromseat, toseat)
                     
-        def __chcol_col(isbottomside, zhcol):
+        def __chcol_col(zhcol):
             return (NumCols-ChineseToNum[zhcol] if isbottomside
                     else ChineseToNum[zhcol]-1)
             
-        def __movzh_movdir(isbottomside, movchar):
+        def __movzh_movdir(movchar):
             # 根据中文行走方向取得棋子的内部数据方向（进：1，退：-1，平：0）
             return ChineseToNum[movchar] * (1 if isbottomside else -1)
             
-        def __indexname_fromseat(index, name, seats, isbottomside):
+        def __indexname_fromseat(index, name, seats):
             if name in PawnNames: 
                 seats = self.__sortpawnseats(isbottomside, seats) # 获取多兵的列
                 if len(seats) > 3:
@@ -260,7 +260,7 @@ class Board(Model):
         name = chinese[0]
         if name in CharToNames.values():
             seats = sorted([piece.seat for piece in self.getlivesidenamecolpieces(
-                            side, name, __chcol_col(isbottomside, chinese[1]))])
+                            side, name, __chcol_col(chinese[1]))])
             assert bool(seats), ('没有找到棋子 => %s side:%s name: %s\n%s' % 
                             (chinese, side, name, self))
 
@@ -275,10 +275,10 @@ class Board(Model):
             assert len(seats) >= 2, 'side: %s name: %s 棋子列表少于2个! \n%s' % (
                         side, name, self)
             
-            fromseat = __indexname_fromseat(index, name, seats, isbottomside)
+            fromseat = __indexname_fromseat(index, name, seats)
         
-        movdir = __movzh_movdir(isbottomside, chinese[2])
-        tocol = __chcol_col(isbottomside, chinese[3])
+        movdir = __movzh_movdir(chinese[2])
+        tocol = __chcol_col(chinese[3])
         toseat = (__linename_toseat(fromseat, movdir, tocol, chinese[3])
                     if name in LineMovePieceNames else
                         __obliquename_toseat(fromseat, movdir, tocol,
@@ -290,7 +290,7 @@ class Board(Model):
         
     def moveseats_chinese(self, fromseat, toseat):
         # 根据源、目标位置: (fromseat, toseat)取得中文纵线着法描述
-        def __col_chcol(side, isbottomside, col):
+        def __col_chcol(side, col):
             return NumToChinese[side][NumCols-col if isbottomside else col+1]
                 
         frompiece = self.getpiece(fromseat)
@@ -311,10 +311,10 @@ class Board(Model):
             firstStr = indexstr[seats.index(fromseat)] + name
         else: 
             #仕(士)和相(象)不用“前”和“后”区别，因为能退的一定在前，能进的一定在后
-            firstStr = name + __col_chcol(side, isbottomside, fromcol)
+            firstStr = name + __col_chcol(side, fromcol)
         
         torow, tocol = CrossT.getrow(toseat), CrossT.getcol(toseat)
-        chcol = __col_chcol(side, isbottomside, tocol)
+        chcol = __col_chcol(side, tocol)
         tochar = ('平' if torow == fromrow else
                     ('进' if isbottomside == (torow > fromrow) else '退'))
         tochcol = (chcol if torow == fromrow or name not in LineMovePieceNames
