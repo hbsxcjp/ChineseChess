@@ -116,8 +116,8 @@ class Board(Model):
         return self.crosses[seat] is BlankPie
               
     @classmethod
-    def otherside(cls, side):        
-        return TOP_SIDE if side == BOTTOM_SIDE else BOTTOM_SIDE
+    def otherside(cls, boardside):        
+        return TOP_SIDE if boardside == BOTTOM_SIDE else BOTTOM_SIDE
     
     def getpiece(self, seat):
         return self.crosses[seat]
@@ -157,14 +157,11 @@ class Board(Model):
             if all([self.isblank(seat) for seat
                     in CrossT.getsamecolseats(kingseat, otherseat)]):
                 return True
-        for piece in self.getlivesidepieces(otherside): # 是否无子可走
+        for piece in self.getlivesidepieces(otherside):
             if piece.isStronge and (kingseat in piece.getmoveseats(self)):
-                return True        
+                return True
         return False
         
-    def isdied(self, side):
-        return not any([self.canmoveseats(piece) for piece in self.getlivesidepieces(side)])
-
     def canmoveseats(self, piece):
         # 获取棋子可走的位置, 不能被将军
         result = []
@@ -175,6 +172,9 @@ class Board(Model):
                 result.append(toseat)
             self.movepiece(toseat, fromseat, topiece)
         return result
+
+    def isdied(self, side):
+        return not any([self.canmoveseats(piece) for piece in self.getlivesidepieces(side)])
 
     def loadcrosses(self, crosses):
         self.clear()
@@ -207,10 +207,8 @@ class Board(Model):
         
         assert __isvalid(charls)[0], __isvalid(charls)[1]
         
-        self.clear()
-        [self.setpiece(CrossT.getseat(n), self.pieces.getunusedpiece(char)) 
-                for n, char in enumerate(charls)]
-        self.setbottomside()        
+        self.loadcrosses(self.pieces.getcrosses(charls))
+        
         
     def __sortpawnseats(self, isbottomside, pawnseats):
         # 多兵排序
@@ -220,12 +218,12 @@ class Board(Model):
             pawnseatdict[CrossT.getcol(seat)].append(seat) # 列内排序
         for col, seats in sorted(pawnseatdict.items()):    
             if len(seats) > 1:
-                result.extend(seats) # 按列排序，
+                result.extend(seats) # 按列排序
         return result[::-1] if isbottomside else result
         
     def chinese_moveseats(self, side, chinese):
         # 根据中文纵线着法描述取得源、目标位置: (fromseat, toseat)
-                    
+
         def __chcol_col(zhcol):
             return (NumCols-ChineseToNum[zhcol] if isbottomside
                     else ChineseToNum[zhcol]-1)
@@ -284,7 +282,7 @@ class Board(Model):
                         __obliquename_toseat(fromseat, movdir, tocol,
                         name in AdvisorBishopNames))
         
-        #assert chinese == self.moveseats_chinese(fromseat, toseat), ('棋谱着法: %s   生成着法: %s 不等！' % (chinese, self.moveseats_chinese(fromseat, toseat))) 
+        assert chinese == self.moveseats_chinese(fromseat, toseat), ('棋谱着法: %s   生成着法: %s 不等！' % (chinese, self.moveseats_chinese(fromseat, toseat))) 
 
         return (fromseat, toseat)
         
@@ -321,7 +319,7 @@ class Board(Model):
                         else NumToChinese[side][abs(torow - fromrow)])
         lastStr = tochar + tochcol
         
-        assert (fromseat, toseat) == self.chinese_moveseats(side, firstStr + lastStr), '棋谱着法: %s 生成着法: %s 不等！' % ((fromseat, toseat), self.chinese_moveseats(side, firstStr + lastStr))
+        #assert (fromseat, toseat) == self.chinese_moveseats(side, firstStr + lastStr), '棋谱着法: %s 生成着法: %s 不等！' % ((fromseat, toseat), self.chinese_moveseats(side, firstStr + lastStr))
         
         return '{}{}'.format(firstStr, lastStr)
         

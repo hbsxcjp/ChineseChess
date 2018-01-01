@@ -59,11 +59,12 @@ class Piece(object):
         return CrossT.allseats
         
     def intersectionseats(self, moveseats, board):
+        # 棋子规则移动范围与全部移动范围的交集，再筛除本方棋子占用范围
         return {seat for seat in (self.getallseats(board) & moveseats)
                 if board.getside(seat) != self.side}
     
     def getmoveseats(self, board):
-        # 当前棋子所处位置的有效活动范围集合
+        # 筛除棋子特殊规则后的有效活动范围集合
         return {}
         
 
@@ -143,9 +144,9 @@ class Cannon(Piece):
                         result.add(seat)                     
                     else: # 该位置有棋子
                         skip = True
-                elif (not board.isblank(seat) and 
-                        board.getside(seat) != self.side):
-                    result.add(seat)
+                elif not board.isblank(seat):
+                    if board.getside(seat) != self.side:
+                        result.add(seat)
                     break
         return result
         
@@ -183,14 +184,19 @@ class Pieces(object):
     def clear(self):
         [piece.setseat(None) for piece in self.__pieces]
         
-    def getunusedpiece(self, char):
-        if char == BlankChar:
-            return BlankPie
-        for piece in self.__pieces:
-            if piece.char == char and piece.seat is None:
-                return piece
-        #assert False, '找不到空闲的棋子: ' + char        
-
+    def getcrosses(self, charls):    
+        result = {}
+        chars = self.Chars.copy()
+        for n, char in enumerate(charls):
+            if char == BlankChar:
+                continue
+            for i, ch in enumerate(chars):
+                if char == ch:
+                    result[CrossT.getseat(n)] = self.__pieces[i]
+                    chars[i] = ''
+                    break
+        return result
+                
     def getkingpiece(self, side):
         return self.__pieces[0 if side == RED_SIDE else 16]
         

@@ -76,29 +76,22 @@ class ChessBoard(Model):
             if result:
                 self.info['Result'] = result[0]    # 棋局结果
         
-        def __createwalks():
-        
-            def __getwalkdeses():
-            
-                def __getwalks():
-                    #s = '(\d+)\. (\S{4})\s+(\{.*\})?\s*(\S{4})?\s+(\{.*\})?'
-                    s = '(\d+)\.\s+(\S{4})\s+(\{.*\})?\s*(\S{4})?\s*(\{.*\})?'
-                    return re.findall(s, pgn)  # 走棋信息, 字符串元组
-                    
-                walkdeses = []
-                walkremarks = []
-                for n, des1, remark1, des2, remark2 in __getwalks():
-                    walkdeses.extend([des1, des2])
-                    walkremarks.extend([remark1, remark2])                
-                return  walkdeses, walkremarks
-        
-            walkdeses, walkremarks = __getwalkdeses()
+        def __createwalks():        
+            #s = '(\d+)\. (\S{4})\s+(\{.*\})?\s*(\S{4})?\s+(\{.*\})?'
+            s = '(\d+)\.\s+(\S{4})\s+(\{.*\})?\s*(\S{4})?\s*(\{.*\})?'
+            walkdes_remarks = re.findall(s, pgn)  # 走棋信息, 字符串元组
+                
+            walkdeses = []
+            walkremarks = []
+            for n, des1, remark1, des2, remark2 in walkdes_remarks:
+                walkdeses.extend([des1, des2])
+                walkremarks.extend([remark1, remark2])
+                
             for n, des in enumerate(walkdeses):
                 if des:
                     (fromseat, toseat) = self.board.chinese_moveseats(
                             self.walks.currentside, des)
-                    self.walks.append(self.createwalk(fromseat, toseat,
-                            des, walkremarks[n]))
+                    self.walks.append(self.createwalk(fromseat, toseat, walkremarks[n]))
                     self.walks.move(1)
             self.walks.move(-self.walks.length)
         
@@ -110,26 +103,27 @@ class ChessBoard(Model):
         if hasattr(self, 'views'):
             self.notifyviews()
     
-    def createwalk(self, fromseat, toseat, description='', remark=''):
-        # 生成一步着法命令
+    def createwalk(self, fromseat, toseat, remark=''):
+        # 生成一步着法命令description='', 
+        '''
+        assert toseat in self.board.canmoveseats(self.board.getpiece(fromseat)), ('该走法不符合规则，或者可能自己被将军、将帅会面！\nfrom: %s\nto: %s\ncanmove: %s\n%s' % 
+            (fromseat, toseat, sorted(self.board.canmoveseats(self.board.getpiece(fromseat))), self.board))
+        '''        
+        
         def go():
-            assert toseat in self.board.canmoveseats(self.board.getpiece(fromseat)), ('该走法不符合规则，或者可能自己被将军、将帅会面！\nfrom: %s\nto: %s\ncanmove: %s\n%s' % 
-                (fromseat, toseat, sorted(self.board.canmoveseats(self.board.getpiece(fromseat))), self.board))
-            
             back.eatpiece = self.board.movepiece(fromseat, toseat)
             # 给函数back添加一个属性:被吃棋子!
-            self.walks.setcurrentside(Piece.otherside(self.walks.currentside))
+            self.walks.transcurrentside()
             
         def back():
             self.board.movepiece(toseat, fromseat, back.eatpiece)
-            self.walks.setcurrentside(Piece.otherside(self.walks.currentside))
+            self.walks.transcurrentside()
             
-        if not description:
-            description = self.board.moveseats_chinese(fromseat, toseat)
-        walk = Walk(go, back, description, remark)
-        walk.fromseat, walk.toseat = fromseat, toseat
-        return walk     
- 
+        description = self.board.moveseats_chinese(fromseat, toseat)
+        walk = Walk(go, back, remark)
+        walk.fromseat, walk.toseat, walk.description = fromseat, toseat, description   
+        return walk
+
     def changeside(self, changetype='exchange'):
     
         def __crosses_moveseats(changetype):        
@@ -148,18 +142,19 @@ class ChessBoard(Model):
                         [(transfun(fromseat), transfun(toseat))
                         for fromseat, toseat in self.walks.moveseats()])
             
-        offset = self.walks.cursor + 1 - self.walks.length 
+        offset = self.walks.cursor + 1 
         remarkes = self.walks.remarkes  # 备注里如有棋子走法，则未作更改？        
         self.walks.move(-self.walks.length)
         
         crosses, moveseats = __crosses_moveseats(changetype)        
         self.board.loadcrosses(crosses)
+        
         self.walks.clear()
         for n, (fromseat, toseat) in enumerate(moveseats):        
-            self.walks.append(self.createwalk(fromseat, toseat, '', remarkes[n]))
+            self.walks.append(self.createwalk(fromseat, toseat, remarkes[n])) 
             self.walks.move(1)
+        self.walks.move(offset-self.walks.length)
         
-        self.walks.move(offset)
         self.notifyviews()
         
 #        

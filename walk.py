@@ -8,12 +8,11 @@ from board import *
 class Walk(object):
     # 着法类
     
-    def __init__(self, go, back, description, remark):
+    def __init__(self, go, back, remark):
         # 构造一步着法
         assert callable(go) and callable(back), '参数不是可运行的！'
         self.go = go
         self.back = back
-        self.description = description
         self.remark = remark
     
     def __str__(self):
@@ -76,6 +75,9 @@ class Walks(Model):
     def setcurrentside(self, side):
         self.currentside = side
             
+    def transcurrentside(self):
+        self.currentside = Piece.otherside(self.currentside)
+        
     @property
     def descriptiones(self):
         return [walk.description for walk in self.__walks]

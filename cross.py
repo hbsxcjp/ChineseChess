@@ -99,13 +99,13 @@ class CrossTuple(object):
     def getadvisormoveseats(self, seat):
         row, col = seat
         return {(row + 1, col + 1), (row - 1, col + 1),
-                        (row - 1, col - 1), (row + 1, col - 1)}
+                (row - 1, col - 1), (row + 1, col - 1)}
     
     def getbishopmove_centreseats(self, seat):           
         # 获取移动、象心行列值
         row, col = seat
         moveseats = {(row + 2, col + 2), (row - 2, col + 2),
-                        (row - 2, col - 2), (row + 2, col - 2)}
+                    (row - 2, col - 2), (row + 2, col - 2)}
         return {(r, c): ((row+r)//2, (col+c)//2) for r, c in moveseats}
     
     def getknightmove_legseats(self, seat):    
