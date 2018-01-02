@@ -221,7 +221,7 @@ class BdCanvas(View, Canvas):
             self.delete('walk')
             self.coords('to', OutsideXY)
             self.coords('from', self.seat_xy(self.selectedseat))
-            for seat in self.board.canmoveseats(self.board.getpiece(self.selectedseat)):                
+            for seat in self.board.canmoveseats(self.board.getpiece(self.selectedseat)):
                 self.create_oval(self.getoval_xy(seat),
                         outline='blue', fill='blue', tag='walk')
             self.tag_raise('walk', 'pie')

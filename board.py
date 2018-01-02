@@ -282,7 +282,7 @@ class Board(Model):
                         __obliquename_toseat(fromseat, movdir, tocol,
                         name in AdvisorBishopNames))
         
-        assert chinese == self.moveseats_chinese(fromseat, toseat), ('棋谱着法: %s   生成着法: %s 不等！' % (chinese, self.moveseats_chinese(fromseat, toseat))) 
+        #assert chinese == self.moveseats_chinese(fromseat, toseat), ('棋谱着法: %s   生成着法: %s 不等！' % (chinese, self.moveseats_chinese(fromseat, toseat))) 
 
         return (fromseat, toseat)
         
@@ -319,7 +319,7 @@ class Board(Model):
                         else NumToChinese[side][abs(torow - fromrow)])
         lastStr = tochar + tochcol
         
-        #assert (fromseat, toseat) == self.chinese_moveseats(side, firstStr + lastStr), '棋谱着法: %s 生成着法: %s 不等！' % ((fromseat, toseat), self.chinese_moveseats(side, firstStr + lastStr))
+        assert (fromseat, toseat) == self.chinese_moveseats(side, firstStr + lastStr), '棋谱着法: %s 生成着法: %s 不等！' % ((fromseat, toseat), self.chinese_moveseats(side, firstStr + lastStr))
         
         return '{}{}'.format(firstStr, lastStr)
         

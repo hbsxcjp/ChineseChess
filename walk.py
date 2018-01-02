@@ -8,13 +8,16 @@ from board import *
 class Walk(object):
     # 着法类
     
-    def __init__(self, go, back, remark):
+    def __init__(self, go, back, fromseat, toseat, remark, description):
         # 构造一步着法
         assert callable(go) and callable(back), '参数不是可运行的！'
         self.go = go
         self.back = back
+        self.fromseat = fromseat
+        self.toseat = toseat
         self.remark = remark
-    
+        self.description = description
+        
     def __str__(self):
         return self.description
     

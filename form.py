@@ -74,6 +74,7 @@ class MainForm(View, ttk.Frame):
     def opennewpgn(self):
         if self.__asksavepgn('打开棋局文件') is None:
             return
+        self.config.setelement('lastpgnfilename', '')
         self.chessboard.setpgn('')
             
     def openotherpgn(self):
@@ -90,6 +91,7 @@ class MainForm(View, ttk.Frame):
             self.config.setelement('lastpgnfilename', filename)
             with open(filename, 'w') as file:
                 file.write(self.chessboard.getpgn())
+            self.updateview()
         else:
             self.saveotherpgn()
         
@@ -103,11 +105,11 @@ class MainForm(View, ttk.Frame):
         pass
         
     def deducepgn(self):
-    
+        #新窗口推演
         pass
         
     def modifyfen(self):
-    
+        #编辑局面
         pass
 
     def setoption(self):
@@ -131,7 +133,7 @@ class MainForm(View, ttk.Frame):
             ('文件(F)', 
                    [('新的对局(N)', self.opennewpgn, 5),
                     ('打开(O)...', self.openotherpgn, 3),
-                    ('近期文件...', self.lastpgn, 3),
+                    #('近期文件...', self.lastpgn, 3),
                     ('保存(S)', self.savethispgn, 3),
                     ('另存为(A)...', self.saveotherpgn, 4),
                     'separator',
@@ -145,11 +147,10 @@ class MainForm(View, ttk.Frame):
                     ('左右对称(M)', lambda: self.chessboard.changeside('symmetry'), 5),
                     ('对换棋局(D)', self.chessboard.changeside, 5),
                     'separator',
-                    ('新窗口推演(A)', self.deducepgn, 6),
-                    ('编辑局面(E)', self.modifyfen, 5),
-                    'separator',
-                    ('复制局面(C)', lambda: pyperclip.copy(self.chessboard.getpgn()), 5),
-                    ('粘贴局面(P)', lambda: self.chessboard.setpgn(pyperclip.paste()), 5)],
+                    #('新窗口推演(A)', self.deducepgn, 6),
+                    #('编辑局面(E)', self.modifyfen, 5),
+                    #'separator',
+                    ('复制局面(C)', lambda: pyperclip.copy(self.chessboard.getpgn()), 5)],
              3),
             ('着法(M)', 
                    [('起始局面(S)', lambda: self.walkarea.onHomeKey(None), 5),
@@ -191,7 +192,6 @@ class MainForm(View, ttk.Frame):
        
     def updateview(self):
         # 更新视图（由数据模型发起）
-        self.__settitle(self.config.getelement('lastpgnfilename').text)     
-
+        self.__settitle(self.config.getelement('lastpgnfilename').text)
 
 #        

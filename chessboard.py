@@ -79,19 +79,18 @@ class ChessBoard(Model):
         def __createwalks():        
             #s = '(\d+)\. (\S{4})\s+(\{.*\})?\s*(\S{4})?\s+(\{.*\})?'
             s = '(\d+)\.\s+(\S{4})\s+(\{.*\})?\s*(\S{4})?\s*(\{.*\})?'
-            walkdes_remarks = re.findall(s, pgn)  # 走棋信息, 字符串元组
+            description_remarks = re.findall(s, pgn)  # 走棋信息, 字符串元组
                 
-            walkdeses = []
-            walkremarks = []
-            for n, des1, remark1, des2, remark2 in walkdes_remarks:
-                walkdeses.extend([des1, des2])
-                walkremarks.extend([remark1, remark2])
+            descriptiones, remarks = [], []
+            for n, des1, remark1, des2, remark2 in description_remarks:
+                descriptiones.extend([des1, des2])
+                remarks.extend([remark1, remark2])
                 
-            for n, des in enumerate(walkdeses):
+            for n, des in enumerate(descriptiones):
                 if des:
                     (fromseat, toseat) = self.board.chinese_moveseats(
                             self.walks.currentside, des)
-                    self.walks.append(self.createwalk(fromseat, toseat, walkremarks[n]))
+                    self.walks.append(self.createwalk(fromseat, toseat, remarks[n]))
                     self.walks.move(1)
             self.walks.move(-self.walks.length)
         
@@ -104,10 +103,10 @@ class ChessBoard(Model):
             self.notifyviews()
     
     def createwalk(self, fromseat, toseat, remark=''):
-        # 生成一步着法命令description='', 
+        # 生成一步着法命令
         '''
-        assert toseat in self.board.canmoveseats(self.board.getpiece(fromseat)), ('该走法不符合规则，或者可能自己被将军、将帅会面！\nfrom: %s\nto: %s\ncanmove: %s\n%s' % 
-            (fromseat, toseat, sorted(self.board.canmoveseats(self.board.getpiece(fromseat))), self.board))
+        canmoveseats = self.board.canmoveseats(self.board.getpiece(fromseat))
+        assert toseat in canmoveseats, ('该走法不符合规则，或者可能自己被将军、将帅会面！\nfrom: {}\nto: {}\ncanmove: {}\n{}'.format(fromseat, toseat, sorted(canmoveseats), self.board))
         '''        
         
         def go():
@@ -120,10 +119,8 @@ class ChessBoard(Model):
             self.walks.transcurrentside()
             
         description = self.board.moveseats_chinese(fromseat, toseat)
-        walk = Walk(go, back, remark)
-        walk.fromseat, walk.toseat, walk.description = fromseat, toseat, description   
-        return walk
-
+        return Walk(go, back, fromseat, toseat, remark, description)
+            
     def changeside(self, changetype='exchange'):
     
         def __crosses_moveseats(changetype):        
