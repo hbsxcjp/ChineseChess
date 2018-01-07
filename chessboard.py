@@ -1,7 +1,8 @@
 ﻿'''
 中国象棋棋谱类型
 '''
-from walk import *
+
+from walks import *
 
 
 class ChessBoard(Model):
@@ -90,7 +91,7 @@ class ChessBoard(Model):
                 if des:
                     (fromseat, toseat) = self.board.chinese_moveseats(
                             self.walks.currentside, des)
-                    self.walks.append(self.createwalk(fromseat, toseat, remarks[n]))
+                    self.walks.append(fromseat, toseat, remarks[n], self.board)
                     self.walks.move(1)
             self.walks.move(-self.walks.length)
         
@@ -100,32 +101,13 @@ class ChessBoard(Model):
         if pgn:
             __createwalks()        
         if hasattr(self, 'views'):
-            self.notifyviews()
+            self.walks.notifyviews()            
     
-    def createwalk(self, fromseat, toseat, remark=''):
-        # 生成一步着法命令
-        '''
-        canmoveseats = self.board.canmoveseats(self.board.getpiece(fromseat))
-        assert toseat in canmoveseats, ('该走法不符合规则，或者可能自己被将军、将帅会面！\nfrom: {}\nto: {}\ncanmove: {}\n{}'.format(fromseat, toseat, sorted(canmoveseats), self.board))
-        '''        
-        
-        def go():
-            back.eatpiece = self.board.movepiece(fromseat, toseat)
-            # 给函数back添加一个属性:被吃棋子!
-            self.walks.transcurrentside()
-            
-        def back():
-            self.board.movepiece(toseat, fromseat, back.eatpiece)
-            self.walks.transcurrentside()
-            
-        description = self.board.moveseats_chinese(fromseat, toseat)
-        return Walk(go, back, fromseat, toseat, remark, description)
-            
     def changeside(self, changetype='exchange'):
     
         def __crosses_moveseats(changetype):        
             if changetype == 'exchange':
-                self.walks.currentside = Piece.otherside(self.walks.currentside)
+                self.walks.transcurrentside()
                 return ({piece.seat: self.board.pieces.getothersidepiece(piece)
                                 for piece in self.board.getlivepieces()},
                                 self.walks.moveseats())
@@ -140,7 +122,7 @@ class ChessBoard(Model):
                         for fromseat, toseat in self.walks.moveseats()])
             
         offset = self.walks.cursor + 1 
-        remarkes = self.walks.remarkes  # 备注里如有棋子走法，则未作更改？        
+        remarkes = self.walks.remarkes()  # 备注里如有棋子走法，则未作更改？        
         self.walks.move(-self.walks.length)
         
         crosses, moveseats = __crosses_moveseats(changetype)        
@@ -148,10 +130,10 @@ class ChessBoard(Model):
         
         self.walks.clear()
         for n, (fromseat, toseat) in enumerate(moveseats):        
-            self.walks.append(self.createwalk(fromseat, toseat, remarkes[n])) 
+            self.walks.append(fromseat, toseat, remarkes[n], self.board) 
             self.walks.move(1)
         self.walks.move(offset-self.walks.length)
         
-        self.notifyviews()
+        self.walks.notifyviews()
         
 #        

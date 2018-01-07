@@ -4,7 +4,7 @@
 
 from config_et import *
 from cross import *
-from walk import *
+from walks import *
 
        
 class WalkArea(View, ttk.Frame):
@@ -145,7 +145,7 @@ class WalkArea(View, ttk.Frame):
         def __setremark():
             self.remarktext.delete('1.0', END)
             if not self.walks.isstart:
-                self.remarktext.insert('1.0', self.walks.getremark(self.walks.cursor))
+                self.remarktext.insert('1.0', self.walks.curremark())
 
         __setinfo()
         __setboutstr()

@@ -47,10 +47,6 @@ class Piece(object):
     def isStronge(self):
         return self.name in StrongePieceNames        
         
-    @classmethod
-    def otherside(cls, side):        
-        return RED_SIDE if side == BLACK_SIDE else BLACK_SIDE
-        
     def setseat(self, seat):
         self.__seat = seat
      
@@ -184,15 +180,15 @@ class Pieces(object):
     def clear(self):
         [piece.setseat(None) for piece in self.__pieces]
         
-    def getcrosses(self, charls):    
+    def getseatpieces(self, seatchars):  
         result = {}
         chars = self.Chars.copy()
-        for n, char in enumerate(charls):
+        for seat, char in seatchars.items():
             if char == BlankChar:
                 continue
             for i, ch in enumerate(chars):
                 if char == ch:
-                    result[CrossT.getseat(n)] = self.__pieces[i]
+                    result[seat] = self.__pieces[i]
                     chars[i] = ''
                     break
         return result

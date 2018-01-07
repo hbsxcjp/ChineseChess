@@ -114,10 +114,6 @@ class Board(Model):
     
     def isblank(self, seat):
         return self.crosses[seat] is BlankPie
-              
-    @classmethod
-    def otherside(cls, boardside):        
-        return TOP_SIDE if boardside == BOTTOM_SIDE else BOTTOM_SIDE
     
     def getpiece(self, seat):
         return self.crosses[seat]
@@ -151,7 +147,7 @@ class Board(Model):
                 if CrossT.getcol(piece.seat) == col}
         
     def iskilled(self, side):
-        otherside = Piece.otherside(side)
+        otherside = not side
         kingseat, otherseat = self.getkingseat(side), self.getkingseat(otherside)
         if CrossT.issamecol(kingseat, otherseat): # 将帅是否对面
             if all([self.isblank(seat) for seat
@@ -176,9 +172,9 @@ class Board(Model):
     def isdied(self, side):
         return not any([self.canmoveseats(piece) for piece in self.getlivesidepieces(side)])
 
-    def loadcrosses(self, crosses):
+    def loadcrosses(self, seatpieces):
         self.clear()
-        [self.setpiece(seat, piece) for seat, piece in crosses.items()]
+        [self.setpiece(seat, piece) for seat, piece in seatpieces.items()]
         self.setbottomside()
         
     def loadpieces(self, fen):
@@ -207,8 +203,8 @@ class Board(Model):
         
         assert __isvalid(charls)[0], __isvalid(charls)[1]
         
-        self.loadcrosses(self.pieces.getcrosses(charls))
-        
+        seatchars = {CrossT.getseat(n): char for n, char in enumerate(charls)}
+        self.loadcrosses(self.pieces.getseatpieces(seatchars))
         
     def __sortpawnseats(self, isbottomside, pawnseats):
         # 多兵排序

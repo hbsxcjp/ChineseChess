@@ -4,7 +4,7 @@
 
 from config_et import *
 from cross import *
-from walk import *
+from walks import *
 
 
 BorderWidth = 521
@@ -55,14 +55,14 @@ class BdCanvas(View, Canvas):
             # 图形框内文字坐标
             PondTopTextX, PondTopTextY = ImgBdStartX // 2, CanvasHeight // 2 - PieHeight // 2
             PondBottomTextX, PondBottomTextY = ImgBdStartX // 2, CanvasHeight // 2 + PieHeight // 2
-            PondTopText = PondText[Board.otherside(bottomside)]
+            PondTopText = PondText[not bottomside]
             PondBottomText = PondText[bottomside]
             textxys = [(PondTopTextX, PondTopTextY, PondTopText), 
                         (PondBottomTextX, PondBottomTextY, PondBottomText)]
             for i in range(NumCols):
                 textx = ImgBdStartX + i * (TagLength + PieBdWidth) + TagLength // 2
                 textxys.append((textx, ImgBdStartY // 2,
-                    NumToChinese[Board.otherside(bottomside)][i+1]))
+                    NumToChinese[not bottomside][i+1]))
                 textxys.append((textx, CanvasHeight - ImgBdStartY // 2, 
                         NumToChinese[bottomside][NumCols-i]))
             return textxys
@@ -236,7 +236,7 @@ class BdCanvas(View, Canvas):
             
             if toseat in self.board.canmoveseats(self.board.getpiece(fromseat)):
                 if self.walks.islast or __change():
-                    self.walks.append(self.chessboard.createwalk(fromseat, toseat))
+                    self.walks.append(fromseat, toseat, '', self.chessboard.board)
                     self.walks.move_refresh(1)  # 更新视图
                     self.selectedseat = None                    
             else:
@@ -262,14 +262,14 @@ class BdCanvas(View, Canvas):
             eatpies = self.board.geteatedpieces()
             for side in [RED_SIDE, BLACK_SIDE]:
                 eatpieimgids = sorted([pie.imgid for pie in eatpies if pie.side == side])
-                [self.coords(imgid, self.geteatpie_xy(Piece.otherside(side), n))
+                [self.coords(imgid, self.geteatpie_xy(not side, n))
                         for n, imgid in enumerate(eatpieimgids)]
             
         def __drawtraces():
             if self.walks.isstart:
                 fromxy, toxy = OutsideXY, OutsideXY
             else:
-                fromseat, toseat = self.walks.currentwalk().moveseat
+                fromseat, toseat = self.walks.curmoveseat()
                 fromxy, toxy = self.seat_xy(fromseat), self.seat_xy(toseat)
             self.delete('walk')
             self.coords('from', fromxy)
@@ -279,7 +279,7 @@ class BdCanvas(View, Canvas):
             currentside = self.walks.currentside
             kingseat = self.board.getkingseat(currentside)
             kingpie = self.board.getkingpiece(currentside)
-            otherkingpie = self.board.getkingpiece(Piece.otherside(currentside))
+            otherkingpie = self.board.getkingpiece(not currentside)
             self.coords(kingpie.eatimgid, OutsideXY)
             self.coords(otherkingpie.eatimgid, OutsideXY)
             if self.board.isdied(currentside): # 将死后，将帅图像更改
@@ -292,7 +292,7 @@ class BdCanvas(View, Canvas):
                         outline=color, fill=color, tag='walk') # , width=4
                 playsound('CHECK2')
             elif not self.walks.isstart:
-                eatpiece = self.walks.currentwalk().eatpiece
+                eatpiece = self.walks.cureatpiece()
                 playsound('MOVE' if eatpiece is BlankPie else
                             ('CAPTURE2' if eatpiece.isStronge else 'CAPTURE'))
             
