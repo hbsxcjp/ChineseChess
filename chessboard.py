@@ -26,30 +26,15 @@ class ChessBoard(Model):
     def __repr__(self):
         pass
 
-    def getfen(self):
-        '将一个棋盘局面写入FEN格式串'
-        def __linetonums():
-            '下划线字符串对应数字字符元组 列表'
-            return [('_' * i, str(i)) for i in range(9, 0, -1)]
-
-        piecechars = [
-            piece.char for rc, piece in sorted(self.board.crosses.items())
-        ]
-        chars = [
-            piecechars[rowno * NumCols:(rowno + 1) * NumCols]
-            for rowno in range(NumRows)
-        ]
-        afen = '/'.join([''.join(char) for char in chars[::-1]])
-        for _str, nstr in __linetonums():
-            afen = afen.replace(_str, nstr)
+    def getfen(self):        
         sidechar = 'b' if self.walks.currentside == BLACK_SIDE else 'r'
-        return '{} {} {} {} {} {}'.format(afen, sidechar, '-', '-', '0', '0')
+        return '{} {} {} {} {} {}'.format(self.board.getafen(), sidechar, '-', '-', '0', '0')
 
     def setfen(self, fen):
         afens = fen.split()
         self.walks.setcurrentside(
             BLACK_SIDE if (len(afens) > 1 and afens[1] == 'b') else RED_SIDE)
-        self.board.loadpieces(fen)
+        self.board.loadafen(afens[0])
 
     def getpgn(self):
         # 将一个棋局着棋过程，写入pgn字符串

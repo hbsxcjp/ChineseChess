@@ -164,14 +164,16 @@ class MainForm(View, ttk.Frame):
                     ('下一着(F)', lambda: self.walkarea.onDownKey(None), 4),
                     ('最后局面(E)', lambda: self.walkarea.onEndKey(None), 5)],
              3),
+            ('帮助(A)',
+                   [('关于(O)...', self.about, 3)],
+             3)] # yapf: disable
+        '''
             ('选项(O)',
                    [('设置(O)...', self.setoption, 3),
                     'separator'],
              3),
-            ('帮助(A)',
-                   [('关于(O)...', self.about, 3)],
-             3)] # yapf: disable
-
+        '''
+            
         def addMenuItems(menu, items):
             '载入菜单子目，包括子菜单'
             for item in items:

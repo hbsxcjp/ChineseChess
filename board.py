@@ -189,7 +189,7 @@ class Board(Model):
         [self.setpiece(seat, piece) for seat, piece in seatpieces.items()]
         self.setbottomside()
 
-    def loadpieces(self, fen):
+    def loadafen(self, afen):
         def __numtolines():
             '数字字符: 下划线字符串'
             numtolines = {}
@@ -209,8 +209,7 @@ class Board(Model):
                     return False, '棋子: %s 的个数大于规定个数，有误！' % c
             return True, ''
 
-        afens = fen.split()
-        fenstr = ''.join(afens[0].split('/')[::-1])
+        fenstr = ''.join(afen.split('/')[::-1])
         charls = list(multrepl(fenstr, __numtolines()))
 
         assert __isvalid(charls)[0], __isvalid(charls)[1]
@@ -218,6 +217,23 @@ class Board(Model):
         seatchars = {CrossT.getseat(n): char for n, char in enumerate(charls)}
         self.loadseatpieces(self.pieces.getseatpieces(seatchars))
 
+    def getafen(self):
+        def __linetonums():
+            '下划线字符串对应数字字符元组 列表'
+            return [('_' * i, str(i)) for i in range(9, 0, -1)]
+
+        piecechars = [
+            piece.char for seat, piece in sorted(self.crosses.items())
+        ]
+        charls = [
+            piecechars[rowno * NumCols:(rowno + 1) * NumCols]
+            for rowno in range(NumRows)
+        ]
+        afen = '/'.join([''.join(chars) for chars in charls[::-1]])
+        for _str, nstr in __linetonums():
+            afen = afen.replace(_str, nstr)
+        return afen
+        
     def __sortpawnseats(self, isbottomside, pawnseats):
         '多兵排序'
         result = []
