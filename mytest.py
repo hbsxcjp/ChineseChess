@@ -11,9 +11,8 @@ from form import *
 
 
 class Test(unittest.TestCase):
-       
     def test_setandgetPGN(self):
-        start = time.time()        
+        start = time.time()
         chessboard = ChessBoard()
         pgnfilenamel = ['“石林杯”全国象棋团体锦标赛 - 广东许银川 (先胜) 上海胡荣华.PGN',
                 '东北联队、上海队象棋友谊赛 - 东北王嘉良 (先负) 上海胡荣华.PGN',
@@ -25,29 +24,27 @@ class Test(unittest.TestCase):
                 '第十九届“五羊杯”象棋冠军赛 - 湖北柳大华 (先和) 上海胡荣华.PGN',
                 'a.pgn',
                 '聂许战.pgn',
-                '兵的着法.pgn']
+                '兵的着法.pgn'] # yapf: disable
         for filename in pgnfilenamel:
             #print(pgnfilename)'pgn/' + pgnfilename
-            with open('pgn/'+filename) as f:
+            with open('pgn/' + filename) as f:
                 pgn = f.read()
             chessboard.setpgn(pgn)
-            with open('c:/chinesechess/mytest_'+filename, 'w') as f:
+            with open('c:/chinesechess/mytest_' + filename, 'w') as f:
                 f.write(chessboard.getpgn())
-            pass            
+            pass
         end = time.time()
         print('usetime: %0.5f' % (end - start))
 
     def test_form(self):
         user = User(1, 'cjp')
         user.application.mainloop()
-        pass      
-    
-        
+        pass
+
+
 if __name__ == '__main__':
 
     unittest.main()
-    
+
     # 测试
     #cProfile.run('unittest.main()')
-    
-    
