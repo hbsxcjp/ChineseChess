@@ -40,46 +40,49 @@ class Walks(Model):
         self.clear()
 
     def clear(self):
-        self.cursor = -1  # 着法序号 范围：0 ~ length
         self.__walks = []
-
+        self.cursor = -1  # 着法序号 范围：0 ~ length
+        
     def __str__(self):
+        result = []
+        remarkes = self.remarkes()
         line_n = self.__lineboutnum * 2
         blanknums = [13, 10, 13, 10, 13, 10, 13, 10]
-        boutstrls = []
-        for n, strwalk in enumerate(self.getboutstr()):
-            boutstrls.append(strwalk)
+        for n, boutstr in enumerate(self.__getboutstrs()):
+            result.append(boutstr)
             colnum = (n + 1) % line_n  # 求得需要填充空格的着数
             if colnum == 0:
-                boutstrls.append('\n')
-            remark = self.__walks[n].remark.strip()
+                result.append('\n')
+            remark = remarkes[n].strip()
             if remark:
-                boutstrls.append(' {0}\n{1}'.format(
+                result.append(' {0}\n{1}'.format(
                     remark, ' ' * sum(blanknums[:colnum])))
-        return ''.join(boutstrls)
-
-    def getboutstr(self, align=False):
-        '着法字符串转换成带序号的回合字符串'
-        width = 9 if align else 5  # 是否对齐
-        result = []
-        for n, walk in enumerate(self.__walks):
-            description = walk.description
-            boutstr = ('{0:>{1}}'.format(description, width)
-                       if n % 2 == 1 else '{0:>3d}. {1}'.format(
-                           n // 2 + 1, description))
-            if align:
-                boutstr = '{0}{1}'.format(boutstr, '☆' if walk.remark else '')
-            result.append(boutstr)
-        return result
-
+        return ''.join(result)
+        
+    def __getboutstrs(self):
+        '着法字符串转换集合成带序号的回合字符串'
+        return ['{0:>3d}. {1!s}'.format(n // 2 + 1, walk)
+                if n % 2 == 0 else
+                ' {0!s}'.format(walk)
+                for n, walk in enumerate(self.__walks)]
+                
+    def getboutstrs_ltbox(self):
+        boutstrs = self.__getboutstrs()
+        for n, remark in enumerate(self.remarkes()):
+            if remark.strip():
+                boutstrs[n] += '☆'
+            if n % 2 == 1:
+                boutstrs[n] = '    {0}'.format(boutstrs[n])
+        return boutstrs
+                
     def setstrcolumn(self, boutnum):
         self.__lineboutnum = (boutnum % 4) if (boutnum % 4) != 0 else 4
 
-    def setcurrentside(self, side):
-        self.currentside = side
+    def setcurrentside(self, color):
+        self.currentside = color
 
     def transcurrentside(self):
-        self.setcurrentside(not self.currentside)
+        self.setcurrentside(other_color(self.currentside))
 
     @property
     def length(self):

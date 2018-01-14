@@ -23,17 +23,14 @@ class ChessBoard(Model):
     def __str__(self):
         return '{}\n{}'.format(str(self.board), str(self.walks))
 
-    def __repr__(self):
-        pass
-
     def getfen(self):        
-        sidechar = 'b' if self.walks.currentside == BLACK_SIDE else 'r'
+        sidechar = 'b' if self.walks.currentside == BLACK_Piece else 'r'
         return '{} {} {} {} {} {}'.format(self.board.getafen(), sidechar, '-', '-', '0', '0')
 
     def setfen(self, fen):
         afens = fen.split()
         self.walks.setcurrentside(
-            BLACK_SIDE if (len(afens) > 1 and afens[1] == 'b') else RED_SIDE)
+            BLACK_Piece if (len(afens) > 1 and afens[1] == 'b') else RED_Piece)
         self.board.loadafen(afens[0])
 
     def getpgn(self):
@@ -56,8 +53,7 @@ class ChessBoard(Model):
     def setpgn(self, pgn=''):
         '将一个pgn棋局文件载入棋局'
 
-        def __getinfo():
-            self.info = {}
+        def __setinfo():
             infolist = re.findall('\[(\w+) "(.*)"\]', pgn)
             for key, value in infolist:
                 self.info[key] = value  # 棋局信息（pgn标签）
@@ -67,6 +63,7 @@ class ChessBoard(Model):
             result = re.findall('\s(1-0|0-1|1/2-1/2|\*)\s?', pgn)
             if result:
                 self.info['Result'] = result[0]  # 棋局结果
+            self.setfen(self.info.get('FEN', self.FEN))
 
         def __createwalks():
             #s = '(\d+)\. (\S{4})\s+(\{.*\})?\s*(\S{4})?\s+(\{.*\})?'
@@ -85,11 +82,13 @@ class ChessBoard(Model):
                     self.walks.append(fromseat, toseat, remarks[n], self.board)
             self.walks.move(-self.walks.length)
 
-        __getinfo()
-        self.setfen(self.info.get('FEN', self.FEN))
-        self.walks.clear()
+        self.info = {}
+        self.walks.clear()        
         if pgn:
+            __setinfo()
             __createwalks()
+        else:
+            self.setfen(self.FEN)
         if hasattr(self, 'views'):
             self.notifyviews()
 
@@ -104,9 +103,9 @@ class ChessBoard(Model):
                 }, self.walks.moveseats())
             else:
                 if changetype == 'rotate':
-                    transfun = CrossT.getrotateseat
+                    transfun = Seats.getrotateseat
                 elif changetype == 'symmetry':
-                    transfun = CrossT.getsymmetryseat
+                    transfun = Seats.getsymmetryseat
                 return ({
                     transfun(piece.seat): piece
                     for piece in self.board.getlivepieces()

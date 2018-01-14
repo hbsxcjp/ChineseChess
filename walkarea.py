@@ -3,7 +3,7 @@
 '''
 
 from config_et import *
-from cross import *
+from seats import *
 from walks import *
 
 
@@ -160,7 +160,7 @@ class WalkArea(View, ttk.Frame):
                 label.config(text=infotext[n])
 
         def __setboutstr():
-            boutstr = self.walks.getboutstr(True)
+            boutstr = self.walks.getboutstrs_ltbox() #getboutstr(True)
             boutstr.insert(0, '=====开始======')
             self.listvar.set(boutstr)
 

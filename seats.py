@@ -2,8 +2,8 @@
 
 import re
 
-BLACK_SIDE = True
-RED_SIDE = False
+BLACK_Piece = True
+RED_Piece = False
 
 TOP_SIDE = True
 BOTTOM_SIDE = False
@@ -26,7 +26,7 @@ MinRowNo_T = 5
 MaxRowNo_T = 9
 
 
-class CrossTuple(object):
+class Seats(object):
     '交叉元组类'
     sideseats = {
         BOTTOM_SIDE: {(row, col)
@@ -77,12 +77,14 @@ class CrossTuple(object):
           for row in range(MaxRowNo_B - 1, MaxRowNo_B + 1)
           for col in range(MinColNo, MaxColNo + 1, 2)})
     }
+    
+    sorted_allseats = sorted(allseats)
 
     def getindex(self, seat):
-        return sorted(self.allseats).index(seat)
+        return self.sorted_allseats.index(seat)
 
     def getseat(self, index):
-        return sorted(self.allseats)[index]
+        return self.sorted_allseats[index]
 
     def getrow(self, seat):
         return seat[0]
@@ -152,11 +154,14 @@ class CrossTuple(object):
         return {(row, col + 1), (row, col - 1), (row - 1, col), (row + 1, col)}
 
 
-CrossT = CrossTuple()
+Seats = Seats()
+# 调用位置转换类型，可更换
 
-# 调用交叉转换类型，可更换
 
-
+def other_color(color):
+    return RED_Piece if color == BLACK_Piece else BLACK_Piece
+    
+    
 def multrepl(text, xdict):
     '一次替换多个子字符串（字典定义）（方法来源于PythonCook）'
     rx = re.compile('|'.join(map(re.escape, xdict)))  # 模式
