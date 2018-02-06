@@ -38,15 +38,15 @@ class ChessBoard(Model):
         offset = self.walks.cursor + 1
         self.walks.move(-offset)
 
-        strinfo = '\n'.join(
-            ['[{} "{}"]'.format(key, self.info[key]) for key in self.info])
         sfen, gfen = self.info.get('FEN'), self.getfen()
         if sfen:
             assert sfen.split()[0] == gfen.split()[
                 0], '\n棋谱FEN：%s, \n生成FEN: %s' % (sfen.split()[0],
                                                  gfen.split()[0])
         self.info['FEN'] = gfen
-
+        strinfo = '\n'.join(
+            ['[{} "{}"]'.format(key, self.info[key]) for key in sorted(self.info)])
+            
         self.walks.move(offset)
         return '{}\n{}\n{}\n'.format(strinfo, self.remark, str(self.walks))
 

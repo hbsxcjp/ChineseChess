@@ -47,7 +47,6 @@ class Walks(Model):
         result = []
         remarkes = self.remarkes()
         line_n = self.__lineboutnum * 2
-        blanknums = [13, 10, 13, 10, 13, 10, 13, 10]
         for n, boutstr in enumerate(self.__getboutstrs()):
             result.append(boutstr)
             colnum = (n + 1) % line_n  # 求得需要填充空格的着数
@@ -56,7 +55,8 @@ class Walks(Model):
             remark = remarkes[n].strip()
             if remark:
                 result.append(' {0}\n{1}'.format(
-                    remark, ' ' * sum(blanknums[:colnum])))
+                    remark, ' ' * (colnum // 2 * (13+9) + (colnum % 2 * 13))))
+                # [13, 9, 13, 9, 13, 9, 13, 9...]
         return ''.join(result)
         
     def __getboutstrs(self):
@@ -75,8 +75,8 @@ class Walks(Model):
                 boutstrs[n] = '    {0}'.format(boutstrs[n])
         return boutstrs
                 
-    def setstrcolumn(self, boutnum):
-        self.__lineboutnum = (boutnum % 4) if (boutnum % 4) != 0 else 4
+    def setstrcolumn(self, lineboutnum):
+        self.__lineboutnum = lineboutnum # (boutnum % 4) if (boutnum % 4) != 0 else 4
 
     def setcurrentside(self, color):
         self.currentside = color
