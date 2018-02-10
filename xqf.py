@@ -2,9 +2,10 @@
 中国象棋棋谱转换类型
 '''
 
-import cProfile
-import struct
-
+import cProfile, os, sys, glob
+import struct, shutil, chardet
+import codecs
+    
 
 piechars = 'RNBAKABNRCCPPPPPrnbakabnrccppppp' # QiziXY设定的棋子顺序 
 colchars = 'abcdefghi'
@@ -17,18 +18,23 @@ def remarkstruct(size):
     return struct.Struct('{}s'.format(size))
     
     
-def tostr(bstr): 
-    return bstr.decode('GB2312')  # encoding=GB2312 GB18030 utf-8 GBK
-    
+def tostr(bstr):
+    try:  # encoding=GB2312 GB18030 utf-8 GBK
+        return bstr.decode('GBK', errors='ignore')
+    except:
+        coding = chardet.detect(bstr)
+        return bstr.decode(coding['encoding'], errors='ignore')
+        
 
 def subbyte(a, b):
-    return (a - b + 25600) % 256
+    return (a - b + 1024) % 256
     
     
 class Head(object):
     'XQF象棋文件头类'
     
-    def __init__(self, data):
+    def __init__(self, filename, data):
+        self.name = os.path.basename(filename)
         self.Signature = data[:2] # 2字节 文件标记 'XQ' = $5158;
         self.Version = data[2] # 版本号
         self.KeyMask = data[3] # 加密掩码
@@ -89,7 +95,7 @@ class Head(object):
         if self.Version > 18: 
             print('这是一个高版本的XQF文件，您需要更高版本的XQStudio来读取这个文件')
         '''            
-        self.fKeys = self.__calkeys()
+        self.keys = self.__calkeys()
 
     def __str__(self):    
     
@@ -104,19 +110,12 @@ class Head(object):
         afen = '/'.join([''.join(chars) for chars in charls[::-1]])
         for _str, nstr in __linetonums():
             afen = afen.replace(_str, nstr)
-        FEN = '{} {} - - 0 0'.format(afen, 'b' if self.WhoPlay == 1 else 'r')
+        self.FEN = '{} {} - - 0 0'.format(afen, 'b' if self.WhoPlay == 1 else 'r')        
         
-        playtype = {0: '全局', 1: '开局', 2: '中局', 3: '残局'}
-        playresult = {0: '未知', 1: '红胜', 2: '黑胜', 3: '和棋'}
-        result = ('[棋谱名称 "{}"]\n[比赛名称 "{}"]\n[比赛时间 "{}"]\n[比赛地点 "{}"]\n' +
-                '[红方姓名 "{}"]\n[黑方姓名 "{}"]\n[对局类型 "{}"]\n[开局类型 "{}"]\n' +
-                '[棋谱评论员 "{}"]\n[文件作者 "{}"]\n[比赛结果 "{}"]\n[XQF版本 "{}"]\n' +
-                '[FEN "{}"]').format(
-                self.TitleA, self.MatchName, self.MatchTime, self.MatchAddr,
-                self.RedPlayer, self.BlkPlayer, playtype[self.CodeA], self.TimeRule,
-                self.RMKWriter, self.Author, playresult[self.PlayResult], self.Version,
-                FEN)
-        return result
+        self.playtype = {0: '全局', 1: '开局', 2: '中局', 3: '残局'}[self.CodeA]
+        self.playresult = {0: '未知', 1: '红胜', 2: '黑胜', 3: '和棋'}[self.PlayResult]
+        
+        return ('''[Filename "{self.name}"]\n[Game "Chinese Chess"]\n[Event "{self.MatchName}"]\n[Date "{self.MatchTime}"]\n[Site "{self.MatchAddr}"]\n[Round ""]\n[Red "{self.RedPlayer}"]\n[RedTeam ""]\n[Black "{self.BlkPlayer}"]\n[BlackTeam ""]\n[Opening "{self.TimeRule}"]\n[Variation ""]\n[ECCO ""]\n[Result "{self.playresult}"]\n[FEN "{self.FEN}"]\n[Format "ICCS"]\n[棋谱名称 "{self.TitleA}"]\n[对局类型 "{self.playtype}"]\n[棋谱评论员 "{self.RMKWriter}"]\n[文件作者 "{self.Author}"]\n[XQF版本 "{self.Version}"]''').format(self=self)
         
     def __calkeys(self):
         '根据文件头密码因子计算真正的加密密码'
@@ -153,24 +152,72 @@ class Head(object):
 class Node(object):
     'XQF象棋着法树节点类'
     
-    def __init__(self, stepno):
-        self.stepno = stepno
-        self.XYf = 0 # 本步棋的起始位置XY
-        self.XYt = 0 # 本步棋的目的位置XY
+    def __init__(self, prenode):
         self.ChildTag = 0
         self.RemarkSize = 0
+        
+        self.stepno = 0
+        self.XYf = 0 # 本步棋的起始位置XY
+        self.XYt = 0 # 本步棋的目的位置XY
         self.Remark = ''
+        self.prenode = prenode
+        self.nextnode = None
+        self.othernode = None
+        
+    def setnext(self, nextnode):
+        self.nextnode = nextnode
+        self.nextnode.stepno = self.stepno + 1
+        
+    def setother(self, othernode):
+        self.othernode = othernode
+        self.othernode.stepno = self.stepno
         
         
 class XQFFile(object):
     'XQF象棋文件类'
-            
+    
+    def __init__(self):
+        self.head = None
+        self.rootnode = None
+        self.nodestr = ''
+        self.nodestrl = []
+        
     def __str__(self):
-        return '[文件名 "{}"]\n{}\n{}'.format(self.name, self.head, self.nodestr)
+        return '{}\n{}'.format(self.head, self.nodestr)
 
-    def readnodestr(self, filename):    
+    def __setnodestrl(self, node, isother=False):
+    
+        def __remarkstr():
+            remarkstr = '' if not node.Remark else node.Remark.strip()
+            return '' if not remarkstr else '\n{{{}}}\n '.format(remarkstr)
+        
+        def __mergestr():                        
+            if not isother:
+                prestr = ('' if node.stepno % 2 == 0 else 
+                        '{}. '.format((node.stepno + 1) // 2))
+            else:
+                prestr = '({0}. {1}'.format((node.stepno + 1) // 2, 
+                        '... ' if node.stepno % 2 == 0 else '')           
+            xyf, xyt = node.XYf, node.XYt
+            bodystr = '{0}{1}{2}{3} '.format(colchars[xyf // 10], xyf % 10,
+                        colchars[xyt // 10], xyt % 10) # XQF位置转换为坐标序号
+            return '{0}{1}{2}'.format(prestr, bodystr, __remarkstr())
+            
+        if node.prenode is None: # 根节点 
+            self.nodestrl.append(__remarkstr())
+        else:
+            self.nodestrl.append(__mergestr())
+            
+        if node.othernode:
+            self.__setnodestrl(node.othernode, True)
+            self.nodestrl.append(') ')
+        
+        if node.nextnode:
+            self.__setnodestrl(node.nextnode)
+        
+    def readfile(self, filename):    
 
-        def __readnode(stepno):
+        def __readnode(node):
             '递归添加着法节点'
             
             def __readdata():
@@ -178,6 +225,7 @@ class XQFFile(object):
                 def __readbytes(size):
                     pos = fileobj.tell()
                     bytestr = fileobj.read(size)
+                    
                     if len(bytestr) != size: # 文件最后一个节点注解标志位为1，但无注解情形
                         return 0
                     if self.head.Version <= 10:
@@ -187,20 +235,20 @@ class XQFFile(object):
                         for i, b in enumerate(bytestr):
                             barr[i] = subbyte(int(b), F32Keys[(pos + i) % 32])
                         return barr
-                    
+                        
                 def __readnodehead():
                     data = nodestruct1.unpack(__readbytes(4))                    
                     # 一步棋的起点和终点有简单的加密计算，读入时需要还原
                     node.XYf = subbyte(data[0], 0X18 + KeyXYf) # 一步棋的起点
                     node.XYt = subbyte(data[1], 0X20 + KeyXYt) # 一步棋的终点
-                    node.ChildTag = data[2]                    
+                    node.ChildTag = data[2]
                 
                 def __readremarksize():
-                    unbytestr = __readbytes(4)
-                    if unbytestr == 0:
+                    bytestr = __readbytes(4)
+                    if bytestr == 0:
                         node.RemarkSize = 0
                     else:  # 还原注解的大小
-                        node.RemarkSize = nodestruct2.unpack(unbytestr)[0] - KeyRMKSize
+                        node.RemarkSize = nodestruct2.unpack(bytestr)[0] - KeyRMKSize
                                 
                 def __readremark():
                     bytestr = __readbytes(node.RemarkSize)
@@ -219,56 +267,119 @@ class XQFFile(object):
                 else:
                     node.ChildTag = node.ChildTag & 0xE0
                     if (node.ChildTag & 0x20) != 0:                        
-                        __readremarksize()                
-                if node.RemarkSize > 0: # 如果有注解
-                    __readremark()                    
+                        __readremarksize()
+                if node.RemarkSize > 0: # 如果有注解 and node.RemarkSize < 2048
+                    __readremark()
                     
-            def __tocoord(xy):
-                'XQF位置转换为坐标序号'    
-                return '{}{}'.format(colchars[xy // 10], xy % 10)
-
-            node = Node(stepno)
-            __readdata()            
-            if stepno > 0: # 第0个为根节点，不需要
-                self.nodestr += '{0}{1} '.format(
-                        __tocoord(node.XYf), __tocoord(node.XYt))
-            if node.Remark:
-                self.nodestr += '{' + node.Remark + '}\n'
-            
+            __readdata()
             if (node.ChildTag & 0x80) != 0: # 有左子树
-                __readnode(stepno + 1)
+                nextnode = Node(node)
+                node.setnext(nextnode)
+                __readnode(nextnode)
             if (node.ChildTag & 0x40) != 0: # 有右子树
-                self.nodestr += '【{}. '.format(stepno)  # ≤≤◤╠ 
-                __readnode(stepno)
-                self.nodestr += '】 ' # ≥≥ ◢ ╣
-                
-        with open(filename, 'rb') as fileobj:
-            self.name = filename
-            self.nodestr = ''
-            self.head = Head(headstruct.unpack(fileobj.read(1024))) # 象棋文件头
-            KeyXY, KeyXYf, KeyXYt, KeyRMKSize, F32Keys = self.head.fKeys            
-            __readnode(0)
+                othernode = Node(node)
+                node.setother(othernode)
+                __readnode(othernode)
+        
+        with open(filename, 'rb') as fileobj:            
+            bytestr = headstruct.unpack(fileobj.read(1024))
+            self.head = Head(filename, bytestr)
+            KeyXY, KeyXYf, KeyXYt, KeyRMKSize, F32Keys = self.head.keys
             
+            self.rootnode = Node(None)
+            __readnode(self.rootnode)
             
-def main():
-    filenames = ['将族屏风马先负过宫炮.XQF',
-                '- 北京张强 (和) 上海胡荣华 (1993.4.27于南京).xqf',
-                '布局陷阱--飞相局对金钩炮.XQF',
-                '4四量拨千斤.XQF',
-                '05WY0001.XQF'] #
+        self.nodestrl = []
+        self.__setnodestrl(self.rootnode)            
+        self.nodestr = ''.join(self.nodestrl)    
+   
+    def transdir(self, dirfrom, dirto):
+        fcount = dcount = 0
+        if not os.path.exists(dirto):
+            os.mkdir(dirto)
+        for subname in os.listdir(dirfrom):
+            subname = os.path.normcase(subname)
+            pathfrom = os.path.join(dirfrom, subname)
+            pathto = os.path.join(dirto, subname)
+            if os.path.isfile(pathfrom): # 文件
+                data = ''
+                filename, extension = os.path.splitext(subname)
+                try:
+                    if extension == '.xqf':
+                        self.readfile(pathfrom)
+                        data = str(self)
+                        pathto = os.path.join(dirto, filename + '.pgn')
+                    elif extension == '.txt':
+                        data = open(pathfrom).read()
+                    if data:
+                        codecs.open(pathto, 'w', encoding='utf-8').write(data) #  
+                        fcount += 1
+                except:
+                    print('转换文件不成功：', pathfrom)
+            else:
+                try:
+                    below = self.transdir(pathfrom, pathto)
+                    fcount += below[0]
+                    dcount += below[1]
+                    dcount += 1
+                except:
+                    print('转换目录不成功：', pathfrom)
+        return (fcount, dcount)
+    
+    
+def transdir(i):
+
+    dirfrom = ['C:\\示例文件XQF',
+                'C:\\象棋杀着大全',
+                'C:\\疑难文件xqf\\第21届五羊杯赛对局选（评注版）',
+                'C:\疑难文件xqf',
+                'C:\\360安全浏览器下载\\中国象棋棋谱大全'
+                ]
+    dirto = ['C:\\示例文件XQF_pgn',
+                'C:\\象棋杀着大全_pgn',
+                'C:\\疑难文件xqf_pgn\\第21届五羊杯赛对局选（评注版）',
+                'C:\疑难文件xqf_pgn',
+                'C:\\中国象棋棋谱大全_pgn'
+                ]
+    
     xqfile = XQFFile()
-    for fn in filenames:
-        xqfile.readnodestr(fn)
-        print(xqfile, '\n')
-        '''
-        for k, v in xqfile.head.__dict__.items():
-            print(k, v)
-        print('')
-        '''        
+    fc, dc = xqfile.transdir(dirfrom[i], dirto[i])
+    print('文件数: {} 目录数: {}'.format(fc, dc))
+    
+    
+def transfile(i):
+
+    dirfrom = 'C:\\疑难文件xqf'
+    dirto = 'C:\\疑难文件xqf_pgn'
+    filenames = ['将族屏风马先负过宫炮.XQF',
+                '飞相局【卒7进1】.XQF',
+                '仙人指路全集（史上最全最新版）.XQF',
+                '中炮对屏风马.XQF',
+                '黑用开局库.XQF',
+                '中炮【马8进7】.XQF',
+                '5、第二轮 吕钦　红先胜 徐天红 2001.1.XQF'
+                ]
+    filenameto = filenames[i][:-4] + '.pgn'
+    xqfile = XQFFile()
+    xqfile.readfile(os.path.join(dirfrom, filenames[i]))    
+    codecs.open(os.path.join(dirto, filenameto), 'w', encoding='utf-8').write(str(xqfile))
+    
             
 if __name__ == '__main__':
 
-    #cProfile.run('main()')
-    main()
+    import time
+    start = time.time()
+    
+    #cProfile.run('transdir(2)')
+    #cProfile.run('transfile(5)')
+    
+    transdir(3)
+    #transfile(0)
+    
+    end = time.time()
+    print('usetime: %0.4f' % (end - start))
+    
+    #shutil.rmtree('C:\\中国象棋棋谱大全')
+    pass
     
 #
