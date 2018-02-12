@@ -2,9 +2,9 @@
 中国象棋棋谱转换类型
 '''
 
-import cProfile, os, sys, glob
+import cProfile, os, sys, glob, re
 import struct, shutil, chardet
-import codecs
+import xml.etree.ElementTree as ET
     
 
 piechars = 'RNBAKABNRCCPPPPPrnbakabnrccppppp' # QiziXY设定的棋子顺序 
@@ -15,8 +15,7 @@ headstruct = struct.Struct(headfmt)
 nodestruct1 = struct.Struct('4B')
 nodestruct2 = struct.Struct('L')
 def remarkstruct(size):
-    return struct.Struct('{}s'.format(size))
-    
+    return struct.Struct('{}s'.format(size))    
     
 def tostr(bstr):
     try:  # encoding=GB2312 GB18030 utf-8 GBK
@@ -25,10 +24,33 @@ def tostr(bstr):
         coding = chardet.detect(bstr)
         return bstr.decode(coding['encoding'], errors='ignore')
         
+def bodystr(xyf, xyt):
+    return '{0}{1}{2}{3}'.format(colchars[xyf // 10], xyf % 10,
+                colchars[xyt // 10], xyt % 10) # XQF位置转换为坐标序号
 
 def subbyte(a, b):
     return (a - b + 1024) % 256
     
+def xmlindent(elem, islast=False, level=0):
+    'Get pretty look 取得漂亮的外观'
+    def __isblank(text):
+        return not text or not text.expandtabs(4).strip()
+
+    def __addblank(text):
+        return '{}{}'.format(text.expandtabs(4).strip(), tabstr)
+
+    def __cuttab(tail, islast):
+        return tail[:-1] if islast else tail
+
+    tabstr = '\n' + level * '\t'
+    if len(elem):
+        elem.text = '{}\t'.format(
+            tabstr if __isblank(elem.text) else __addblank(elem.text))
+    for n, e in enumerate(elem):
+        xmlindent(e, bool(len(elem) - 1 == n), level + 1)
+    elem.tail = __cuttab(
+        tabstr if __isblank(elem.tail) else __addblank(elem.tail), islast)
+
     
 class Head(object):
     'XQF象棋文件头类'
@@ -94,8 +116,7 @@ class Head(object):
             print('检查密码校验和不对，不等于0。')
         if self.Version > 18: 
             print('这是一个高版本的XQF文件，您需要更高版本的XQStudio来读取这个文件')
-        '''            
-        self.keys = self.__calkeys()
+        '''
 
     def __str__(self):    
     
@@ -116,8 +137,8 @@ class Head(object):
         self.playresult = {0: '未知', 1: '红胜', 2: '黑胜', 3: '和棋'}[self.PlayResult]
         
         return ('''[Filename "{self.name}"]\n[Game "Chinese Chess"]\n[Event "{self.MatchName}"]\n[Date "{self.MatchTime}"]\n[Site "{self.MatchAddr}"]\n[Round ""]\n[Red "{self.RedPlayer}"]\n[RedTeam ""]\n[Black "{self.BlkPlayer}"]\n[BlackTeam ""]\n[Opening "{self.TimeRule}"]\n[Variation ""]\n[ECCO ""]\n[Result "{self.playresult}"]\n[FEN "{self.FEN}"]\n[Format "ICCS"]\n[棋谱名称 "{self.TitleA}"]\n[对局类型 "{self.playtype}"]\n[棋谱评论员 "{self.RMKWriter}"]\n[文件作者 "{self.Author}"]\n[XQF版本 "{self.Version}"]''').format(self=self)
-        
-    def __calkeys(self):
+
+    def calkeys(self):
         '根据文件头密码因子计算真正的加密密码'
         
         def __calkey(bKey, cKey):
@@ -170,7 +191,7 @@ class Node(object):
         
     def setother(self, othernode):
         self.othernode = othernode
-        self.othernode.stepno = self.stepno
+        self.othernode.stepno = self.stepno # 与prenode的步数相同
         
         
 class XQFFile(object):
@@ -179,43 +200,10 @@ class XQFFile(object):
     def __init__(self):
         self.head = None
         self.rootnode = None
-        self.nodestr = ''
         self.nodestrl = []
-        
-    def __str__(self):
-        return '{}\n{}'.format(self.head, self.nodestr)
-
-    def __setnodestrl(self, node, isother=False):
-    
-        def __remarkstr():
-            remarkstr = '' if not node.Remark else node.Remark.strip()
-            return '' if not remarkstr else '\n{{{}}}\n '.format(remarkstr)
-        
-        def __mergestr():                        
-            if not isother:
-                prestr = ('' if node.stepno % 2 == 0 else 
-                        '{}. '.format((node.stepno + 1) // 2))
-            else:
-                prestr = '({0}. {1}'.format((node.stepno + 1) // 2, 
-                        '... ' if node.stepno % 2 == 0 else '')           
-            xyf, xyt = node.XYf, node.XYt
-            bodystr = '{0}{1}{2}{3} '.format(colchars[xyf // 10], xyf % 10,
-                        colchars[xyt // 10], xyt % 10) # XQF位置转换为坐标序号
-            return '{0}{1}{2}'.format(prestr, bodystr, __remarkstr())
+        self.nodexmls = []
             
-        if node.prenode is None: # 根节点 
-            self.nodestrl.append(__remarkstr())
-        else:
-            self.nodestrl.append(__mergestr())
-            
-        if node.othernode:
-            self.__setnodestrl(node.othernode, True)
-            self.nodestrl.append(') ')
-        
-        if node.nextnode:
-            self.__setnodestrl(node.nextnode)
-        
-    def readfile(self, filename):    
+    def __readfile(self, filename):    
 
         def __readnode(node):
             '递归添加着法节点'
@@ -284,85 +272,138 @@ class XQFFile(object):
         with open(filename, 'rb') as fileobj:            
             bytestr = headstruct.unpack(fileobj.read(1024))
             self.head = Head(filename, bytestr)
-            KeyXY, KeyXYf, KeyXYt, KeyRMKSize, F32Keys = self.head.keys
-            
+            KeyXY, KeyXYf, KeyXYt, KeyRMKSize, F32Keys = self.head.calkeys()
             self.rootnode = Node(None)
             __readnode(self.rootnode)
+
+    def __writefile(self, filename, data):
+        try:
+            open(filename, 'w', encoding='utf-8').write(data)
+        except:
+            print('错误：写入 {} 文件不成功！'.format(filename))        
+    
+    def __transtopgn(self, filename):
+
+        def __setnodestrl(node, isother=False):
+        
+            def __remarkstr():
+                remarkstr = '' if not node.Remark else node.Remark.strip()
+                return '' if not remarkstr else '\n{{{}}}\n '.format(remarkstr)
             
+            def __mergestr():                        
+                if not isother:
+                    prestr = ('' if node.stepno % 2 == 0 else 
+                            '{}. '.format((node.stepno + 1) // 2))
+                else:
+                    prestr = '({0}. {1}'.format((node.stepno + 1) // 2, 
+                            '... ' if node.stepno % 2 == 0 else '')
+                return '{0}{1} {2}'.format(prestr,
+                            bodystr(node.XYf, node.XYt), __remarkstr())
+                
+            if node.prenode is None: # 根节点 
+                self.nodestrl.append(__remarkstr())
+            else:
+                self.nodestrl.append(__mergestr())            
+            if node.othernode:
+                __setnodestrl(node.othernode, True)
+                self.nodestrl.append(') ')        
+            if node.nextnode:
+                __setnodestrl(node.nextnode)
+    
+        __setnodestrl(self.rootnode)
+        data = '{}\n{}'.format(self.head, ''.join(self.nodestrl))
+        self.__writefile(filename, data)
         self.nodestrl = []
-        self.__setnodestrl(self.rootnode)            
-        self.nodestr = ''.join(self.nodestrl)    
-   
-    def transdir(self, dirfrom, dirto):
+        
+    def __transtoxml(self, filename):
+            
+        def __createlem(pre, body, remark=''):
+            sub = ET.Element(pre) # 元素名
+            sub.text = body
+            if remark:
+                r = ET.Element('remark')
+                r.text = remark
+                sub.append(r)
+            return sub                
+            
+        def __addheadelems(elem, headstr):
+            for name, value in re.findall('\[(.+) "(.*)"\]', headstr):
+                elem.append(__createlem(name, value))
+        
+        def __addnodelems(elem, node, isother=False):
+        
+            def __remarkstr():
+                return node.Remark.strip() if node.Remark else ''
+        
+            def __prestr(): 
+                return '({})'.format(node.stepno) if isother else str(node.stepno)
+            
+            if node.prenode is None: # 根节点
+                remarkstr = __remarkstr()
+                if remarkstr:
+                    elem.append(__createlem('allremark', remarkstr))
+            else:
+                subelem = __createlem(__prestr(),
+                        bodystr(node.XYf, node.XYt), __remarkstr())
+                if node.othernode: # 本着有变着
+                    __addnodelems(subelem, node.othernode, True)                        
+                elem.append(subelem)
+            if node.nextnode:
+                __addnodelems(elem, node.nextnode)        
+        
+        elem = ET.Element('root')
+        __addheadelems(elem, str(self.head))        
+        __addnodelems(elem, self.rootnode)
+        xmlindent(elem)  # 美化
+        ET.ElementTree(elem).write(filename, encoding='utf-8')
+        
+    def transfile(self, ext, pathfrom, dirto='.\\'):
+        name = os.path.splitext(os.path.basename(pathfrom))[0]
+        filenameto = os.path.join(dirto, name + ext)
+        self.__readfile(pathfrom) # 读入XQF文件
+        if ext == '.pgn':
+            self.__transtopgn(filenameto)
+        elif ext == '.xml':
+            self.__transtoxml(filenameto)
+            
+        
+    def transdir(self, ext, dirfrom, dirto='.\\'):
         fcount = dcount = 0
         if not os.path.exists(dirto):
             os.mkdir(dirto)
         for subname in os.listdir(dirfrom):
             subname = os.path.normcase(subname)
-            pathfrom = os.path.join(dirfrom, subname)
+            pathfrom = os.path.join(dirfrom, subname)            
             pathto = os.path.join(dirto, subname)
             if os.path.isfile(pathfrom): # 文件
-                data = ''
-                filename, extension = os.path.splitext(subname)
-                try:
-                    if extension == '.xqf':
-                        self.readfile(pathfrom)
-                        data = str(self)
-                        pathto = os.path.join(dirto, filename + '.pgn')
-                    elif extension == '.txt':
-                        data = open(pathfrom).read()
-                    if data:
-                        codecs.open(pathto, 'w', encoding='utf-8').write(data) #  
-                        fcount += 1
-                except:
-                    print('转换文件不成功：', pathfrom)
+                extension = os.path.splitext(os.path.basename(pathfrom))[1]
+                if extension == '.xqf':
+                    self.transfile(ext, pathfrom, dirto)
+                    fcount += 1
+                elif extension == '.txt':
+                    data = open(pathfrom).read()
+                    open(pathto, 'w', encoding='utf-8').write(data)
+                    fcount += 1
             else:
-                try:
-                    below = self.transdir(pathfrom, pathto)
-                    fcount += below[0]
-                    dcount += below[1]
-                    dcount += 1
-                except:
-                    print('转换目录不成功：', pathfrom)
+                below = self.transdir(ext, pathfrom, pathto)
+                fcount += below[0]
+                dcount += below[1]
+                dcount += 1
         return (fcount, dcount)
     
     
-def transdir(i):
+def testtransdir(num, ext):
 
-    dirfrom = ['C:\\示例文件XQF',
-                'C:\\象棋杀着大全',
-                'C:\\疑难文件xqf\\第21届五羊杯赛对局选（评注版）',
-                'C:\疑难文件xqf',
-                'C:\\360安全浏览器下载\\中国象棋棋谱大全'
-                ]
-    dirto = ['C:\\示例文件XQF_pgn',
-                'C:\\象棋杀着大全_pgn',
-                'C:\\疑难文件xqf_pgn\\第21届五羊杯赛对局选（评注版）',
-                'C:\疑难文件xqf_pgn',
-                'C:\\中国象棋棋谱大全_pgn'
+    dirfrom = ['C:\\360Downloads\\棋谱文件\\示例文件xqf',
+                'C:\\360Downloads\\棋谱文件\\象棋杀着大全xqf',
+                'C:\\360Downloads\\棋谱文件\\疑难文件xqf',
+                'C:\\360Downloads\\棋谱文件\\中国象棋棋谱大全xqf'
                 ]
     
     xqfile = XQFFile()
-    fc, dc = xqfile.transdir(dirfrom[i], dirto[i])
-    print('文件数: {} 目录数: {}'.format(fc, dc))
-    
-    
-def transfile(i):
-
-    dirfrom = 'C:\\疑难文件xqf'
-    dirto = 'C:\\疑难文件xqf_pgn'
-    filenames = ['将族屏风马先负过宫炮.XQF',
-                '飞相局【卒7进1】.XQF',
-                '仙人指路全集（史上最全最新版）.XQF',
-                '中炮对屏风马.XQF',
-                '黑用开局库.XQF',
-                '中炮【马8进7】.XQF',
-                '5、第二轮 吕钦　红先胜 徐天红 2001.1.XQF'
-                ]
-    filenameto = filenames[i][:-4] + '.pgn'
-    xqfile = XQFFile()
-    xqfile.readfile(os.path.join(dirfrom, filenames[i]))    
-    codecs.open(os.path.join(dirto, filenameto), 'w', encoding='utf-8').write(str(xqfile))
+    for i in range(num):
+        fc, dc = xqfile.transdir(ext, dirfrom[i], dirfrom[i] + ext)
+        print('{}： {}个文件，{}个目录'.format(dirfrom[i], fc, dc))    
     
             
 if __name__ == '__main__':
@@ -371,10 +412,8 @@ if __name__ == '__main__':
     start = time.time()
     
     #cProfile.run('transdir(2)')
-    #cProfile.run('transfile(5)')
-    
-    transdir(3)
-    #transfile(0)
+    #testtransdir(2, '.pgn')
+    #testtransdir(3, '.xml')
     
     end = time.time()
     print('usetime: %0.4f' % (end - start))

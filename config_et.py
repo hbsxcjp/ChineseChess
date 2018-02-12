@@ -98,6 +98,7 @@ class Config(object):
     def setelement(self, tag, value):
         self.getelement(tag).text = value
 
+    @classmethod
     def indent(self, elem, islast=False, level=0):
         'Get pretty look 取得漂亮的外观'
         def __isblank(text):
@@ -120,7 +121,7 @@ class Config(object):
 
     def iniconfig(self, elem, items):
         for item in items:
-            subelem = ET.Element(item[0])
+            subelem = ET.Element(item[0]) # 元素名
             if len(item) > 1:  # 除元素名外，还有其他内容
                 for it in item[1:]:
                     if type(it) == str:
