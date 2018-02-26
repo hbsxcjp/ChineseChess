@@ -1,422 +1,486 @@
 '''
-中国象棋棋谱转换类型
+中国象棋棋谱文件转换类型
 '''
 
 import cProfile, os, sys, glob, re
 import struct, shutil, chardet
-import xml.etree.ElementTree as ET
-    
+import xml.etree.ElementTree as ET    
+import sqlite3
+import base
 
-piechars = 'RNBAKABNRCCPPPPPrnbakabnrccppppp' # QiziXY设定的棋子顺序 
-colchars = 'abcdefghi'
+global movecount
+movecount = 0 
 
-headfmt = '2B2BL8B32BH2B2L4B8H64p64p64p16p16p16p16p64p16p16p32p16p16p4P128P'#206个元素
-headstruct = struct.Struct(headfmt)
-nodestruct1 = struct.Struct('4B')
-nodestruct2 = struct.Struct('L')
-def remarkstruct(size):
-    return struct.Struct('{}s'.format(size))    
-    
-def tostr(bstr):
-    try:  # encoding=GB2312 GB18030 utf-8 GBK
-        return bstr.decode('GBK', errors='ignore')
-    except:
-        coding = chardet.detect(bstr)
-        return bstr.decode(coding['encoding'], errors='ignore')
-        
-def bodystr(xyf, xyt):
-    return '{0}{1}{2}{3}'.format(colchars[xyf // 10], xyf % 10,
-                colchars[xyt // 10], xyt % 10) # XQF位置转换为坐标序号
-
-def subbyte(a, b):
-    return (a - b + 1024) % 256
-    
-def xmlindent(elem, islast=False, level=0):
-    'Get pretty look 取得漂亮的外观'
-    def __isblank(text):
-        return not text or not text.expandtabs(4).strip()
-
-    def __addblank(text):
-        return '{}{}'.format(text.expandtabs(4).strip(), tabstr)
-
-    def __cuttab(tail, islast):
-        return tail[:-1] if islast else tail
-
-    tabstr = '\n' + level * '\t'
-    if len(elem):
-        elem.text = '{}\t'.format(
-            tabstr if __isblank(elem.text) else __addblank(elem.text))
-    for n, e in enumerate(elem):
-        xmlindent(e, bool(len(elem) - 1 == n), level + 1)
-    elem.tail = __cuttab(
-        tabstr if __isblank(elem.tail) else __addblank(elem.tail), islast)
-
-    
-class Head(object):
-    'XQF象棋文件头类'
-    
-    def __init__(self, filename, data):
-        self.name = os.path.basename(filename)
-        self.Signature = data[:2] # 2字节 文件标记 'XQ' = $5158;
-        self.Version = data[2] # 版本号
-        self.KeyMask = data[3] # 加密掩码
-        #self.ProductId = data[4] # 4字节 产品号(厂商的产品号)
-        self.KeyOrA = data[5] #
-        self.KeyOrB = data[6] #
-        self.KeyOrC = data[7] #
-        self.KeyOrD = data[8] #
-        self.KeysSum = data[9] # 加密的钥匙和
-        self.KeyXY = data[10] # 棋子布局位置钥匙       
-        self.KeyXYf = data[11] # 棋谱起点钥匙
-        self.KeyXYt = data[12] # 棋谱终点钥匙
-        #// = 16 bytes
-        self.QiziXY = list(data[13:45]) # 32个棋子的原始位置
-        #// 用单字节坐标表示, 将字节变为十进制数, 十位数为X(0-8)个位数为Y(0-9),
-        #// 棋盘的左下角为原点(0, 0). 32个棋子的位置从1到32依次为:
-        #// 红: 车马相士帅士相马车炮炮兵兵兵兵兵 (位置从右到左, 从下到上)
-        #// 黑: 车马象士将士象马车炮炮卒卒卒卒卒 (位置从右到左, 从下到上)        
-        #// = 48 bytes
-        #self.PlayStepNo = data[45] # 棋谱文件的开始步数
-        self.WhoPlay = data[46] # 该谁下 0-红先, 1-黑先
-        self.PlayResult = data[47] # 最终结果 0-未知, 1-红胜 2-黑胜, 3-和棋
-        #self.PlayNodes = data[48] # 本棋谱一共记录了多少步
-        #self.PTreePos = data[49] # 对弈树在文件中的起始位置
-        #self.Reserved1 = data[50:54] # : array [1..4] of dTByte;        
-        #// = 64 bytes
-        self.CodeA = data[54] # 对局类型(开,中,残等)
-        #self.CodeB = data[55] # 另外的类型
-        #self.CodeC = data[56] #
-        #self.CodeD = data[57] #
-        #self.CodeE = data[58] #
-        #self.CodeF = data[59] #
-        #self.CodeH = data[60] #
-        #self.CodeG = data[61] #
-        #// = 80  bytes
-        self.TitleA = tostr(data[62]) # 标题
-        self.TitleB = tostr(data[63]) #
-        #// = 208 bytes
-        self.MatchName = tostr(data[64]) # 比赛名称
-        self.MatchTime = tostr(data[65]) # 比赛时间
-        self.MatchAddr = tostr(data[66]) # 比赛地点
-        self.RedPlayer = tostr(data[67]) # 红方姓名
-        self.BlkPlayer = tostr(data[68]) # 黑方姓名
-        #// = 336 bytes
-        self.TimeRule = tostr(data[69]) # 开局类型
-        #self.RedTime = tostr(data[70]) #
-        #self.BlkTime = tostr(data[71]) #
-        #self.Reservedh = tostr(data[72]) #        
-        #// = 464 bytes
-        self.RMKWriter = tostr(data[73]) # 棋谱评论员
-        self.Author = tostr(data[74]) # 文件的作者
-        
-        '''
-        if self.Signature != (0x58, 0x51):
-            print('文件标记不对。xqfhead.Signature != (0x58, 0x51)')
-        if (self.KeysSum + self.KeyXY + self.KeyXYf + self.KeyXYt) % 256 != 0:
-            print('检查密码校验和不对，不等于0。')
-        if self.Version > 18: 
-            print('这是一个高版本的XQF文件，您需要更高版本的XQStudio来读取这个文件')
-        '''
-
-    def __str__(self):    
-    
-        def __linetonums():
-            '下划线字符串对应数字字符元组 列表'
-            return [('_' * i, str(i)) for i in range(9, 0, -1)]
-            
-        charls = [['_' for _ in range(9)] for row in range(10)]
-        for i, xy in enumerate(self.QiziXY):
-            if xy < 90:
-                charls[xy%10][(8 - xy//10) if i < 16 else xy//10] = piechars[i]
-        afen = '/'.join([''.join(chars) for chars in charls[::-1]])
-        for _str, nstr in __linetonums():
-            afen = afen.replace(_str, nstr)
-        self.FEN = '{} {} - - 0 0'.format(afen, 'b' if self.WhoPlay == 1 else 'r')        
-        
-        self.playtype = {0: '全局', 1: '开局', 2: '中局', 3: '残局'}[self.CodeA]
-        self.playresult = {0: '未知', 1: '红胜', 2: '黑胜', 3: '和棋'}[self.PlayResult]
-        
-        return ('''[Filename "{self.name}"]\n[Game "Chinese Chess"]\n[Event "{self.MatchName}"]\n[Date "{self.MatchTime}"]\n[Site "{self.MatchAddr}"]\n[Round ""]\n[Red "{self.RedPlayer}"]\n[RedTeam ""]\n[Black "{self.BlkPlayer}"]\n[BlackTeam ""]\n[Opening "{self.TimeRule}"]\n[Variation ""]\n[ECCO ""]\n[Result "{self.playresult}"]\n[FEN "{self.FEN}"]\n[Format "ICCS"]\n[棋谱名称 "{self.TitleA}"]\n[对局类型 "{self.playtype}"]\n[棋谱评论员 "{self.RMKWriter}"]\n[文件作者 "{self.Author}"]\n[XQF版本 "{self.Version}"]''').format(self=self)
-
-    def calkeys(self):
-        '根据文件头密码因子计算真正的加密密码'
-        
-        def __calkey(bKey, cKey):
-            return (((((bKey*bKey)*3+9)*3+8)*2+1)*3+8) * cKey % 256 # 保持为<256
-            
-        if self.Version <= 10: # 兼容1.0以前的版本
-            KeyXY = 0
-            KeyXYf = 0
-            KeyXYt = 0
-            KeyRMKSize = 0
-        else:
-            KeyXY = __calkey(self.KeyXY, self.KeyXY)
-            KeyXYf = __calkey(self.KeyXYf, KeyXY)
-            KeyXYt = __calkey(self.KeyXYt, KeyXYf)
-            KeyRMKSize = ((self.KeysSum * 256 + self.KeyXY) % 65536 % 32000) + 767
-            if self.Version >= 12: # 棋子位置循环移动
-                for i, xy in enumerate(self.QiziXY[:]):
-                    self.QiziXY[(i + KeyXY + 1) % 32] = xy
-            for i in range(32): # 棋子位置解密           
-                self.QiziXY[i] = subbyte(self.QiziXY[i], KeyXY)
-                # 保持为8位无符号整数，<256
-                
-        KeyBytes = [(self.KeysSum & self.KeyMask) | self.KeyOrA,
-                    (self.KeyXY & self.KeyMask) | self.KeyOrB,
-                    (self.KeyXYf & self.KeyMask) | self.KeyOrC,
-                    (self.KeyXYt & self.KeyMask) | self.KeyOrD]
-        F32Keys = [ord(c) & KeyBytes[i % 4]
-                    for i, c in enumerate('[(C) Copyright Mr. Dong Shiwei.]')]
-        return (KeyXY, KeyXYf, KeyXYt, KeyRMKSize, F32Keys)
-        
-                 
-class Node(object):
+class Move(object):
     'XQF象棋着法树节点类'
-    
-    def __init__(self, prenode):
-        self.ChildTag = 0
-        self.RemarkSize = 0
+    colchars = 'abcdefghi'
         
+    def __init__(self, prev=None):
         self.stepno = 0
-        self.XYf = 0 # 本步棋的起始位置XY
-        self.XYt = 0 # 本步棋的目的位置XY
-        self.Remark = ''
-        self.prenode = prenode
-        self.nextnode = None
-        self.othernode = None
+        self.fseat = (0, 0)
+        self.tseat = (0, 0)
+        self.prev = prev
+        self.next_ = None
+        self.other = None
+        self.remark = ''
         
-    def setnext(self, nextnode):
-        self.nextnode = nextnode
-        self.nextnode.stepno = self.stepno + 1
+    @property
+    def coordstr(self):
+        if self.stepno == 0:
+            return ''
+        return '{0}{1}{2}{3}'.format(self.colchars[self.fseat[1]], self.fseat[0],
+                self.colchars[self.tseat[1]], self.tseat[0])    
+
+    @property
+    def coordint(self):
+        return (self.fseat[0] * 10 + self.fseat[1],
+                self.tseat[0] * 10 + self.tseat[1])
+                
+    def setseat(self, coordstr):
+        fl, fw, tl, tw = coordstr
+        self.fseat = (int(fw), self.colchars.index(fl))
+        self.tseat = (int(tw), self.colchars.index(tl))
+
+    def setnext(self, next_):
+        self.next_ = next_
+        self.next_.stepno = self.stepno + 1
         
-    def setother(self, othernode):
-        self.othernode = othernode
-        self.othernode.stepno = self.stepno # 与prenode的步数相同
-        
-        
-class XQFFile(object):
-    'XQF象棋文件类'
+    def setother(self, other):
+        self.other = other
+        self.other.stepno = self.stepno # 与premove的步数相同
+
+      
+class ChessFile(object):
+    '象棋文件类'
     
     def __init__(self):
-        self.head = None
-        self.rootnode = None
-        self.nodestrl = []
-        self.nodexmls = []
+        self.info = {'Game': "Chinese Chess", 'Round': "",
+                    'RedTeam': "", 'BlackTeam': "",
+                    'Variation': "", 'ECCO': "",
+                    'Format':  "ICCS"}
+        self.rootmove = Move()
+                
+    def readxqf(self, filename):    
+        
+        def __tostr(bstr):
+            try:  # encoding=GB2312 GB18030 utf-8 GBK
+                return bstr.decode('GBK', errors='ignore')
+            except:
+                coding = chardet.detect(bstr)
+                print(coding)
+                return bstr.decode(coding['encoding'], errors='ignore')                
+                
+        def __subbyte(a, b):
+            return (a - b + 1024) % 256
             
-    def __readfile(self, filename):    
+        def __readinfo(data):
+        
+            def __calkey(bKey, cKey):
+                return (((((bKey*bKey)*3+9)*3+8)*2+1)*3+8) * cKey % 256 # 保持为<256
+                
+            piechars = 'RNBAKABNRCCPPPPPrnbakabnrccppppp' # QiziXY设定的棋子顺序 
+            #self.Signature = data[:2] # 2字节 文件标记 'XQ' = $5158;
+            self.info['Version'] = data[2] # 版本号
+            headKeyMask = data[3] # 加密掩码
+            #self.ProductId = data[4] # 4字节 产品号(厂商的产品号)
+            headKeyOrA = data[5] #
+            headKeyOrB = data[6] #
+            headKeyOrC = data[7] #
+            headKeyOrD = data[8] #
+            headKeysSum = data[9] # 加密的钥匙和
+            headKeyXY = data[10] # 棋子布局位置钥匙       
+            headKeyXYf = data[11] # 棋谱起点钥匙
+            headKeyXYt = data[12] # 棋谱终点钥匙
+            #// = 16 bytes
+            headQiziXY = list(data[13:45]) # 32个棋子的原始位置
+            #// 用单字节坐标表示, 将字节变为十进制数, 十位数为X(0-8)个位数为Y(0-9),
+            #// 棋盘的左下角为原点(0, 0). 32个棋子的位置从1到32依次为:
+            #// 红: 车马相士帅士相马车炮炮兵兵兵兵兵 (位置从右到左, 从下到上)
+            #// 黑: 车马象士将士象马车炮炮卒卒卒卒卒 (位置从右到左, 从下到上)        
+            #// = 48 bytes
+            #self.PlayStepNo = data[45] # 棋谱文件的开始步数
+            headWhoPlay = data[46] # 该谁下 0-红先, 1-黑先
+            headPlayResult = data[47] # 最终结果 0-未知, 1-红胜 2-黑胜, 3-和棋
+            #self.PlayNodes = data[48] # 本棋谱一共记录了多少步
+            #self.PTreePos = data[49] # 对弈树在文件中的起始位置
+            #self.Reserved1 = data[50:54] # : array [1..4] of dTByte;        
+            #// = 64 bytes
+            headCodeA = data[54] # 对局类型(开,中,残等)
+            #self.CodeB = data[55] # 另外的类型
+            #self.CodeC = data[56] #
+            #self.CodeD = data[57] #
+            #self.CodeE = data[58] #
+            #self.CodeF = data[59] #
+            #self.CodeH = data[60] #
+            #self.CodeG = data[61] #
+            #// = 80  bytes
+            self.info['Title'] = __tostr(data[62]) # 标题
+            #self.TitleB = __tostr(data[63]) #
+            #// = 208 bytes
+            self.info['Event'] = __tostr(data[64]) # 比赛名称
+            self.info['Date'] = __tostr(data[65]) # 比赛时间
+            self.info['Site'] = __tostr(data[66]) # 比赛地点
+            self.info['Red'] = __tostr(data[67]) # 红方姓名
+            self.info['Black'] = __tostr(data[68]) # 黑方姓名
+            #// = 336 bytes
+            self.info['Opening'] = __tostr(data[69]) # 开局类型
+            #self.RedTime = __tostr(data[70]) #
+            #self.BlkTime = __tostr(data[71]) #
+            #self.Reservedh = __tostr(data[72]) #        
+            #// = 464 bytes
+            self.info['RMKWriter'] = __tostr(data[73]) # 棋谱评论员
+            self.info['Author'] = __tostr(data[74]) # 文件的作者
+            
+            '''
+            if self.Signature != (0x58, 0x51):
+                print('文件标记不对。xqfinfo.Signature != (0x58, 0x51)')
+            if (headKeysSum + headKeyXY + headKeyXYf + headKeyXYt) % 256 != 0:
+                print('检查密码校验和不对，不等于0。')
+            if self.info['Version'] > 18: 
+                print('这是一个高版本的XQF文件，您需要更高版本的XQStudio来读取这个文件')
+            '''            
+            if self.info['Version'] <= 10: # 兼容1.0以前的版本
+                KeyXY = 0
+                KeyXYf = 0
+                KeyXYt = 0
+                KeyRMKSize = 0
+            else:
+                KeyXY = __calkey(headKeyXY, headKeyXY)
+                KeyXYf = __calkey(headKeyXYf, KeyXY)
+                KeyXYt = __calkey(headKeyXYt, KeyXYf)
+                KeyRMKSize = ((headKeysSum * 256 + headKeyXY) % 65536 % 32000) + 767
+                if self.info['Version'] >= 12: # 棋子位置循环移动
+                    for i, xy in enumerate(headQiziXY[:]):
+                        headQiziXY[(i + KeyXY + 1) % 32] = xy
+                for i in range(32): # 棋子位置解密           
+                    headQiziXY[i] = __subbyte(headQiziXY[i], KeyXY)
+                    # 保持为8位无符号整数，<256
+                    
+            KeyBytes = [(headKeysSum & headKeyMask) | headKeyOrA,
+                        (headKeyXY & headKeyMask) | headKeyOrB,
+                        (headKeyXYf & headKeyMask) | headKeyOrC,
+                        (headKeyXYt & headKeyMask) | headKeyOrD]
+            F32Keys = [ord(c) & KeyBytes[i % 4]
+                        for i, c in enumerate('[(C) Copyright Mr. Dong Shiwei.]')]
 
-        def __readnode(node):
+            charls = [['_' for _ in range(9)] for row in range(10)]
+            for i, xy in enumerate(headQiziXY):
+                if xy < 90:
+                    charls[xy%10][(8 - xy//10) if i < 16 else xy//10] = piechars[i]
+            afen = '/'.join([''.join(chars) for chars in charls[::-1]])
+            for _str, nstr in base.linetonums():
+                afen = afen.replace(_str, nstr)
+            self.info['FEN'] = '{} {} - - 0 0'.format(afen,
+                    'b' if headWhoPlay == 1 else 'r')
+            
+            self.info['PlayType'] = {0: '全局', 1: '开局', 2: '中局', 3: '残局'}[headCodeA]
+            self.info['Result'] = {0: '未知', 1: '红胜',
+                    2: '黑胜', 3: '和棋'}[headPlayResult]            
+            return (KeyXYf, KeyXYt, KeyRMKSize, F32Keys)            
+
+        def __readmove(move):
             '递归添加着法节点'
             
-            def __readdata():
+            def __bytetoseat(a, b):
+                xy = __subbyte(a, b)
+                return (xy % 10, xy // 10)
                     
-                def __readbytes(size):
-                    pos = fileobj.tell()
-                    bytestr = fileobj.read(size)
-                    
-                    if len(bytestr) != size: # 文件最后一个节点注解标志位为1，但无注解情形
-                        return 0
-                    if self.head.Version <= 10:
-                        return bytestr 
-                    else: # '字节串解密'
-                        barr = bytearray(len(bytestr))  # 字节数组才能赋值，字节串不能赋值
-                        for i, b in enumerate(bytestr):
-                            barr[i] = subbyte(int(b), F32Keys[(pos + i) % 32])
-                        return barr
-                        
-                def __readnodehead():
-                    data = nodestruct1.unpack(__readbytes(4))                    
-                    # 一步棋的起点和终点有简单的加密计算，读入时需要还原
-                    node.XYf = subbyte(data[0], 0X18 + KeyXYf) # 一步棋的起点
-                    node.XYt = subbyte(data[1], 0X20 + KeyXYt) # 一步棋的终点
-                    node.ChildTag = data[2]
+            def __remarkstruct(size):
+                return struct.Struct('{}s'.format(size))       
                 
-                def __readremarksize():
-                    bytestr = __readbytes(4)
-                    if bytestr == 0:
-                        node.RemarkSize = 0
-                    else:  # 还原注解的大小
-                        node.RemarkSize = nodestruct2.unpack(bytestr)[0] - KeyRMKSize
-                                
-                def __readremark():
-                    bytestr = __readbytes(node.RemarkSize)
-                    remarks = remarkstruct(node.RemarkSize)
-                    node.Remark = tostr(remarks.unpack(bytestr)[0])
+            def __readbytes(size):
+                pos = fileobj.tell()
+                bytestr = fileobj.read(size)                
+                if self.info['Version'] <= 10:
+                    return bytestr 
+                else: # '字节串解密'
+                    barr = bytearray(len(bytestr))  # 字节数组才能赋值，字节串不能赋值
+                    for i, b in enumerate(bytestr):
+                        barr[i] = __subbyte(int(b), F32Keys[(pos + i) % 32])
+                    return barr
                     
-                __readnodehead()
-                if self.head.Version <= 0x0A:
-                    b = 0
-                    if (node.ChildTag & 0xF0) != 0: 
-                        b = b | 0x80
-                    if (node.ChildTag & 0x0F) != 0: 
-                        b = b | 0x40
-                    node.ChildTag = b
-                    __readremarksize()
-                else:
-                    node.ChildTag = node.ChildTag & 0xE0
-                    if (node.ChildTag & 0x20) != 0:                        
-                        __readremarksize()
-                if node.RemarkSize > 0: # 如果有注解 and node.RemarkSize < 2048
-                    __readremark()
+            def __readremarksize():
+                bytestr = __readbytes(4)
+                return movestruct2.unpack(bytestr)[0] - KeyRMKSize
+                
+            data = movestruct1.unpack(__readbytes(4))
+            # 一步棋的起点和终点有简单的加密计算，读入时需要还原
+            move.fseat = __bytetoseat(data[0], 0X18 + KeyXYf) # 一步棋的起点
+            move.tseat = __bytetoseat(data[1], 0X20 + KeyXYt) # 一步棋的终点
+            ChildTag = data[2]
+            
+            RemarkSize = 0
+            if self.info['Version'] <= 0x0A:
+                b = 0
+                if (ChildTag & 0xF0) != 0: 
+                    b = b | 0x80
+                if (ChildTag & 0x0F) != 0: 
+                    b = b | 0x40
+                ChildTag = b
+                RemarkSize = __readremarksize()
+            else:
+                ChildTag = ChildTag & 0xE0
+                if (ChildTag & 0x20) != 0:                        
+                    RemarkSize = __readremarksize()
                     
-            __readdata()
-            if (node.ChildTag & 0x80) != 0: # 有左子树
-                nextnode = Node(node)
-                node.setnext(nextnode)
-                __readnode(nextnode)
-            if (node.ChildTag & 0x40) != 0: # 有右子树
-                othernode = Node(node)
-                node.setother(othernode)
-                __readnode(othernode)
-        
-        with open(filename, 'rb') as fileobj:            
-            bytestr = headstruct.unpack(fileobj.read(1024))
-            self.head = Head(filename, bytestr)
-            KeyXY, KeyXYf, KeyXYt, KeyRMKSize, F32Keys = self.head.calkeys()
-            self.rootnode = Node(None)
-            __readnode(self.rootnode)
+            if RemarkSize > 0: # 如果有注解
+                bytestr = __readbytes(RemarkSize)
+                move.remark = __tostr(__remarkstruct(RemarkSize).unpack(bytestr)[0])
+                    
+            if (ChildTag & 0x80) != 0: # 有左子树
+                next_ = Move(move)
+                move.setnext(next_)
+                __readmove(next_)
+            if (ChildTag & 0x40) != 0: # 有右子树
+                other = Move(move)
+                move.setother(other)
+                __readmove(other)
 
-    def __writefile(self, filename, data):
+        infofmt = '2B2BL8B32BH2B2L4B8H64p64p64p16p16p16p16p64p16p16p32p16p16p4P128P'
+        #206个元素
+        infostruct = struct.Struct(infofmt)
+        movestruct1 = struct.Struct('4B')
+        movestruct2 = struct.Struct('L')
+        with open(filename, 'rb') as fileobj:
+            self.__init__()
+            self.dirname = os.path.splitdrive(os.path.dirname(filename))[1]
+            self.filename = os.path.splitext(os.path.basename(filename))[0]
+            bytestr = infostruct.unpack(fileobj.read(1024))
+            KeyXYf, KeyXYt, KeyRMKSize, F32Keys = __readinfo(bytestr)
+            __readmove(self.rootmove)
+        self.info['Version'] = str(self.info['Version'])
+            
+    def saveasbin(self, filename):
+    
+        def __addbytes(move):
+            fcoord, tcoord = move.coordint
+            rbytes = move.remark.encode()
+            reslutbytes.extend(moveheadtruct.pack(fcoord, tcoord, len(rbytes)))
+            reslutbytes.extend(rbytes)
+            #global movecount
+            #movecount += 1 # 着法步数 
+            if move.other:
+                __addbytes(move.other)                               
+            if move.next_:
+                __addbytes(move.next_)
+    
+        reslutbytes = bytearray()
+        infobytes = [value.encode() for name, value in sorted(self.info.items())]
+        for valuebytes in infobytes:
+            reslutbytes.append(len(valuebytes))
+            reslutbytes.extend(valuebytes)
+            
+        moveheadtruct = struct.Struct('2BH')
+        __addbytes(self.rootmove)
+        try:
+            open(filename, 'wb').write(reslutbytes)
+        except:
+            print('错误：写入 {} 文件不成功！'.format(filename))
+
+    def saveaspgn(self, filename):
+
+        def __remarkstr(remark):
+            rem = remark.strip()
+            return '' if not rem else '\n{{{}}}\n '.format(rem)
+        
+        def __addstrl(move, isother=False):
+            prestr = ('({0}. {1}'.format((move.stepno + 1) // 2, 
+                    '... ' if move.stepno % 2 == 0 else '')
+                    if isother else
+                    ('' if move.stepno % 2 == 0 else 
+                    '{}. '.format((move.stepno + 1) // 2)))
+            mergestr = '{0}{1} {2}'.format(prestr,
+                    move.coordstr, __remarkstr(move.remark))
+            movestrl.append(mergestr)
+            if move.other:
+                __addstrl(move.other, True)
+                movestrl.append(') ')
+                global movecount
+                movecount -= 1 # 修正着法步数
+                
+            if move.next_:
+                __addstrl(move.next_)
+    
+        infostrl = ['[{} "{}"]'.format(name, value)
+                for name, value in sorted(self.info.items())]
+        movestrl = []
+        __addstrl(self.rootmove)
+        global movecount
+        movecount += len(movestrl) # 计算着法步数
+        
+        data = '{}\n{}'.format('\n'.join(infostrl), ''.join(movestrl))
         try:
             open(filename, 'w', encoding='utf-8').write(data)
         except:
-            print('错误：写入 {} 文件不成功！'.format(filename))        
-    
-    def __transtopgn(self, filename):
-
-        def __setnodestrl(node, isother=False):
+            print('错误：写入 {} 文件不成功！'.format(filename))
         
-            def __remarkstr():
-                remarkstr = '' if not node.Remark else node.Remark.strip()
-                return '' if not remarkstr else '\n{{{}}}\n '.format(remarkstr)
+    def saveasxml(self, filename):
             
-            def __mergestr():                        
-                if not isother:
-                    prestr = ('' if node.stepno % 2 == 0 else 
-                            '{}. '.format((node.stepno + 1) // 2))
-                else:
-                    prestr = '({0}. {1}'.format((node.stepno + 1) // 2, 
-                            '... ' if node.stepno % 2 == 0 else '')
-                return '{0}{1} {2}'.format(prestr,
-                            bodystr(node.XYf, node.XYt), __remarkstr())
-                
-            if node.prenode is None: # 根节点 
-                self.nodestrl.append(__remarkstr())
-            else:
-                self.nodestrl.append(__mergestr())            
-            if node.othernode:
-                __setnodestrl(node.othernode, True)
-                self.nodestrl.append(') ')        
-            if node.nextnode:
-                __setnodestrl(node.nextnode)
-    
-        __setnodestrl(self.rootnode)
-        data = '{}\n{}'.format(self.head, ''.join(self.nodestrl))
-        self.__writefile(filename, data)
-        self.nodestrl = []
-        
-    def __transtoxml(self, filename):
-            
-        def __createlem(pre, body, remark=''):
+        def __createlem(pre, body='', remark=''):
             sub = ET.Element(pre) # 元素名
             sub.text = body
-            if remark:
-                r = ET.Element('remark')
-                r.text = remark
-                sub.append(r)
-            return sub                
+            sub.tail = remark
+            return sub
             
-        def __addheadelems(elem, headstr):
-            for name, value in re.findall('\[(.+) "(.*)"\]', headstr):
-                elem.append(__createlem(name, value))
-        
-        def __addnodelems(elem, node, isother=False):
-        
-            def __remarkstr():
-                return node.Remark.strip() if node.Remark else ''
-        
-            def __prestr(): 
-                return '({})'.format(node.stepno) if isother else str(node.stepno)
+        def __addelem(elem, move):    
+            thissub = __createlem(str(move.stepno), move.coordstr, move.remark.strip())
+            global movecount
+            movecount += 1  # 计算着法步数
             
-            if node.prenode is None: # 根节点
-                remarkstr = __remarkstr()
-                if remarkstr:
-                    elem.append(__createlem('allremark', remarkstr))
-            else:
-                subelem = __createlem(__prestr(),
-                        bodystr(node.XYf, node.XYt), __remarkstr())
-                if node.othernode: # 本着有变着
-                    __addnodelems(subelem, node.othernode, True)                        
-                elem.append(subelem)
-            if node.nextnode:
-                __addnodelems(elem, node.nextnode)        
+            if move.other: # 有变着
+                __addelem(thissub, move.other)                
+            elem.append(thissub)
+            if move.next_:
+                __addelem(elem, move.next_)        
         
         elem = ET.Element('root')
-        __addheadelems(elem, str(self.head))        
-        __addnodelems(elem, self.rootnode)
-        xmlindent(elem)  # 美化
+        sub = __createlem('info')
+        for name, value in sorted(self.info.items()):
+            sub.append(__createlem(name, value))
+        elem.append(sub)
+        
+        firstsub = __createlem('moves', '', '')
+        __addelem(firstsub, self.rootmove)
+        elem.append(firstsub)        
+        base.xmlindent(elem)  # 美化
         ET.ElementTree(elem).write(filename, encoding='utf-8')
         
-    def transfile(self, ext, pathfrom, dirto='.\\'):
-        name = os.path.splitext(os.path.basename(pathfrom))[0]
-        filenameto = os.path.join(dirto, name + ext)
-        self.__readfile(pathfrom) # 读入XQF文件
-        if ext == '.pgn':
-            self.__transtopgn(filenameto)
-        elif ext == '.xml':
-            self.__transtoxml(filenameto)
-            
-        
-    def transdir(self, ext, dirfrom, dirto='.\\'):
+    def tranxqfto(self, ext, dirfrom, dirto='.\\'):
         fcount = dcount = 0
         if not os.path.exists(dirto):
             os.mkdir(dirto)
         for subname in os.listdir(dirfrom):
             subname = os.path.normcase(subname)
-            pathfrom = os.path.join(dirfrom, subname)            
+            pathfrom = os.path.join(dirfrom, subname)          
             pathto = os.path.join(dirto, subname)
             if os.path.isfile(pathfrom): # 文件
                 extension = os.path.splitext(os.path.basename(pathfrom))[1]
                 if extension == '.xqf':
-                    self.transfile(ext, pathfrom, dirto)
+                    filename = os.path.splitext(os.path.basename(pathfrom))[0] + ext
+                    filenameto = os.path.join(dirto, filename)
+                    self.readxqf(pathfrom) # 读入XQF文件
+                    if ext == '.bin':
+                        self.saveasbin(filenameto)
+                    elif ext == '.pgn':
+                        self.saveaspgn(filenameto)
+                    elif ext == '.xml':
+                        self.saveasxml(filenameto)
                     fcount += 1
                 elif extension == '.txt':
                     data = open(pathfrom).read()
                     open(pathto, 'w', encoding='utf-8').write(data)
                     fcount += 1
             else:
-                below = self.transdir(ext, pathfrom, pathto)
+                below = self.tranxqfto(ext, pathfrom, pathto)
                 fcount += below[0]
                 dcount += below[1]
                 dcount += 1
         return (fcount, dcount)
-    
-    
+        
+    def tranxqftodb(self, dirnamefrom, dirto='.\\'):
+
+        def __addinfomove():
+        
+            def __addmove(move, preid):
+                self.moves.append((None, self.manid, preid, move.stepno,
+                            move.coordstr, move.remark))
+                self.lastmovid += 1
+                move.movid = self.lastmovid # 重要!保存当前move的id
+                if move.other:
+                    __addmove(move.other, preid)
+                if move.next_:
+                    __addmove(move.next_, move.movid)
+                    
+            info = ([None, self.dirname, self.filename, self.rootmove.remark] + 
+                    [value for key, value in sorted(self.info.items())])
+            self.infos.append(info)
+            self.manid += 1            
+            __addmove(self.rootmove, 0)
+            
+        def __getinfomove(dirfrom):
+            fcount = dcount = 0        
+            for subname in os.listdir(dirfrom):
+                subname = os.path.normcase(subname)
+                pathfrom = os.path.join(dirfrom, subname)
+                if os.path.isfile(pathfrom):
+                    extension = os.path.splitext(os.path.basename(pathfrom))[1]
+                    if extension == '.xqf':
+                        self.readxqf(pathfrom)
+                        __addinfomove()
+                        fcount += 1
+                    elif extension == '.txt':
+                        content = open(pathfrom).read()
+                        cur.execute(base.insertmanual,
+                                (None, os.path.splitdrive(dirfrom)[1], subname, content))
+                        fcount += 1
+                else:
+                    below = __getinfomove(pathfrom)
+                    fcount += below[0]
+                    dcount += below[1]
+                    dcount += 1
+            return (fcount, dcount)
+
+        #if not os.path.exists(dirto):
+        #    os.mkdir(dirto)
+        dbname = dirto + '\\chessmanual.db'
+        #if os.path.exists(dbname):
+        #    os.remove(dbname)
+        con = sqlite3.connect(dbname)
+        con.execute('PRAGMA synchronous = OFF')
+        cur = con.cursor()
+        cur.executescript(base.initdbsql) # 执行sql脚本，多个sql语句
+        
+        cur.execute(base.getlastmanid)
+        res = cur.fetchone()
+        self.manid = 0 if res is None else res[0]
+        cur.execute(base.getlastmovid)
+        res = cur.fetchone()
+        self.lastmovid = 0 if res is None else res[0]
+        
+        self.infos = []
+        self.moves = []
+        fcount, dcount = __getinfomove(dirnamefrom)
+        con.execute('BEGIN;')
+        cur.executemany(base.insertinfo, self.infos)
+        cur.executemany(base.insertmove, self.moves)
+        
+        cur.close()
+        con.commit()
+        con.close()
+        return (fcount, dcount)
+   
+   
 def testtransdir(num, ext):
 
-    dirfrom = ['C:\\360Downloads\\棋谱文件\\示例文件xqf',
-                'C:\\360Downloads\\棋谱文件\\象棋杀着大全xqf',
-                'C:\\360Downloads\\棋谱文件\\疑难文件xqf',
-                'C:\\360Downloads\\棋谱文件\\中国象棋棋谱大全xqf'
+    dirfrom = ['C:\\360Downloads\\棋谱文件\\示例文件',
+                'C:\\360Downloads\\棋谱文件\\象棋杀着大全',
+                'C:\\360Downloads\\棋谱文件\\疑难文件',
+                'C:\\360Downloads\\棋谱文件\\中国象棋棋谱大全'
                 ]
     
-    xqfile = XQFFile()
+    xqfile = ChessFile()
     for i in range(num):
-        fc, dc = xqfile.transdir(ext, dirfrom[i], dirfrom[i] + ext)
-        print('{}： {}个文件，{}个目录'.format(dirfrom[i], fc, dc))    
-    
+        if ext == '.db':
+            fc, dc = xqfile.tranxqftodb(dirfrom[i], dirto='C:\\360Downloads\\棋谱文件')
+        else:
+            fc, dc = xqfile.tranxqfto(ext, dirfrom[i], dirfrom[i] + ext)
+        print('{}： {}个文件，{}个目录'.format(dirfrom[i], fc, dc))
+    global movecount
+    print('movecount: ', movecount) # 计算着法步数 
             
 if __name__ == '__main__':
 
     import time
     start = time.time()
     
-    #cProfile.run('transdir(2)')
-    #testtransdir(2, '.pgn')
-    #testtransdir(3, '.xml')
+    #cProfile.run('tranxqfto(2)')
+    testtransdir(2, '.bin')
+    testtransdir(2, '.pgn')
+    testtransdir(2, '.xml')
+    #testtransdir(2, '.db') # 第3级目录生产文件超过1G，测试不成功.
     
     end = time.time()
-    print('usetime: %0.4f' % (end - start))
+    print('usetime: %0.3fs' % (end - start))
     
     #shutil.rmtree('C:\\中国象棋棋谱大全')
     pass
