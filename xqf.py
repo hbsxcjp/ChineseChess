@@ -3,13 +3,15 @@
 '''
 
 import cProfile, os, sys, glob, re
-import struct, shutil, chardet
+import struct, shutil #, chardet
 import xml.etree.ElementTree as ET    
 import sqlite3
 import base
 
-global movecount
-movecount = 0 
+global movecount, remlenmax
+movecount = 0
+remlenmax = 0
+ 
 
 class Move(object):
     'XQF象棋着法树节点类'
@@ -36,10 +38,14 @@ class Move(object):
         return (self.fseat[0] * 10 + self.fseat[1],
                 self.tseat[0] * 10 + self.tseat[1])
                 
-    def setseat(self, coordstr):
+    def setseat_s(self, coordstr):
         fl, fw, tl, tw = coordstr
         self.fseat = (int(fw), self.colchars.index(fl))
         self.tseat = (int(tw), self.colchars.index(tl))
+
+    def setseat_i(self, fi, ti):
+        self.fseat = (fi // 10, fi % 10)
+        self.tseat = (ti // 10, ti % 10)
 
     def setnext(self, next_):
         self.next_ = next_
@@ -54,22 +60,45 @@ class ChessFile(object):
     '象棋文件类'
     
     def __init__(self):
-        self.info = {'Game': "Chinese Chess", 'Round': "",
-                    'RedTeam': "", 'BlackTeam': "",
-                    'Variation': "", 'ECCO': "",
-                    'Format':  "ICCS"}
+        self.info = {'Author': '',
+                    'Black': '',
+                    'BlackTeam': '',
+                    'Date': '',
+                    'ECCO': '',
+                    'Event': '',
+                    'FEN': '',
+                    'Format': "ICCS",
+                    'Game': 'Chinese Chess',
+                    'Opening': '',
+                    'PlayType': '',
+                    'RMKWriter': '',
+                    'Red': '',
+                    'RedTeam': '',
+                    'Result': '',
+                    'Round': '',
+                    'Site': '',
+                    'Title': '',
+                    'Variation': '',
+                    'Version': ''}
+                    
         self.rootmove = Move()
+                
+    def strstruct(self, size):
+        return struct.Struct('{}s'.format(size))
                 
     def readxqf(self, filename):    
         
         def __tostr(bstr):
+            return bstr.decode('GBK', errors='ignore')
+            '''
             try:  # encoding=GB2312 GB18030 utf-8 GBK
                 return bstr.decode('GBK', errors='ignore')
             except:
                 coding = chardet.detect(bstr)
                 print(coding)
                 return bstr.decode(coding['encoding'], errors='ignore')                
-                
+            '''
+            
         def __subbyte(a, b):
             return (a - b + 1024) % 256
             
@@ -185,9 +214,6 @@ class ChessFile(object):
                 xy = __subbyte(a, b)
                 return (xy % 10, xy // 10)
                     
-            def __remarkstruct(size):
-                return struct.Struct('{}s'.format(size))       
-                
             def __readbytes(size):
                 pos = fileobj.tell()
                 bytestr = fileobj.read(size)                
@@ -225,7 +251,7 @@ class ChessFile(object):
                     
             if RemarkSize > 0: # 如果有注解
                 bytestr = __readbytes(RemarkSize)
-                move.remark = __tostr(__remarkstruct(RemarkSize).unpack(bytestr)[0])
+                move.remark = __tostr(self.strstruct(RemarkSize).unpack(bytestr)[0])
                     
             if (ChildTag & 0x80) != 0: # 有左子树
                 next_ = Move(move)
@@ -236,9 +262,10 @@ class ChessFile(object):
                 move.setother(other)
                 __readmove(other)
 
-        infofmt = '2B2BL8B32BH2B2L4B8H64p64p64p16p16p16p16p64p16p16p32p16p16p4P128P'
+        infofmt = '2B2BL8B32BH2B2L4B8H64p64p64p16p16p16p16p64p16p16p32p16p16p528B'
         #206个元素
         infostruct = struct.Struct(infofmt)
+        #print('infostruct：', struct.calcsize(infofmt))
         movestruct1 = struct.Struct('4B')
         movestruct2 = struct.Struct('L')
         with open(filename, 'rb') as fileobj:
@@ -250,28 +277,91 @@ class ChessFile(object):
             __readmove(self.rootmove)
         self.info['Version'] = str(self.info['Version'])
             
+    def readbin(self, filename):
+    
+        def __readmove(move):
+            hasothernextrem, fint, tint = movestruct1.unpack(fileobj.read(3))
+            move.setseat_i(fint, tint)
+            if hasothernextrem & 0x20:
+                rlength = movestruct2.unpack(fileobj.read(2))[0]
+                move.remark = fileobj.read(rlength).decode()
+            if hasothernextrem & 0x80:
+                move.setother(Move())
+                __readmove(move.other)
+            if hasothernextrem & 0x40:
+                move.setnext(Move())
+                __readmove(move.next_)
+                
+        infokstruct = struct.Struct('20B')
+        infovfmt = '{}s' * 20
+        movestruct1 = struct.Struct('3B')
+        movestruct2 = struct.Struct('H')
+        with open(filename, 'rb') as fileobj:
+            self.__init__()
+            self.dirname = os.path.splitdrive(os.path.dirname(filename))[1]
+            self.filename = os.path.splitext(os.path.basename(filename))[0]
+            infoks = infokstruct.unpack(fileobj.read(20))
+            infovstruct = struct.Struct(infovfmt.format(*infoks))
+            infovs = infovstruct.unpack(fileobj.read(sum(infoks)))
+            for n, key in enumerate(sorted(self.info)):
+                self.info[key] = infovs[n].decode()
+            __readmove(self.rootmove)
+        
+    def readpgn(self, filename):
+        pass
+
+    def readxml(self, filename):
+            
+        def __readelem(elem, move):    
+            sub = ET.Element(pre) # 元素名
+            sub.text = body
+            sub.tail = remark
+            
+            if move.other: # 有变着
+                __addelem(thissub, move.other)                
+            elem.append(thissub)
+            if move.next_:
+                __addelem(elem, move.next_)        
+        
+        etree = ET.ElementTree.read(filename, encoding='utf-8')
+        rootelem = etree.getroot()
+        info = rootelem['info']
+        for key, value in sorted(self.info):
+            self.info[key] = info[key]
+        
+        movelem = rootelem['moves']
+        __readelem(movelem)        
+        
     def saveasbin(self, filename):
     
-        def __addbytes(move):
-            fcoord, tcoord = move.coordint
-            rbytes = move.remark.encode()
-            reslutbytes.extend(moveheadtruct.pack(fcoord, tcoord, len(rbytes)))
-            reslutbytes.extend(rbytes)
-            #global movecount
-            #movecount += 1 # 着法步数 
+        def __addmoves(move):
+            fint, tint = move.coordint
+            rbytes = move.remark.strip().encode()
+            hasothernextrem = ((0x80 if move.other else 0) |
+                                (0x40 if move.next_ else 0) |
+                                (0x20 if rbytes else 0))
+            global movecount, remlenmax
+            movecount += 1 # 着法步数 
+            reslutbytes.extend(movestruct1.pack(hasothernextrem, fint, tint))
+            if rbytes:
+                remlenmax = max(remlenmax, len(rbytes))
+                reslutbytes.extend(movestruct2.pack(len(rbytes)))
+                reslutbytes.extend(rbytes)  # rbytes已经是字节串，不需要再pack
             if move.other:
-                __addbytes(move.other)                               
+                __addmoves(move.other)
             if move.next_:
-                __addbytes(move.next_)
+                __addmoves(move.next_)
     
         reslutbytes = bytearray()
-        infobytes = [value.encode() for name, value in sorted(self.info.items())]
+        infobytes = [value.encode() for key, value in sorted(self.info.items())]
+        lenbytes = [len(infob) for infob in infobytes]
+        reslutbytes.extend(lenbytes)
         for valuebytes in infobytes:
-            reslutbytes.append(len(valuebytes))
             reslutbytes.extend(valuebytes)
             
-        moveheadtruct = struct.Struct('2BH')
-        __addbytes(self.rootmove)
+        movestruct1 = struct.Struct('3B')
+        movestruct2 = struct.Struct('H')
+        __addmoves(self.rootmove)
         try:
             open(filename, 'wb').write(reslutbytes)
         except:
@@ -345,7 +435,7 @@ class ChessFile(object):
         base.xmlindent(elem)  # 美化
         ET.ElementTree(elem).write(filename, encoding='utf-8')
         
-    def tranxqfto(self, ext, dirfrom, dirto='.\\'):
+    def trandir(self, fext, text, dirfrom, dirto='.\\'):
         fcount = dcount = 0
         if not os.path.exists(dirto):
             os.mkdir(dirto)
@@ -355,23 +445,30 @@ class ChessFile(object):
             pathto = os.path.join(dirto, subname)
             if os.path.isfile(pathfrom): # 文件
                 extension = os.path.splitext(os.path.basename(pathfrom))[1]
-                if extension == '.xqf':
-                    filename = os.path.splitext(os.path.basename(pathfrom))[0] + ext
+                if extension == fext:
+                    filename = os.path.splitext(os.path.basename(pathfrom))[0] + text
                     filenameto = os.path.join(dirto, filename)
-                    self.readxqf(pathfrom) # 读入XQF文件
-                    if ext == '.bin':
+                    if fext == '.xqf':
+                        self.readxqf(pathfrom) # 读入XQF文件
+                    elif fext == '.bin':
+                        self.readbin(pathfrom) # 读入bin文件
+                    elif fext == '.pgn':
+                        self.readpgn(pathfrom) # 读入pgn文件
+                    elif fext == '.xml':
+                        self.readxml(pathfrom) # 读入xml文件
+                    if text == '.bin':
                         self.saveasbin(filenameto)
-                    elif ext == '.pgn':
+                    elif text == '.pgn':
                         self.saveaspgn(filenameto)
-                    elif ext == '.xml':
+                    elif text == '.xml':
                         self.saveasxml(filenameto)
                     fcount += 1
                 elif extension == '.txt':
                     data = open(pathfrom).read()
-                    open(pathto, 'w', encoding='utf-8').write(data)
+                    open(pathto, 'w').write(data)
                     fcount += 1
             else:
-                below = self.tranxqfto(ext, pathfrom, pathto)
+                below = self.trandir(fext, text, pathfrom, pathto)
                 fcount += below[0]
                 dcount += below[1]
                 dcount += 1
@@ -450,34 +547,40 @@ class ChessFile(object):
         return (fcount, dcount)
    
    
-def testtransdir(num, ext):
+dirfrom = ['C:\\360Downloads\\棋谱文件\\示例文件',
+            'C:\\360Downloads\\棋谱文件\\象棋杀着大全',
+            'C:\\360Downloads\\棋谱文件\\疑难文件',
+            'C:\\360Downloads\\棋谱文件\\中国象棋棋谱大全'
+            ]
+            
+dirfrom2 = ['C:\\360Downloads\\棋谱文件\\示例文件.bin',
+            'C:\\360Downloads\\棋谱文件\\象棋杀着大全.bin',
+            'C:\\360Downloads\\棋谱文件\\疑难文件.bin',
+            #'C:\\360Downloads\\棋谱文件\\中国象棋棋谱大全.bin'
+            ]
 
-    dirfrom = ['C:\\360Downloads\\棋谱文件\\示例文件',
-                'C:\\360Downloads\\棋谱文件\\象棋杀着大全',
-                'C:\\360Downloads\\棋谱文件\\疑难文件',
-                'C:\\360Downloads\\棋谱文件\\中国象棋棋谱大全'
-                ]
-    
+def testtransdir(dirfrom, num, fext, text):
+
     xqfile = ChessFile()
     for i in range(num):
-        if ext == '.db':
+        if text == '.db':
             fc, dc = xqfile.tranxqftodb(dirfrom[i], dirto='C:\\360Downloads\\棋谱文件')
         else:
-            fc, dc = xqfile.tranxqfto(ext, dirfrom[i], dirfrom[i] + ext)
+            fc, dc = xqfile.trandir(fext, text, dirfrom[i], dirfrom[i] + text)
         print('{}： {}个文件，{}个目录'.format(dirfrom[i], fc, dc))
-    global movecount
-    print('movecount: ', movecount) # 计算着法步数 
+    global movecount, remlenmax
+    print('movecount:', movecount, 'remlenmax:', remlenmax) # 计算着法步数 
             
 if __name__ == '__main__':
 
     import time
     start = time.time()
     
-    #cProfile.run('tranxqfto(2)')
-    testtransdir(2, '.bin')
-    testtransdir(2, '.pgn')
-    testtransdir(2, '.xml')
-    #testtransdir(2, '.db') # 第3级目录生产文件超过1G，测试不成功.
+    #cProfile.run('trandir(2)')
+    testtransdir(dirfrom, 3, '.xqf', '.bin')
+    testtransdir(dirfrom2, 3, '.bin', '.pgn')
+    testtransdir(dirfrom2, 3, '.bin', '.xml')
+    #testtransdir(dirfrom, 2, '.xqf', '.db') # 第3级目录生产文件超过1G，不具备可操作性.
     
     end = time.time()
     print('usetime: %0.3fs' % (end - start))
