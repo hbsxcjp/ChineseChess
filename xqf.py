@@ -312,25 +312,26 @@ class ChessFile(object):
 
     def readxml(self, filename):
             
-        def __readelem(elem, move):    
-            sub = ET.Element(pre) # 元素名
-            sub.text = body
-            sub.tail = remark
-            
-            if move.other: # 有变着
-                __addelem(thissub, move.other)                
-            elem.append(thissub)
+        def __readelem(elem, i, move):
+            if i < len(elem):
+                move.stepno = elem[i].tag # 元素名
+                move.coordstr = elem[i].text
+                move.remark = elem[i].tail
+            if len(elem[i]) > 0: # 有子元素(变着)
+                move.setother(Move())
+                __readelem(subelem, 0, move.other)
             if move.next_:
-                __addelem(elem, move.next_)        
+                __addelem(elem, move.next_)
+                
+        rootelem = ET.Element('root')
+        etree = ET.ElementTree(rootelem, filename)
+        infoelem = rootelem.find('info')
+        for n, key in enumerate(sorted(self.info)):
+            self.info[key] = infoelem[n].text
         
-        etree = ET.ElementTree.read(filename, encoding='utf-8')
-        rootelem = etree.getroot()
-        info = rootelem['info']
-        for key, value in sorted(self.info):
-            self.info[key] = info[key]
-        
-        movelem = rootelem['moves']
-        __readelem(movelem)        
+        movelem = rootelem.find('moves')
+        i = 0
+        __readelem(movelem, i, self.rootmove)
         
     def saveasbin(self, filename):
     
@@ -406,11 +407,11 @@ class ChessFile(object):
         
     def saveasxml(self, filename):
             
-        def __createlem(pre, body='', remark=''):
-            sub = ET.Element(pre) # 元素名
-            sub.text = body
-            sub.tail = remark
-            return sub
+        def __createlem(name, value='', remark=''):
+            reselem = ET.Element(name) # 元素名
+            reselem.text = value
+            reselem.tail = remark
+            return reselem
             
         def __addelem(elem, move):    
             thissub = __createlem(str(move.stepno), move.coordstr, move.remark.strip())
@@ -423,17 +424,17 @@ class ChessFile(object):
             if move.next_:
                 __addelem(elem, move.next_)        
         
-        elem = ET.Element('root')
-        sub = __createlem('info')
+        rootelem = ET.Element('root')
+        infoelem = __createlem('info')
         for name, value in sorted(self.info.items()):
-            sub.append(__createlem(name, value))
-        elem.append(sub)
+            infoelem.append(__createlem(name, value))
+        rootelem.append(infoelem)
         
-        firstsub = __createlem('moves', '', '')
-        __addelem(firstsub, self.rootmove)
-        elem.append(firstsub)        
-        base.xmlindent(elem)  # 美化
-        ET.ElementTree(elem).write(filename, encoding='utf-8')
+        movelem = __createlem('moves', '', '')
+        __addelem(movelem, self.rootmove)
+        rootelem.append(movelem)        
+        base.xmlindent(rootelem)  # 美化
+        ET.ElementTree(rootelem).write(filename, encoding='utf-8')
         
     def trandir(self, fext, text, dirfrom, dirto='.\\'):
         fcount = dcount = 0
