@@ -89,7 +89,7 @@ class ChessFile(object):
     def readxqf(self, filename):    
         
         def __tostr(bstr):
-            return bstr.decode('GBK', errors='ignore')
+            return bstr.decode('GBK', errors='ignore').strip()
             '''
             try:  # encoding=GB2312 GB18030 utf-8 GBK
                 return bstr.decode('GBK', errors='ignore')
@@ -313,41 +313,47 @@ class ChessFile(object):
     def readxml(self, filename):
             
         def __readelem(elem, i, move):
-            if i < len(elem):
-                move.stepno = elem[i].tag # 元素名
-                move.coordstr = elem[i].text
-                move.remark = elem[i].tail
+            move.stepno = int(elem[i].tag[1:]) # 元素名
+            if move.stepno > 0:
+                move.setseat_s(elem[i].text.strip())
+            move.remark = elem[i].tail.strip()
             if len(elem[i]) > 0: # 有子元素(变着)
                 move.setother(Move())
-                __readelem(subelem, 0, move.other)
-            if move.next_:
-                __addelem(elem, move.next_)
+                __readelem(elem[i], 0, move.other)
+            i += 1
+            if len(elem) > i:
+                move.setnext(Move())
+                __readelem(elem, i, move.next_)
                 
-        rootelem = ET.Element('root')
-        etree = ET.ElementTree(rootelem, filename)
+        self.dirname = os.path.splitdrive(os.path.dirname(filename))[1]
+        self.filename = os.path.splitext(os.path.basename(filename))[0]
+        etree = ET.ElementTree(ET.Element('root'), filename)
+        rootelem = etree.getroot()
         infoelem = rootelem.find('info')
-        for n, key in enumerate(sorted(self.info)):
-            self.info[key] = infoelem[n].text
+        for elem in infoelem.getchildren():
+            text = elem.text.strip() if elem.text else ''
+            self.info[elem.tag] = text
         
         movelem = rootelem.find('moves')
-        i = 0
-        __readelem(movelem, i, self.rootmove)
+        if len(movelem) > 0:
+            __readelem(movelem, 0, self.rootmove)
         
     def saveasbin(self, filename):
     
         def __addmoves(move):
             fint, tint = move.coordint
-            rbytes = move.remark.strip().encode()
+            rembytes = move.remark.strip().encode()
             hasothernextrem = ((0x80 if move.other else 0) |
                                 (0x40 if move.next_ else 0) |
-                                (0x20 if rbytes else 0))
+                                (0x20 if rembytes else 0))
             global movecount, remlenmax
             movecount += 1 # 着法步数 
             reslutbytes.extend(movestruct1.pack(hasothernextrem, fint, tint))
-            if rbytes:
-                remlenmax = max(remlenmax, len(rbytes))
-                reslutbytes.extend(movestruct2.pack(len(rbytes)))
-                reslutbytes.extend(rbytes)  # rbytes已经是字节串，不需要再pack
+            if rembytes:
+                remlenmax = max(remlenmax, len(move.remark.strip()))
+                
+                reslutbytes.extend(movestruct2.pack(len(rembytes)))
+                reslutbytes.extend(rembytes)  # rbytes已经是字节串，不需要再pack
             if move.other:
                 __addmoves(move.other)
             if move.next_:
@@ -357,8 +363,7 @@ class ChessFile(object):
         infobytes = [value.encode() for key, value in sorted(self.info.items())]
         lenbytes = [len(infob) for infob in infobytes]
         reslutbytes.extend(lenbytes)
-        for valuebytes in infobytes:
-            reslutbytes.extend(valuebytes)
+        reslutbytes.extend(b''.join(infobytes))
             
         movestruct1 = struct.Struct('3B')
         movestruct2 = struct.Struct('H')
@@ -372,6 +377,8 @@ class ChessFile(object):
 
         def __remarkstr(remark):
             rem = remark.strip()
+            global remlenmax
+            remlenmax = max(remlenmax, len(rem))
             return '' if not rem else '\n{{{}}}\n '.format(rem)
         
         def __addstrl(move, isother=False):
@@ -414,15 +421,17 @@ class ChessFile(object):
             return reselem
             
         def __addelem(elem, move):    
-            thissub = __createlem(str(move.stepno), move.coordstr, move.remark.strip())
-            global movecount
+            thissub = __createlem('m{0:02d}'.format(move.stepno),
+                    move.coordstr, move.remark.strip())
+            global movecount, remlenmax
             movecount += 1  # 计算着法步数
+            remlenmax = max(remlenmax, len(move.remark.strip()))
             
             if move.other: # 有变着
                 __addelem(thissub, move.other)                
             elem.append(thissub)
             if move.next_:
-                __addelem(elem, move.next_)        
+                __addelem(elem, move.next_)     
         
         rootelem = ET.Element('root')
         infoelem = __createlem('info')
@@ -432,7 +441,7 @@ class ChessFile(object):
         
         movelem = __createlem('moves', '', '')
         __addelem(movelem, self.rootmove)
-        rootelem.append(movelem)        
+        rootelem.append(movelem)
         base.xmlindent(rootelem)  # 美化
         ET.ElementTree(rootelem).write(filename, encoding='utf-8')
         
@@ -545,29 +554,22 @@ class ChessFile(object):
         cur.close()
         con.commit()
         con.close()
-        return (fcount, dcount)
+        return (fcount, dcount)   
    
-   
-dirfrom = ['C:\\360Downloads\\棋谱文件\\示例文件',
-            'C:\\360Downloads\\棋谱文件\\象棋杀着大全',
-            'C:\\360Downloads\\棋谱文件\\疑难文件',
-            'C:\\360Downloads\\棋谱文件\\中国象棋棋谱大全'
-            ]
-            
-dirfrom2 = ['C:\\360Downloads\\棋谱文件\\示例文件.bin',
-            'C:\\360Downloads\\棋谱文件\\象棋杀着大全.bin',
-            'C:\\360Downloads\\棋谱文件\\疑难文件.bin',
-            #'C:\\360Downloads\\棋谱文件\\中国象棋棋谱大全.bin'
-            ]
 
-def testtransdir(dirfrom, num, fext, text):
+def testtransdir(num, fext, text):
 
+    dirfrom = ['C:\\360Downloads\\棋谱文件\\示例文件',
+                'C:\\360Downloads\\棋谱文件\\象棋杀着大全',
+                'C:\\360Downloads\\棋谱文件\\疑难文件',
+                'C:\\360Downloads\\棋谱文件\\中国象棋棋谱大全'
+                ]                
     xqfile = ChessFile()
     for i in range(num):
         if text == '.db':
             fc, dc = xqfile.tranxqftodb(dirfrom[i], dirto='C:\\360Downloads\\棋谱文件')
         else:
-            fc, dc = xqfile.trandir(fext, text, dirfrom[i], dirfrom[i] + text)
+            fc, dc = xqfile.trandir(fext, text, dirfrom[i]+fext, dirfrom[i]+text)
         print('{}： {}个文件，{}个目录'.format(dirfrom[i], fc, dc))
     global movecount, remlenmax
     print('movecount:', movecount, 'remlenmax:', remlenmax) # 计算着法步数 
@@ -578,10 +580,16 @@ if __name__ == '__main__':
     start = time.time()
     
     #cProfile.run('trandir(2)')
-    testtransdir(dirfrom, 3, '.xqf', '.bin')
-    testtransdir(dirfrom2, 3, '.bin', '.pgn')
-    testtransdir(dirfrom2, 3, '.bin', '.xml')
-    #testtransdir(dirfrom, 2, '.xqf', '.db') # 第3级目录生产文件超过1G，不具备可操作性.
+    #testtransdir(2, '.xqf', '.bin')
+    #testtransdir(2, '.xqf', '.pgn')
+    #testtransdir(2, '.xqf', '.xml')
+    #testtransdir(2, '.bin', '.pgn')
+    #testtransdir(2, '.bin', '.xml')
+    #testtransdir(2, '.xml', '.bin')
+    #testtransdir(2, '.xml', '.pgn')
+    testtransdir(2, '.pgn', '.bin')
+    testtransdir(2, '.pgn', '.xml')
+    #testtransdir(2, '.xqf', '.db') # 第3级目录生产文件超过1G，不具备可操作性.
     
     end = time.time()
     print('usetime: %0.3fs' % (end - start))
