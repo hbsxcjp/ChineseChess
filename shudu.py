@@ -23,8 +23,8 @@
 
 import cProfile, re, os, sys, itertools, copy
 
-global inscount
-inscount = 0
+global count
+count = 0
 
 
 class ShuDu(object):
@@ -33,7 +33,7 @@ class ShuDu(object):
     colchars = '123456789'
     nums = {1, 2, 3, 4, 5, 6, 7, 8, 9}
     
-    allseats = {y*9+x for x in range(9) for y in range(9)} # 81项
+    allseats = [y*9+x for x in range(9) for y in range(9)] # 81项
     row_seats = [[y*9+x for x in range(9)] for y in range(9)] # 9行
     col_seats = [[y*9+x for y in range(9)] for x in range(9)] # 9列
     blk_seats = [[(r*3+y)*9+c*3+x for y in range(3) for x in range(3)]
@@ -42,10 +42,10 @@ class ShuDu(object):
                 
     def __init__(self, no_nums):
         self.seat_nums = {seat: [0, self.nums.copy()] for seat in self.allseats}
-        self.no = no_nums[0]
+        self.no = int(no_nums[0])
         [self.__setnum(i, int(num))
             for i, num in enumerate(no_nums[1:]) if num]
-        self.calculate()      
+        self.calculate()
         
     def __str__(self):
         blankboard0 = '''
@@ -106,8 +106,6 @@ class ShuDu(object):
     def __setnum(self, seat, num):
         y, x = seat // 9, seat % 9
         self.seat_nums[seat] = [num, set()]
-        #global inscount
-        #inscount += 1
         r_seats = self.row_seats[y] + self.col_seats[x] + self.blk_seats[y//3*3+x//3]
         r_seats.remove(seat)
         for r_seat in r_seats:
@@ -136,22 +134,22 @@ class ShuDu(object):
         def __onlyone():
             ''' 唯一数法
                 如果发现某个格子中只有一个可用候选数，那么这个格子必然是这个数字
-            '''
-            if not self.right():
-                return                        
+            '''    
             searched = bool([self.__setnum(seat, list(nums[1])[0])
                             for seat, nums in self.seat_nums.items()
                             if len(nums[1]) == 1])
             '''
                 隐含唯一数法
                 如果发现某一行某一列或某个九宫有一个候选数只出现在一个格子里面，那么这个格子必然是这个数字
-            '''
+            '''                  
+            if not self.right():
+                return
             for rcb_seat in self.rcb_seats:
                 cannums = self.__getcannums(rcb_seat)
                 for num in self.nums:
                     if cannums.count(num) == 1:
                         _seats = self.__getnum_seats(num, rcb_seat)
-                        if not _seats:
+                        if not _seats: # crack试填可能会产生逻辑错误
                             return
                         self.__setnum(list(_seats)[0], num)
                         searched = True
@@ -256,39 +254,36 @@ class ShuDu(object):
                 if seat_nums[seat][0] > 0:
                     continue
                 for num in seat_nums[seat][1]: 
-                    global inscount
-                    inscount += 1
+                    global count
+                    count += 1
                     self.__setnum(seat, num)
                     __rectangle()
-                    if self.right() and self.numcount() == 81:                        
-                        return                            
+                    if self.isdone():                        
+                        return
                     else:
                         self.seat_nums = copy.deepcopy(seat_nums)
-        
-        #firstcount = self.numcount()
-        
-        global inscount
+            
+        firstcount = self.numcount()        
         __rectangle()
-        if self.numcount() < 81:
+        if not self.isdone():
             __crack()
-        else:
-            #inscount += 1
-            #print('rectangle完成：{:3d}个'.format(inscount))
-            pass
-        print('crack完成：{:3d}个筛选'.format(inscount))
-        '''    
+        #'''    
         endcount = self.numcount()
-        print('初始数字：{:2d}个，填入：{:2d}个，最终数字：{:2d}个，累计填入：{:3d}个'.format(
-                firstcount, endcount - firstcount, endcount, inscount))
-        '''    
+        print('{:4d} 初始：{:2d}个，填入：{:2d}个，最终：{:2d}个，crack填入：{:2d}个'.format(
+                self.no, firstcount, endcount - firstcount, endcount, count))
+        #'''    
                 
     def right(self):
-        return all([(bool(n) != bool(c)) for n, c in self.seat_nums.values()])
-        
-        #assert all([(bool(n) != bool(c)) for n, c in self.seat_nums.values()]), ('num、cannums同时为(0、空), 或(非0、非空)\n{}'.format(self))
+        return all([(bool(n) != bool(c)) for n, c in self.seat_nums.values()]) 
         
     def numcount(self):        
         return len([1 for seat in self.seat_nums if self.seat_nums[seat][0] > 0])
+
+    def isdone(self):
+        #return self.right() and self.numcount() == 81
+        return sum([len({self.seat_nums[seat][0]
+                    for seat in rcb_seat if self.seat_nums[seat][0] > 0})
+                    for rcb_seat in self.rcb_seats]) == 9 * 27
         
         
 class ShuDus(object):
@@ -308,7 +303,7 @@ if __name__ == '__main__':
     import time
     start = time.time()
     
-    ShuDus('c:\\cc\\shudu.csv') #_10 
+    ShuDus('c:\\cc\\shudu.csv') 
     
     end = time.time()
     print('用时: {0:6.3f} 秒'.format(end - start))
