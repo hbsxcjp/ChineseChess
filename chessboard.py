@@ -24,6 +24,12 @@ class ChessBoard(Model):
     def __str__(self):
         return '{}\n{}'.format(str(self.board), str(self.walks))
 
+    def __setside(self, color):
+        self.currentside = color
+
+    def __transside(self):
+        self.__setside(other_color(self.currentside))
+        
     def getfen(self):
         return '{} {} {} {} {} {}'.format(self.board.getafen(), 
                 'b' if self.walks.currentside == BLACK_Piece else 'r', '-', '-', '0', '0')

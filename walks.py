@@ -1,8 +1,6 @@
 ﻿'中国象棋棋子着法类型-树结构'
 
-
-#from board import *
-
+from board import Model
 
 class MoveNode(object):
     '象棋着法树节点类'
@@ -52,31 +50,65 @@ class Walks(Model):
         
     def __init__(self, chessfile, board):
         super().__init__()
-        #self.__lineboutnum = 3  # 生成pgn文件的着法文本每行回合数
         self.chessfile = chessfile
         self.board = board
-        self.__rootmvnode = chessfile.rootmvnode
         self.currentmvnode = chessfile.rootmvnode
         self.cureatpiece = None
+        #self.__lineboutnum = 3  # 生成pgn文件的着法文本每行回合数
 
-    def __setside(self, color):
-        self.currentside = color
+    def getprevmoves(self, mvnode):
+        result = [mvnode]
+        while result[-1].prev is not self.chessfile.rootmvnode:
+            result.append(result[-1].prev)
+        return result # reversed()
+                
+    def getnextmoves(self, mvnode):
+        result = [mvnode]
+        while result[-1].next_ is not None:
+            result.append(result[-1].next_)
+        return result
+                
+    def cutfollow(self):
+        self.currentmvnode.next_ = None
 
-    def __transside(self):
-        self.__setside(other_color(self.currentside))
+    def movebackto(self, mvnode):
+        while (self.currentmvnode is not mvnode
+                and self.currentmvnode is not self.chessfile.rootmvnode):
+            self.board.movepiece(self.currentmvnode.tseat, 
+                    self.currentmvnode.fseat, self.cureatpiece)
+            self.currentmvnode = self.currentmvnode.prev
+        self.notifyviews()
         
-    def __goto(mvnode):
-        self.currentmvnode = mvnode
-        self.cureatpiece = self.board.movepiece(mvnode.fseat, mvnode.tseat)
-        self.__transside()
+    def movegoto(self, mvnode):
+        while (self.currentmvnode is not mvnode
+                and self.currentmvnode.next_ is not None):
+            self.currentmvnode = self.currentmvnode.next_   
+            self.cureatpiece = self.board.movepiece(self.currentmvnode.fseat, 
+                    self.currentmvnode.tseat, self.cureatpiece)
+        self.notifyviews()
 
-    def __back():
-        fromseat, toseat = self.currentmvnode.fseat, self.currentmvnode.tseat
-        self.board.movepiece(toseat, fromseat, self.cureatpiece)
-        self.currentmvnode = self.currentmvnode.prev
-        self.__transside()
+    def moveoffset(self, inc=1):
+        if inc > 0:
+            self.movegoto(self.getnextmoves(self.currentmvnode)[i])
+        elif inc < 0:
+            self.movebackto(self.getprevmoves(self.currentmvnode)[i-1])        
+        self.notifyviews()
+
+    def moveother():
+        if self.currentmvnode.other is None:
+            return
+        othermvnode = self.currentmvnode.other
+        self.movebackto(self.currentmvnode.prev)
+        self.movegoto(othermvnode)
+        self.notifyviews()
         
-    '''        
+    def movefirst(self):
+        self.moveto(self.chessfile.rootmvnode)
+    
+    def movelast(self):
+        self.movegoto(None)
+        
+   '''        
     class Walk(object):
         '象棋着法树节点类'            
         
@@ -174,56 +206,4 @@ class Walks(Model):
         pass
     '''
         
-    def getpremoves(self, mvnode):
-        #mvnode = mvnode if mvnode else self.currentmvnode
-        result = [mvnode]
-        while result[-1].prev is not None:
-            result.append(result[-1].prev)
-        return reversed(result)
-                
-    def cutfollow(self):
-        self.currentmvnode.next_ = None
-
-    def move(self, inc=1):
-    
-        def gonext():
-            if self.currentmvnode and self.currentmvnode.next_:
-                self.__goto(self.currentmvnode.next_)
-
-        def back():
-            if self.currentmvnode is not None:
-                self.__back()
-        
-        if inc == 0:
-            return
-        movefunc = gonext if inc > 0 else back
-        [movefunc() for _ in range(abs(inc))]
-        self.notifyviews()
-
-    def moveto(self, mvnode):
-        if self.currentmvnode is mvnode:
-            return
-        while self.currentmvnode is not None:
-            self.__back()
-        for mvnd in self.getpremoves(mvnode):
-            self.__goto(mvnd)
-        self.notifyviews()
-
-    def moveother():
-        if self.currentmvnode is None or self.currentmvnode.other is None:
-            return
-        othermvnode = self.currentmvnode.other
-        self.__back()
-        self.__goto(othermvnode)
-        self.notifyviews()
-        
-    def movefirst(self):
-        self.moveto(None)
-    
-    def movelast(self):
-        while self.currentmvnode.next_ is not None:
-            self.__goto(self.currentmvnode.next_)
-        self.notifyviews()
-        
-
 #
