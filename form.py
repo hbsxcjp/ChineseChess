@@ -4,11 +4,20 @@
 
 from walkarea import *
 from bdcanvas import *
+
 from subform import *
 
 pgndir = './pgn/'
 pgnext = '.pgn'
 pgntitle = 'pgn棋谱文件'
+
+
+import chardet
+def readpgnstr(filename):
+    bstr = open(filename, 'rb').read()
+    coding = chardet.detect(bstr)
+    return bstr.decode(coding['encoding'], errors='ignore') 
+    # encoding=GB2312 GB18030 utf-8 GBK
 
 
 class MainForm(View, ttk.Frame):
@@ -89,8 +98,7 @@ class MainForm(View, ttk.Frame):
         filename = self.__getopenfilename()
         if filename:
             self.config.setelement('lastpgnfilename', filename)
-            with open(filename, 'r') as file:
-                self.chessboard.setpgn(file.read())
+            self.chessboard.setpgn(readpgnstr(filename))
 
     def savethispgn(self, filename):
         if filename:

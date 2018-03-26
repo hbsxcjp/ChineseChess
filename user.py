@@ -2,8 +2,13 @@
 中国象棋用户类型
 '''
 
-from chessboard import *
-from form import *
+from config_et import Config
+from chessfile import ChessFile
+from chessboard import ChessBoard
+from form import MainForm
+
+
+filename = 'C:\\360Downloads\\棋谱文件\\示例文件.xml\\第01局.xml'
 
 
 class User(object):
@@ -12,19 +17,10 @@ class User(object):
     def __init__(self, sn=1, name='cjp'):
         self.sn = sn
         self.name = name
-
         self.config = Config(name)
-        self.chessboard = ChessBoard(self.readpgn())
+        self.chessboard = ChessBoard(ChessFile(filename))       
         self.creatwin()
-
-    def readpgn(self):
-        pgn = ''
-        filename = self.config.getelement('lastpgnfilename').text
-        if filename:
-            with open(filename, 'r') as file:
-                pgn = file.read()
-        return pgn
-
+        
     def creatwin(self):
         self.application = Tk()
         #self.application.title('中国象棋')

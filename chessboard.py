@@ -2,7 +2,8 @@
 中国象棋棋谱类型
 '''
 
-from walks import *
+from board import Board
+from walks import Walks
 
 
 class ChessBoard(Model):
@@ -12,20 +13,20 @@ class ChessBoard(Model):
 
     # 新棋局
 
-    def __init__(self, pgn=''):
+    def __init__(self, chessfile=None):
         super().__init__()
         self.board = Board()
-        self.walks = Walks()
-        self.info = {}  # 信息: pgn标签...
-        self.remark = ''
-        self.setpgn(pgn)
+        self.walks = None
+        self.chessfile = None
+        if chessfile:
+            self.setwalks(chessfile)
 
     def __str__(self):
         return '{}\n{}'.format(str(self.board), str(self.walks))
 
-    def getfen(self):        
-        sidechar = 'b' if self.walks.currentside == BLACK_Piece else 'r'
-        return '{} {} {} {} {} {}'.format(self.board.getafen(), sidechar, '-', '-', '0', '0')
+    def getfen(self):
+        return '{} {} {} {} {} {}'.format(self.board.getafen(), 
+                'b' if self.walks.currentside == BLACK_Piece else 'r', '-', '-', '0', '0')
 
     def setfen(self, fen):
         afens = fen.split()
@@ -92,6 +93,9 @@ class ChessBoard(Model):
         if hasattr(self, 'views'):
             self.notifyviews()
 
+    def setwalks(self, chessfile):
+        self.walks = Walks(chessfile, self.board)
+        
     def changeside(self, changetype='exchange'):
         def __seatpieces_moveseats(changetype):
             self.walks.move(-self.walks.length)
