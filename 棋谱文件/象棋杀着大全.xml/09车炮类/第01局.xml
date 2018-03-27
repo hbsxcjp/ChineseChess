@@ -1,0 +1,39 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>2b1kab2/4a4/4c4/9/9/5R3/9/7C1/4r4/2B2KB2 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>附局7</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是一种常见的车炮成杀的定式。
+		<m01>b2b9
+			<m01>b2e2</m01>伏车六进五杀。
+			<m02>e1e2</m02>
+			<m03>c0e2</m03>和棋。
+		</m01>策划借炮使车，是入局的好着。如走炮倣平五，用“铁门拴”叫杀，则和棋。
+		<m02>e8d9
+			<m02>c9a7</m02>
+			<m03>d4d9</m03>
+		</m02>
+		<m03>d4d9</m03>
+		<m04>e9e8</m04>
+		<m05>d9d8</m05>
+	</moves>
+</root>

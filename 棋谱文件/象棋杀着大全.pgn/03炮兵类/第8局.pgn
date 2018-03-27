@@ -1,0 +1,37 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "3k5/9/b3b4/C4P3/9/9/9/9/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第8局"]
+[Variation ""]
+[Version "18"]
+ 1. d6d7 
+{冲兵通炮，瞄住中象，是入局的关键。}
+ a7c9 (1. ... a7c5 2. i6d6 
+{黑方失象。}
+ ) 2. i6e6 
+{平炮占中，利用围困战术破坏双象联防，可以夺得一象。黑方中象不敢动，否则炮五平六叫杀。}
+ c9a7 3. d7e7 a7c5 (3. ... d9d8 4. e6b6 a7c9 5. b6b8 d8d9 6. e7d7 
+{红胜。}
+ ) 4. e7d7 
+{这是控制黑象转移必须占据的要位。如果冒进走兵五进一，则象3退5，成为和局。}
+ (4. e7e8 c5e7 ) d9e9 5. e0f0 
+{抢占肋道，限制黑将的活动范围。}
+ e9e8 6. e6d6 
+{压象眼，笄困死黑方将象，中获胜的一种诀窍。}
+ c5a7 7. d6b6 a7c9 8. b6b8 e8e9 (8. ... c9e7 9. f0e0 ) 9. d7d8 
+{红胜。}
+ 

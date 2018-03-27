@@ -1,0 +1,62 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3k5/4P4/9/9/9/9/p8/5A3/1n2K4/3A2C2 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第9局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />本局红方兵占花心，炮有攻势；黑方的马必须长跟为防杀。针对这种局面，红方运用停着、控制等战术，巧妙的取得胜利。
+		<m01>c0c1</m01>
+		<m02>b1c3</m02>
+		<m03>e1f1</m03>助攻性停着。
+		<m04>a3b3</m04>
+		<m05>c1c0</m05>
+		<m06>c3b1</m06>
+		<m07>f0e1</m07>助攻性停着。
+		<m08>b3a3
+			<m08>b3b2</m08>
+			<m09>c0c1</m09>
+			<m10>b2c2</m10>
+			<m11>c1d1</m11>
+		</m08>
+		<m09>c0b0</m09>利用炮的控制力量（黑方防将不敢动马），迫使黑方进卒，是获胜的重要步骤。
+		<m10>a3a2</m10>
+		<m11>b0c0</m11>利用炮的控制力量（黑方防将不敢动马），迫使黑方进卒，是获胜的重要步骤。
+		<m12>a2a1</m12>
+		<m13>c0g0</m13>进攻性停着，迫使黑卒冲支底线就摛，是获胜的双一重要步骤。
+		<m14>a1a0
+			<m14>b1c3</m14>
+			<m15>g0d0</m15>
+			<m16>c3d1</m16>
+			<m17>e1f0</m17>
+			<m18>a1b1</m18>
+			<m19>f1e1</m19>
+			<m20>b1c1</m20>
+			<m21>d0e0</m21>黑方欠行，必然失马，红胜。
+		</m14>
+		<m15>f1f0</m15>
+		<m16>b1c3</m16>
+		<m17>g0a0</m17>
+		<m18>c3b1</m18>
+		<m19>a0d0</m19>
+		<m20>b1d0</m20>
+		<m21>e1d0</m21>红胜。
+	</moves>
+</root>

@@ -1,0 +1,146 @@
+<root>
+	<info>
+		<Author>郭有志</Author>
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event>14、第五轮 许银川　红先和　柳大华</Event>
+		<FEN>rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>全局</PlayType>
+		<RMKWriter>郭有志</RMKWriter>
+		<Red />
+		<RedTeam />
+		<Result>和棋</Result>
+		<Round />
+		<Site />
+		<Title>14、第五轮 许银川　红先和　柳大华</Title>
+		<Variation />
+		<Version>16</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>h2e2</m01>
+		<m02>h9g7</m02>
+		<m03>h0g2</m03>
+		<m04>g6g5</m04>
+		<m05>i0h0</m05>
+		<m06>i9h9</m06>
+		<m07>h0h6</m07>
+		<m08>b9c7</m08>
+		<m09>c3c4</m09>
+		<m10>h7i7</m10>
+		<m11>h6g6</m11>
+		<m12>i7i8</m12>
+		<m13>b2d2</m13>
+		<m14>h9h4</m14>
+		<m15>b0c2
+			<m15>g6g5</m15>
+			<m16>h4c4</m16>
+			<m17>g5g4</m17>
+			<m18>c4c0
+				<m18>c6c5</m18>
+				<m19>e3e4</m19>
+				<m20>i8g8</m20>
+				<m21>g4f4</m21>
+				<m22>g7h5</m22>
+				<m23>f4h4</m23>
+			</m18>
+			<m19>d2c2</m19>
+			<m20>i8g8</m20>
+			<m21>g4b4</m21>
+			<m22>g7e8</m22>
+			<m23>c2c7</m23>
+			<m24>g8g2</m24>
+			<m25>c7c0</m25>
+			<m26>b7e7</m26>
+			<m27>e2e6</m27>
+		</m15>
+		<m16>h4c4</m16>
+		<m17>a0b0</m17>
+		<m18>a9b9</m18>
+		<m19>b0b3</m19>
+		<m20>d9e8</m20>
+		<m21>c0a2</m21>
+		<m22>c4c5</m22>
+		<m23>c2d4</m23>
+		<m24>i8g8</m24>
+		<m25>g6f6</m25>
+		<m26>b7a7</m26>
+		<m27>b3b9</m27>
+		<m28>c7b9</m28>
+		<m29>e3e4</m29>
+		<m30>g9e7
+			<m30>c5c3</m30>
+			<m31>e2e6
+				<m31>e4e5</m31>
+				<m32>c3d3</m32>
+				<m33>d4e6</m33>
+				<m34>g7e6</m34>
+				<m35>e5e6</m35>
+				<m36>d3d2</m36>
+				<m37>g2e3</m37>
+				<m38>e9d9</m38>
+				<m39>f0e1</m39>
+				<m40>d2d3</m40>
+				<m41>e3f5</m41>
+			</m31>
+			<m32>g7e6</m32>
+			<m33>d4e6</m33>
+			<m34>c3g3</m34>
+			<m35>g0e2</m35>
+			<m36>g5g4</m36>
+			<m37>f6f8
+				<m37>f6g6</m37>
+				<m38>a7a8</m38>
+				<m39>g6g4
+					<m39>d2d8</m39>
+					<m40>g8i8</m40>
+					<m41>g6g4</m41>
+					<m42>g3g4</m42>
+					<m43>e2g4</m43>
+				</m39>
+				<m40>g3g4</m40>
+				<m41>e2g4</m41>
+				<m42>g8g2</m42>
+			</m37>
+			<m38>g4f4</m38>
+			<m39>e6d8</m39>
+			<m40>a7a8</m40>
+			<m41>f8g8</m41>
+			<m42>g3g8</m42>
+			<m43>d8b9</m43>
+			<m44>f4e4</m44>
+		</m30>
+		<m31>f6f3</m31>
+		<m32>b9c7</m32>
+		<m33>g2e1</m33>
+		<m34>g5g4</m34>
+		<m35>g3g4</m35>
+		<m36>g8g4</m36>
+		<m37>e1c2</m37>
+		<m38>g7h5</m38>
+		<m39>e2e1</m39>
+		<m40>g4g7</m40>
+		<m41>g0e2</m41>
+		<m42>c5g5</m42>
+		<m43>e4e5</m43>
+		<m44>e6e5</m44>
+		<m45>d4c6</m45>
+		<m46>g5g3</m46>
+		<m47>c6e5</m47>
+		<m48>g3f3</m48>
+		<m49>e5f3</m49>
+		<m50>c7b5</m50>
+		<m51>f3e5</m51>
+		<m52>h5i3</m52>
+		<m53>e1a1</m53>
+		<m54>g7g2</m54>
+		<m55>d2g2</m55>
+		<m56>i3g2</m56>
+		<m57>a2c0</m57>
+	</moves>
+</root>

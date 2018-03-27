@@ -1,0 +1,50 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>5k3/3n5/9/9/5N3/9/1p1c5/3A5/3K5/4C4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第06局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是马炮联攻夺子制胜的一个典型。
+		<m01>d5e7</m01>
+		<m02>f9f8</m02>
+		<m03>e7g6</m03>运马选位取势，是入局的好着。
+		<m04>f8f9</m04>
+		<m05>g6h8</m05>
+		<m06>f9f8
+			<m06>f9e9</m06>
+			<m07>f2e1</m07>
+			<m08>e9d9</m08>
+			<m09>e0d0</m09>拴住马炮，再马二退四得子。
+		</m06>
+		<m07>e0i0</m07>
+		<m08>d3i3</m08>
+		<m09>f1e1</m09>抢占中路，让出炮位，是有力的续攻手段。
+		<m10>i3i7</m10>
+		<m11>h8g6
+			<m11>i0f0</m11>
+			<m12>i7f7</m12>开方失去胜利机会。
+		</m11>回马牵制黑炮解攻，为夺子奠定基础。
+		<m12>i7g7</m12>
+		<m13>i0f0</m13>
+		<m14>d8f7</m14>
+		<m15>g6e5</m15>至此，红夺得一马，红方胜定。
+	</moves>
+</root>

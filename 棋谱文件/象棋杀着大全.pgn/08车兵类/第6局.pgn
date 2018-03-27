@@ -1,0 +1,31 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "2r1ka3/4a4/5P3/9/9/1R7/9/9/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第6局"]
+[Variation ""]
+[Version "18"]
+ 
+{这是车兵成杀的一种定式。}
+ 1. d7d8 
+{乘黑车尚未抬头，冲兵攻士，伏千里照面，是入局的好着。}
+ c9c0 2. e0e1 c0d0 (2. ... c0f0 3. h4b4 
+{速胜。}
+ ) 3. d8e8 e9d9 4. e8e9 d9d8 5. e9f9 d0d5 6. h4e4 
+{及时占中，是取胜的关键。}
+ d5d6 7. e4e8 d8d7 8. f9e9 
+{准备把兵从将后移过去，再沉车平杀。这种着法俗称小兵搜山。}
+ d6d5 9. e9d9 d5d4 10. d9c9 d4d5 11. e8e9 d7d8 12. e9d9 

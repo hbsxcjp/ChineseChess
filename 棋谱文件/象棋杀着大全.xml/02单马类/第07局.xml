@@ -1,0 +1,50 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>9/4a4/3ak4/8N/9/9/9/9/9/3K5 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第07局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />在一般情况下，单马对双士是和局，05、06、07三局因黑方双士将的位置不好，才导致红方可胜。
+		<m01>a6b8
+			<m01>a6b4</m01>
+			<m02>e8d9</m02>
+			<m03>b4c6</m03>
+			<m04>e7e8</m04>
+			<m05>c6b8</m05>
+			<m06>e8d8</m06>
+			<m07>f0e0</m07>
+			<m08>d9e8</m08>
+			<m09>e0d0</m09>
+			<m10>e8f9</m10>捉不到黑士。
+		</m01>这样跳马取势，不黑方往4路上落士，使将士失调，是取士获胜的要诀。
+　　如误走观九退八，则成和局。
+		<m02>e8f9
+			<m02>e8f7</m02>
+			<m03>b8c6</m03>
+			<m04>e7e8</m04>
+			<m05>c6e5</m05>
+			<m06>e8e7</m06>得士。
+		</m02>
+		<m03>b8c6</m03>
+		<m04>e7e8</m04>成第06局第1回合后的局面，红胜。
+		<m05>f0f1</m05>
+	</moves>
+</root>

@@ -1,0 +1,68 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>9/3k5/5a3/3RP4/9/2B6/5pr2/4BA3/1pn1A4/3K5 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第7局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>e6e7
+			<m01>f6f7</m01>
+			<m02>c1e2</m02>红方失去获胜机会。
+		</m01>冲兵施展“太监追皇帝”叫杀，是入局的关键。如走车四进一吃士，没戏。
+		<m02>d8d9</m02>
+		<m03>f6d6</m03>
+		<m04>d9e9</m04>
+		<m05>d6b6</m05>
+		<m06>e9d9
+			<m06>f7e8</m06>
+			<m07>b6b8</m07>
+			<m08>e8d9</m08>
+			<m09>b8h8</m09>
+			<m10>e9f9</m10>
+			<m11>e7f7</m11>
+			<m12>f9e9</m12>
+			<m13>f7f8</m13>
+			<m14>d9e8</m14>
+			<m15>h8h9</m15>
+			<m16>e8f9</m16>
+			<m17>h9f9</m17>
+		</m06>
+		<m07>b6b9</m07>
+		<m08>d9d8</m08>
+		<m09>b9b7</m09>退车到黑方上三线摧杀，可以带响消灭黑士，是入局获胜的精华。
+		<m10>d8d9</m10>
+		<m11>e7d7</m11>
+		<m12>d9e9</m12>
+		<m13>d7d8</m13>
+		<m14>e9f9</m14>
+		<m15>b7f7</m15>
+		<m16>f9e9</m16>
+		<m17>f7f8
+			<m17>f7e7</m17>
+			<m18>e9f9</m18>
+			<m19>d8e8</m19>
+		</m17>
+		<m18>c1e2</m18>
+		<m19>d8e8</m19>
+		<m20>e9d9</m20>
+		<m21>f8f9</m21>
+	</moves>
+</root>

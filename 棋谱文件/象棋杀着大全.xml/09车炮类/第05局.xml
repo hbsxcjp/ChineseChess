@@ -1,0 +1,54 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3ak4/4a4/6R2/9/9/9/9/9/3r2p2/4K1C2 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第05局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是车马冷着的一种定式。
+		<m01>c7g7</m01>开车取势，两侧叫杀，逼黑方出将。
+		<m02>e9f9</m02>
+		<m03>c0c8
+			<m03>g7g9</m03>
+			<m04>f9f8</m04>
+			<m05>g9g8</m05>
+			<m06>f8f7</m06>
+			<m07>c0c8</m07>
+			<m08>e8d7</m08>
+			<m09>g8g4</m09>
+			<m10>d1f1</m10>
+			<m11>g4g7</m11>
+			<m12>f7f8</m12>
+			<m13>g7g8</m13>
+			<m14>f8f9</m14>红方失去胜机。
+		</m03>借架使炮摧杀，是本局获胜的重要步骤。如走车三进二，没戏。
+		<m04>d1d8</m04>
+		<m05>g7g9</m05>
+		<m06>f9f8</m06>
+		<m07>g9g8</m07>这步将军不可少，把将请上楼，是获胜的又一重要步骤。
+		<m08>f8f7
+			<m08>f8f9</m08>
+			<m09>c8c9</m09>
+		</m08>
+		<m09>g8g1</m09>
+		<m10>f7f8</m10>
+		<m11>g1f1</m11>
+	</moves>
+</root>

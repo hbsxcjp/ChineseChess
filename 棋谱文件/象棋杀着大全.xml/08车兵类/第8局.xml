@@ -1,0 +1,77 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3a5/4a4/3k5/9/6PR1/2B6/9/3AB1r2/2npA4/3K5 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第8局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>c5c6</m01>冲兵，部署太监追皇帝，是入局的好办法。
+		<m02>d7e7</m02>
+		<m03>c6d6</m03>
+		<m04>e8d7
+			<m04>e8f9</m04>
+			<m05>b5e5</m05>
+			<m06>e7f7</m06>
+			<m07>d6e6</m07>
+			<m08>f7f8</m08>
+			<m09>e6e7</m09>
+		</m04>
+		<m05>b5e5</m05>
+		<m06>e7f7</m06>
+		<m07>d6d7</m07>
+		<m08>f7f8</m08>
+		<m09>d7e7</m09>
+		<m10>f8f9</m10>
+		<m11>e5f5</m11>
+		<m12>f9e9</m12>
+		<m13>f5h5</m13>
+		<m14>d9e8
+			<m14>e9f9</m14>
+			<m15>e7f7</m15>
+			<m16>f9e9</m16>
+			<m17>f7f8</m17>速胜。
+		</m14>
+		<m15>h5h8
+			<m15>h5e5</m15>
+			<m16>e8f9</m16>
+			<m17>e7d7</m17>
+			<m18>e9d9
+				<m18>f9e8</m18>
+				<m19>d7d8</m19>
+				<m20>e9f9</m20>
+				<m21>d8e8</m21>
+			</m18>
+			<m19>e5b5</m19>
+			<m20>d9e9</m20>
+			<m21>d7d8</m21>
+		</m15>
+		<m16>e8f9</m16>
+		<m17>h8b8</m17>
+		<m18>e9d9</m18>
+		<m19>e7d7</m19>
+		<m20>d9e9</m20>
+		<m21>d7d8</m21>
+		<m22>f9e8</m22>
+		<m23>b8b9</m23>
+		<m24>e8d9</m24>
+		<m25>b9d9</m25>
+	</moves>
+</root>

@@ -1,0 +1,27 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "2ba3r1/4k4/2ncb4/6C2/2p3p2/3R5/9/4B4/4A4/3K2B2 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第02局"]
+[Variation ""]
+[Version "18"]
+ 
+{黑方中路和九宫有弱点，马炮互相拥塞；红方车炮有隙可乘，可以突袭取胜。}
+ 1. f4f8 
+{进车塞象眼，逼黑方下将，是入局的好着。}
+ e8e9 2. c6e6 
+{炮镇中路，黑象无处飞，是红方制胜的中心。}
+ d9e8 3. f8e8 e9d9 4. e6d6 

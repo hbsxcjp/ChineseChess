@@ -1,0 +1,29 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "3k2b2/4P4/2c6/6N2/9/9/9/9/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第08局"]
+[Variation ""]
+[Version "18"]
+ 1. e0e1 
+{动帅是一步进攻性停着，迫使黑方飞边象，为运马取势铺平道路。如直拉走马七退六，则象7进5，红马进攻受阻。}
+ g9i7 2. c6d4 i7g9 3. d4e6 c7c9 4. e8d8 d9e9 5. e1f1 
+{出帅，伏马五进七杀，迫使黑方升炮平肋遮挡，从而拴住将炮。这是本局制胜的诀窍。}
+ c9c4 6. e6c7 c4f4 7. d8e8 e9f9 8. c7e6 f4f6 9. e6f8 
+{这样运马可以简捷制胜。　如果把马经过帅的下方迂回到右翼进攻马能成杀，但是胜得要慢。}
+ f6g6 10. f1e1 g6g8 11. f8g6 g8g7 12. e1e2 
+{黑方欠行必然失象，红胜。}
+ 

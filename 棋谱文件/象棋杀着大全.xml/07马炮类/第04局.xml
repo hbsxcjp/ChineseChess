@@ -1,0 +1,38 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3ak4/4a4/8b/3N5/p4r3/9/8P/3C5/4A4/4K1B2 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第04局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是马炮联攻先弃后取制胜的一个典型。
+		<m01>f6g8</m01>卧槽引车入瓮，是取势的好着。
+		<m02>f5f8</m02>
+		<m03>e1f0</m03>弃马落士，明帅控制中路，笄平炮叫闷宫得车。先弃后取是本局获胜的中心。
+		<m04>f8g8</m04>
+		<m05>f2b2</m05>
+		<m06>e9f9</m06>
+		<m07>b2b9</m07>
+		<m08>f9f8</m08>
+		<m09>b9b8</m09>
+		<m10>f8f9</m10>
+		<m11>b8g8</m11>以下回炮消灭边座，演成炮高兵必胜双士象的残局。
+	</moves>
+</root>

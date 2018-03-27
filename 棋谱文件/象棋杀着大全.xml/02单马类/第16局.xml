@@ -1,0 +1,45 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>9/4k4/9/2p6/9/9/9/9/8N/3K5 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第16局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>a1b3</m01>
+		<m02>e8e9</m02>
+		<m03>b3a5</m03>这是马控中卒必须要抢占的制高点，也是运马取势入局的关键。
+		<m04>c6c5</m04>
+		<m05>f0f1</m05>进攻性停着，迫使黑将离开中路。
+		<m06>e9d9
+			<m06>e9e8</m06>
+			<m07>f1f2
+				<m07>a5b7</m07>
+				<m08>c5c4</m08>
+				<m09>b7d6</m09>
+			</m07>
+		</m06>
+		<m07>f1e1</m07>
+		<m08>d9d8</m08>
+		<m09>a5b7</m09>
+		<m10>d8d9</m10>
+		<m11>b7c5</m11>
+	</moves>
+</root>

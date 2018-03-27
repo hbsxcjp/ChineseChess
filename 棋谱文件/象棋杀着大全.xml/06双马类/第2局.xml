@@ -1,0 +1,40 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>5ab2/3ka4/4b3n/9/8N/9/9/9/3p1p3/4K4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第2局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>a5c6</m01>
+		<m02>d8d9</m02>
+		<m03>c6b8</m03>
+		<m04>d9e9</m04>
+		<m05>a7c8</m05>
+		<m06>e9d9</m06>
+		<m07>c8e7</m07>利用双马饮泉的杀着消灭中象，使主帅发挥控制中路的作用，是入局的好办法。
+		<m08>d9e9</m08>
+		<m09>e7c8</m09>再次利用双马懈泉的杀着，笄运马选位做杀。
+		<m10>e9d9</m10>
+		<m11>c8d6</m11>
+		<m12>d9e9</m12>
+		<m13>d6f7</m13>
+	</moves>
+</root>

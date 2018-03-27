@@ -1,0 +1,25 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "9/4k4/4b4/8N/9/9/9/9/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第08局"]
+[Variation ""]
+[Version "18"]
+ 
+{帅居中拴着在同一条线上的将象，过河马得势可迅速捉到象。}
+ 1. a6b8 
+{进马瞄控象是入局的好着。}
+ e8f8 (1. ... e8e9 (1. ... e8d8 2. b8c6 d8e8 3. c6e7 ) 2. b8c6 e9e8 3. c6e7 ) 2. b8d9 f8e8 3. d9e7 e8e9 4. e0f0 

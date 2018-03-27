@@ -1,0 +1,54 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>1n2ka3/4a4/9/3N2P2/9/9/9/9/9/4K1B2 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第04局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>f6d7</m01>
+		<m02>e9d9
+			<m02>b9d8</m02>
+			<m03>c6c7</m03>
+			<m04>e9d9</m04>
+			<m05>c7c8</m05>
+			<m06>e8d7</m06>
+			<m07>c8c9</m07>
+		</m02>
+		<m03>d7b8</m03>进马压马，进一步困扰黑方子力，是入局的好着。
+		<m04>d9e9
+			<m04>d9d8</m04>
+			<m05>c6c7</m05>
+			<m06>e8f7</m06>
+			<m07>c7c8</m07>
+			<m08>d8d7</m08>
+			<m09>c8c9</m09>
+			<m10>d7d8</m10>
+			<m11>c9b9</m11>演成马兵必胜双士的残局。
+		</m04>
+		<m05>c6c7</m05>
+		<m06>b9d8</m06>
+		<m07>b8d7</m07>挂空角，围困将府，使黑方只能支将，以下冲后一段民杀，是制胜的妙着。
+		<m08>e9d9</m08>
+		<m09>c7c8</m09>
+		<m10>e8d7</m10>
+		<m11>c8c9</m11>
+	</moves>
+</root>

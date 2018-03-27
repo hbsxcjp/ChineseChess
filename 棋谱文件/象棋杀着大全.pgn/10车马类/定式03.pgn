@@ -1,0 +1,27 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "9/4k4/2NR5/9/9/9/9/4B4/4r1r2/2BK5 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "定式03"]
+[Variation ""]
+[Version "18"]
+ 
+{本局棋图稍有问题，三路应设高相。否则，本局的着法不能成立。}
+ 1. f7c7 e8d8 (1. ... g1g7 
+{a bug.}
+ 2. c7g7 
+{和棋。}
+ ) 2. g7f9 d8e8 3. c7e7 

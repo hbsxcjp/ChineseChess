@@ -1,0 +1,23 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "5a3/4k4/5a3/4p4/9/9/n8/3C5/4p4/5K3 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第3局"]
+[Variation ""]
+[Version "18"]
+ 1. d7d8 e8e9 (1. ... e8e7 2. f2e2 ) 2. f2e2 
+{平炮中路，造成拴链而入局。}
+ f9e8 (2. ... f7e8 3. d8d9 ) 3. d8d9 e9f9 4. e2f2 

@@ -1,0 +1,41 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3rka3/4a1P2/9/1R7/9/9/9/8B/9/4K4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第1局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>h6b6</m01>横车外肋，不给黑车通头打将的机会，是取胜的关键。
+		<m02>d9d7
+			<m02>d9a9</m02>
+			<m03>c8d8</m03>
+			<m04>a9c9</m04>
+			<m05>d8e8</m05>
+			<m06>f9e8</m06>
+			<m07>b6h6</m07>叫杀得车，红胜。
+		</m02>
+		<m03>b6b9</m03>
+		<m04>d7d9</m04>
+		<m05>b9c9</m05>车兵堵门，黑方无子可动，是本局获胜的精华。如果躲车，则黑车4进2，红方无法获胜。
+		<m06>d9c9</m06>
+		<m07>c8c9</m07>
+	</moves>
+</root>

@@ -1,0 +1,28 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>5a3/5k3/5a3/9/9/9/9/5C3/9/4K4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>定式04</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是单炮成杀的基本定式，是借助炮架和帅的作用获胜的。
+		<m01>d2d8</m01>黑方欠行。
+	</moves>
+</root>

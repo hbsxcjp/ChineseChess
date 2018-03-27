@@ -1,0 +1,46 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>6b2/4ak2R/9/3N5/6c2/9/1r7/2p6/4A4/3A1K3 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第02局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是车马成杀的一种定式。
+		<m01>f6d7
+			<m01>f6h7</m01>
+			<m02>g5g7</m02>
+		</m01>借车使马取势。误走其它着法没戏。
+		<m02>f8f7</m02>
+		<m03>d7e5</m03>施展钩子马催杀。
+		<m04>f7f8
+			<m04>f7e7</m04>
+			<m05>e5g6</m05>
+			<m06>e7f7</m06>
+			<m07>a8a7</m07>
+			<m08>g9e7</m08>
+			<m09>a7e7</m09>
+		</m04>
+		<m05>e5g6</m05>
+		<m06>f8f7</m06>
+		<m07>a8a7</m07>
+		<m08>g9e7</m08>
+		<m09>a7e7</m09>
+	</moves>
+</root>

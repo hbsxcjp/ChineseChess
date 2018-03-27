@@ -1,0 +1,25 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "9/6P2/4k4/9/9/9/9/9/9/3K5 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "定式02"]
+[Variation ""]
+[Version "18"]
+ 
+{这是单兵成杀的基本定式。}
+ 1. c8d8 e7d7 2. d8e8 d7e7 3. e8f8 e7d7 4. f0e0 d7d8 5. f8e8 d8d7 6. e0e1 
+{进攻性停着，黑方欠行，红胜。}
+ 

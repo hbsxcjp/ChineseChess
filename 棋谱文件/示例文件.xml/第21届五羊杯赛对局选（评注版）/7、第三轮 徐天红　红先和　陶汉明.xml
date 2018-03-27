@@ -1,0 +1,78 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event>7、第三轮 徐天红　红先和　陶汉明</Event>
+		<FEN>rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>全局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>未知</Result>
+		<Round />
+		<Site />
+		<Title>7、第三轮 徐天红　红先和　陶汉明</Title>
+		<Variation />
+		<Version>16</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>g0e2</m01>
+		<m02>b9c7</m02>
+		<m03>h0g2</m03>
+		<m04>c6c5</m04>
+		<m05>g3g4</m05>
+		<m06>g9e7</m06>
+		<m07>b0a2</m07>
+		<m08>a9a8</m08>
+		<m09>a0a1</m09>
+		<m10>a8f8</m10>
+		<m11>h2i2</m11>
+		<m12>c7b5</m12>
+		<m13>a1b1</m13>
+		<m14>b5c3</m14>
+		<m15>b2c2</m15>
+		<m16>c3a2</m16>
+		<m17>b1b2</m17>
+		<m18>f8f3</m18>
+		<m19>c2c3</m19>
+		<m20>f3f5</m20>
+		<m21>c0a2</m21>
+		<m22>b7d7</m22>
+		<m23>i0h0</m23>
+		<m24>h9f8</m24>
+		<m25>b2d2</m25>
+		<m26>i9h9</m26>
+		<m27>d2d4</m27>
+		<m28>h7h1</m28>
+		<m29>c3c2</m29>
+		<m30>i6i5</m30>
+		<m31>a2c0</m31>
+		<m32>f9e8</m32>
+		<m33>d4f4</m33>
+		<m34>f5f4</m34>
+		<m35>g2f4</m35>
+		<m36>c5c4</m36>
+		<m37>e2c4</m37>
+		<m38>h1h4</m38>
+		<m39>f4d5</m39>
+		<m40>h4c4</m40>
+		<m41>h0h9</m41>
+		<m42>f8h9</m42>
+		<m43>c2e2</m43>
+		<m44>c4c5</m44>
+		<m45>e2e6</m45>
+		<m46>h9f8</m46>
+		<m47>e6b6</m47>
+		<m48>f8h7</m48>
+		<m49>i2h2</m49>
+		<m50>d7b7</m50>
+		<m51>h2h6</m51>
+	</moves>
+</root>

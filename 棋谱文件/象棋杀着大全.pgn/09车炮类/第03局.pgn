@@ -1,0 +1,23 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "2b1k1c2/9/4b4/7C1/2p6/4R4/9/r2A5/5p3/4KA3 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第03局"]
+[Variation ""]
+[Version "18"]
+ 1. b6e6 e7g5 (1. ... e9f9 2. e4f4 ) 2. e6f6 
+{借车使炮，蹩住象眼，从中路突破，是入局的唯一途径。}
+ c9e7 (2. ... e9f9 (2. ... e9d9 3. e4d4 ) 3. f6f1 ) 3. e4e7 e9d9 (3. ... e9f9 4. f6f1 ) 4. e7d7 

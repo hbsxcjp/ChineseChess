@@ -1,0 +1,31 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "9/3ka4/9/9/9/9/9/9/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第02局"]
+[Variation ""]
+[Version "18"]
+ 
+{这是单马取士的典型定式。}
+ 1. f8e6 d8d7 (1. ... d8d9 2. e6c7 d9e9 3. c7e8 
+{红方速胜。}
+ ) 2. e6g7 e8f7 
+{黑如士5退4，红方攻法照常。}
+ (2. ... e8d9 3. g7f5 d9e8 4. f5d6 e8f9 5. d6b7 f9e8 6. b7c9 d7d8 7. c9e8 ) 3. g7f5 f7e8 (3. ... d7d8 4. f5d6 f7e8 5. d6e8 ) 4. f5d6 e8f9 (4. ... e8d9 5. d6b7 d9e8 6. b7c9 d7d8 7. c9e8 ) 5. d6b7 
+{控制老将，迫使黑士就摛。}
+ f9e8 6. b7c9 d7d8 7. c9e8 
+{红马返中向右迂回到左边，转一圈，正好七步内捉到士，可称为七步成诗。}
+ 

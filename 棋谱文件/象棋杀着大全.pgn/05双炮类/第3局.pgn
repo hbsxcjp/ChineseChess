@@ -1,0 +1,31 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "3a1a3/3k5/8b/9/6b2/1C7/9/9/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第3局"]
+[Variation ""]
+[Version "18"]
+ 1. h4h8 
+{叫将压象眼，把将请到不设防的城楼上，是取势的好着。}
+ d8d7 2. f8f6 
+{炮再压象眼，使双象失去防御能力，为从正面入局奠定基础。}
+ d7d8 (2. ... d9e8 3. h8h4 
+{再炮二平六叫重炮绝杀，红方速胜。}
+ ) 3. e0e1 
+{停着，再次把将逼到不的城楼上。}
+ d8d7 4. h8h2 
+{回炮准备重炮杀，黑已无法解救。}
+ d7d8 5. h2d2 d9e8 6. f6d6 

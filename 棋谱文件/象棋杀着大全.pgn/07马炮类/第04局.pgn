@@ -1,0 +1,29 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "3ak4/4a4/8b/3N5/p4r3/9/8P/3C5/4A4/4K1B2 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第04局"]
+[Variation ""]
+[Version "18"]
+ 
+{这是马炮联攻先弃后取制胜的一个典型。}
+ 1. f6g8 
+{卧槽引车入瓮，是取势的好着。}
+ f5f8 2. e1f0 
+{弃马落士，明帅控制中路，笄平炮叫闷宫得车。先弃后取是本局获胜的中心。}
+ f8g8 3. f2b2 e9f9 4. b2b9 f9f8 5. b9b8 f8f9 6. b8g8 
+{以下回炮消灭边座，演成炮高兵必胜双士象的残局。}
+ 

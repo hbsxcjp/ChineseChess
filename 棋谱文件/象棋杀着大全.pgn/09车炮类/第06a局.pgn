@@ -1,0 +1,29 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "2C6/5k3/3r5/9/9/4R4/9/9/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第06A局"]
+[Variation ""]
+[Version "18"]
+ 
+{本局局面，笔者曾见一位弈者始终未能做成海底捞月。}
+ 1. e4f4 
+{这是那位弈者的着法。}
+ (1. g9f9 
+{这是正确的着法}
+ f8f9 (1. ... d7c7 2. e4f4 c7f7 3. f9f7 ) 2. e4f4 d7f7 3. f4f7 ) d7f7 2. f4e4 f7d7 3. e0e1 d7c7 4. e4f4 c7f7 
+{判和。}
+ 

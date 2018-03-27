@@ -1,0 +1,75 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3a5/4ak3/1Nc6/9/9/7p1/9/9/9/4K4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第07局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />本局黑卒在8路，比第07局靠近帅府一步，不少同好认为卒能平中解危而成和局。其实还有文章，红方仍能巧妙制胜。
+		<m01>g7g8</m01>
+		<m02>f8f9</m02>
+		<m03>g8g9</m03>
+		<m04>f9e9</m04>
+		<m05>h7f6</m05>
+		<m06>c7c8</m06>
+		<m07>f6d7</m07>
+		<m08>c8d8</m08>前4个回合同第07局。
+		<m09>d7c5
+			<m09>d7b6
+				<m09>d7f6</m09>
+				<m10>d8c8</m10>
+				<m11>f6h7</m11>
+				<m12>c8c5</m12>
+				<m13>h7i9</m13>
+				<m14>c5c8</m14>也是和局。
+			</m09>
+			<m10>h4g4</m10>
+			<m11>b6c8</m11>
+			<m12>g4f4</m12>
+			<m13>c8d6</m13>
+			<m14>f4e4</m14>
+			<m15>d6e4</m15>黑方弃卒，争得转换双士的时间，成为和局。
+			<m16>e8f7</m16>黑方弃卒，争得转换双士的时间，成为和局。
+		</m09>现丰马退象户，是具有远见的佳着，也是本局获胜的关键。
+　　如象第7局那样的攻法会成为和局。
+		<m10>h4g4</m10>
+		<m11>c5b7</m11>
+		<m12>g4f4
+			<m12>d8d4
+				<m12>d8d3</m12>
+				<m13>b7d6</m13>
+				<m14>d3e3</m14>
+				<m15>d6c8</m15>
+			</m12>？？？
+		</m12>黑方不能逃炮，否则马八退六再马六进四，红方速胜。
+		<m13>b7d8</m13>
+		<m14>f4e4</m14>
+		<m15>d8c6</m15>
+		<m16>e4e3
+			<m16>e8d7</m16>
+			<m17>c6d4</m17>红攻法照常。
+		</m16>
+		<m17>c6d4</m17>
+		<m18>e8d7</m18>
+		<m19>d4f3</m19>
+		<m20>e3e2</m20>
+		<m21>f3g1</m21>
+	</moves>
+</root>

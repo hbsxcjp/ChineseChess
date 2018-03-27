@@ -1,0 +1,69 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>5a3/9/3ak4/9/4N4/9/9/9/3K5/9 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第06局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />在一般情况下，单马对双士是和局，05、06、07三局因黑方双士将的位置不好，才导致红方可胜。
+		<m01>e5c6
+			<m01>e5g6</m01>
+			<m02>e7e8</m02>
+			<m03>g6h8</m03>
+			<m04>e8e9</m04>
+			<m05>h8f9</m05>
+			<m06>d7e8</m06>
+			<m07>f9g7</m07>成单马摛士局。
+			<m08>e8f7</m08>
+			<m09>g7f5</m09>
+			<m10>f7e8</m10>
+			<m11>f5d6</m11>
+			<m12>e8d7</m12>
+			<m13>f1f2</m13>
+			<m14>e9e8</m14>
+			<m15>d6b5</m15>
+			<m16>e8e9</m16>
+			<m17>b5a7</m17>
+			<m18>e9e8</m18>
+			<m19>a7c8</m19>
+			<m20>e8d8</m20>
+			<m21>f2e2</m21>
+			<m22>d7e8</m22>
+			<m23>c8d6</m23>
+			<m24>e8f9</m24>
+			<m25>e2e1</m25>
+			<m26>d8d7</m26>
+			<m27>d6b7</m27>
+			<m28>f9e8</m28>
+			<m29>b7c9</m29>
+		</m01>
+		<m02>e7e8</m02>
+		<m03>f1f0</m03>这是一步进攻性停着，有围困黑将的作用，是取士获胜的关键。
+		<m04>e8e9</m04>
+		<m05>c6b8</m05>
+		<m06>f9e8
+			<m06>d7e8</m06>
+			<m07>f0e0</m07>
+		</m06>
+		<m07>f0f1</m07>再一次运用停着，逼　散黑方双士联防。
+		<m08>e8f9</m08>
+		<m09>b8d7</m09>成单马捉士残局，红方胜定。
+	</moves>
+</root>

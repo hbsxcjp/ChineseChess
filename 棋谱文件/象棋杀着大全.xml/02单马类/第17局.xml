@@ -1,0 +1,61 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>9/4k4/9/2p6/9/2N6/9/9/9/3K5 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第17局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>g4e5</m01>进马逼卒前进一步，笄运马占据边路制高点，控制卒将。这是捉卒的诀窍，也是入局取胜的关键。
+		<m02>c6c5</m02>
+		<m03>f0f1</m03>进攻性停着，支援中马跳到边路。
+		<m04>e8e7</m04>
+		<m05>e5c6</m05>
+		<m06>e7e8
+			<m06>e7d7</m06>
+			<m07>f1f0</m07>
+			<m08>c5c4</m08>
+			<m09>c6e5</m09>得卒。
+		</m06>
+		<m07>c6a5</m07>
+		<m08>e8e7
+			<m08>e8e9</m08>
+			<m09>f1f0</m09>
+			<m10>e9e8
+				<m10>e9d9</m10>
+				<m11>f0e0</m11>
+				<m12>d9d8</m12>
+				<m13>a5b7</m13>
+				<m14>d8d9</m14>
+				<m15>b7c5</m15>
+			</m10>
+			<m11>a5b7</m11>
+			<m12>c5c4</m12>
+			<m13>b7d6</m13>
+		</m08>
+		<m09>f1f0</m09>
+		<m10>e7e8</m10>
+		<m11>a5b7</m11>
+		<m12>c5c4</m12>
+		<m13>b7d6</m13>
+		<m14>e8d8</m14>
+		<m15>d6c4</m15>
+	</moves>
+</root>

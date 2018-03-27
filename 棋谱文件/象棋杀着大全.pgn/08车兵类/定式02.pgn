@@ -1,0 +1,27 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "5k3/4aP3/2R2a3/9/9/9/9/1r7/9/4K1B2 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "定式02"]
+[Variation ""]
+[Version "18"]
+ 
+{车兵错。}
+ 1. d8d9 
+{冲兵追将是入局的关键。}
+ b2f2 (1. ... b2b9 2. d9e9 b9e9 3. g7g9 f9f8 4. g9e9 ) 2. d9e9 f9f8 (2. ... f9e9 3. g7g9 ) 3. g7g8 
+{车兵横向错位促将，这种杀着通称“车兵错”。}
+ 

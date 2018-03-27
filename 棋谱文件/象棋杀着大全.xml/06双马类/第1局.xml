@@ -1,0 +1,44 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>2ba5/4ak3/N3b4/9/9/3N5/4c4/4B4/1n1pA4/2BAK4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第1局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>f4g6</m01>
+		<m02>f8f9
+			<m02>f8f7</m02>
+			<m03>g6h8</m03>
+			<m04>f7f8</m04>
+			<m05>i7g6</m05>
+		</m02>
+		<m03>g6h8</m03>
+		<m04>f9e9</m04>
+		<m05>i7g8</m05>
+		<m06>e9f9</m06>
+		<m07>g8e7</m07>双马配合，借抽将吃子或扩展火力促将。这种杀着俗称“双马饮泉”。
+		<m08>f9e9
+			<m08>f9f8</m08>
+			<m09>e7g6</m09>
+		</m08>
+		<m09>e7c8</m09>
+	</moves>
+</root>

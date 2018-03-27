@@ -1,0 +1,31 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "6b2/5k3/2Pn1aN2/9/9/9/9/9/4K4/9 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第05局"]
+[Variation ""]
+[Version "18"]
+ 
+{棋战中，一鼓作气把对方杀住当然好，但切忌单纯这样构思，因为得子胜定或困杀对方也是制胜的有效方法。}
+ 1. g7g8 
+{冲兵提象是入局的正确途径。}
+ f8f9 2. g8g9 f9f8 3. c7d9 
+{跳马打将，困住黑马是取胜的好着。}
+ d7e9 4. e1f1 
+{平帅加强围困，以下平兵捉死黑马，是本局获胜的精华。}
+ f8e8 5. g9f9 e8d8 6. f9e9 
+{红方胜定。}
+ 

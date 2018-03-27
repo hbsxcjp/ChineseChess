@@ -1,0 +1,32 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>5ab2/3ka4/4n1R2/3c2N2/9/9/9/4B4/2r1A4/4KA3 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>定式06</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>c7c8</m01>
+		<m02>d8d7</m02>
+		<m03>c8d8</m03>
+		<m04>d6d8</m04>
+		<m05>c6e5</m05>
+	</moves>
+</root>

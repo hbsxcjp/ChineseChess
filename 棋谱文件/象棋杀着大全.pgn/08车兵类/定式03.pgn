@@ -1,0 +1,32 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "2ba5/4ak3/4b4/2P6/9/1R7/9/1r2B4/2p1A4/1c2KAB2 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "定式03"]
+[Variation ""]
+[Version "18"]
+ 
+{太监追皇帝。}
+ 1. g6g7 
+{冲兵靠近将，再用车兵步步紧逼，直到把它扣住。这种杀法俗称太监追皇帝（也叫三进兵）。}
+ f8f9 (1. ... e8f7 (1. ... e8d7 2. g7f7 f8e8 3. h4h8 e8e9 4. f7f8 ) 2. g7f7 f8e8 3. h4h8 e8e9 4. f7f8 ) 2. h4h9 
+{要着。如有兵三进一没戏。}
+ (2. g7g8 f9e9 3. g8f8 e8f9 ) e7g9 3. h9g9 f9f8 4. g9h9 
+{开车叫车兵错，是有力续攻的着法。
+　　如误走兵三进一，没戏。}
+ (4. g7g8 f8f7 5. g9h9 f7e7 
+{失去胜机。}
+ ) e8d7 5. h9h8 f8f9 6. g7f7 f9e9 7. f7f8 d9e8 8. h8h9 e8f9 9. h9f9 

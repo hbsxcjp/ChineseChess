@@ -1,0 +1,34 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>2bakab2/9/9/3N5/1R7/2B6/5p3/4B4/4r4/3K5 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>定式09</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>h5b5</m01>
+		<m02>d9e8</m02>
+		<m03>f6g8</m03>
+		<m04>e9d9</m04>
+		<m05>b5d5</m05>
+		<m06>e8d7</m06>
+		<m07>d5d7</m07>
+	</moves>
+</root>

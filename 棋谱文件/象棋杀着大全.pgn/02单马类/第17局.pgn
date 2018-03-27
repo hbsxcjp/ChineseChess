@@ -1,0 +1,27 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "9/4k4/9/2p6/9/2N6/9/9/9/3K5 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第17局"]
+[Variation ""]
+[Version "18"]
+ 1. g4e5 
+{进马逼卒前进一步，笄运马占据边路制高点，控制卒将。这是捉卒的诀窍，也是入局取胜的关键。}
+ c6c5 2. f0f1 
+{进攻性停着，支援中马跳到边路。}
+ e8e7 3. e5c6 e7e8 (3. ... e7d7 4. f1f0 c5c4 5. c6e5 
+{得卒。}
+ ) 4. c6a5 e8e7 (4. ... e8e9 5. f1f0 e9e8 (5. ... e9d9 6. f0e0 d9d8 7. a5b7 d8d9 8. b7c5 ) 6. a5b7 c5c4 7. b7d6 ) 5. f1f0 e7e8 6. a5b7 c5c4 7. b7d6 e8d8 8. d6c4 

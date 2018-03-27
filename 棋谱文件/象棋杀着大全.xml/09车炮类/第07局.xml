@@ -1,0 +1,64 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3k1a3/4a4/r1c1R4/p8/9/4C4/9/3A5/4K4/2BA2B2 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第07局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是根据一则古局改编的“车炮冷着”，是以战术为中心而制胜的典型。
+		<m01>e4d4</m01>平炮封锁肋首，加强围困，是取势的关键。
+		<m02>d9d8
+			<m02>a7b7</m02>
+			<m03>e7d7</m03>
+			<m04>d9e9</m04>
+			<m05>d4h4</m05>
+			<m06>b7b1</m06>
+			<m07>e1e0</m07>
+			<m08>b1h1</m08>
+			<m09>d7c7</m09>叫杀，红方胜定。
+		</m02>防止红方平车横炮入局，中好上将。
+		<m03>e7e6</m03>策划借炮使车，强化围困，与前着相联系，是有力的续攻着法。
+		<m04>d8d9
+			<m04>c7e7
+				<m04>a7a9</m04>
+				<m05>e6d6</m05>
+				<m06>c7d7</m06>
+				<m07>d6a6</m07>
+				<m08>d7a7</m08>以下飞边相、退肋炮，开炮夺炮，红方胜。
+			</m04>
+			<m05>e6d6</m05>
+			<m06>e8d7</m06>
+			<m07>d6a6</m07>
+			<m08>d8e8</m08>
+			<m09>a6a7</m09>
+		</m04>
+		<m05>e6d6</m05>
+		<m06>d9e9</m06>
+		<m07>d6d7</m07>这是控制僵局的最佳点位，使围困达到了高潮，也是本局制胜的。
+		<m08>a7b7</m08>
+		<m09>d4h4</m09>
+		<m10>b7b1</m10>
+		<m11>e1e0</m11>
+		<m12>b1h1</m12>
+		<m13>d7c7</m13>
+		<m14>e9d9</m14>
+		<m15>c7c4</m15>红方胜定。
+	</moves>
+</root>

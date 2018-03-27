@@ -1,0 +1,45 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3k1a3/9/9/9/1N7/9/9/9/9/4K4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第01局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>h5g7</m01>
+		<m02>f9e8</m02>
+		<m03>g7e8</m03>
+		<m04>d9e9</m04>
+		<m05>e0e1</m05>助攻性停着，破坏黑方的拴链。
+		<m06>e9d9
+			<m06>e9f9</m06>
+			<m07>e8g7</m07>
+			<m08>f9f8</m08>
+			<m09>g7h9</m09>
+			<m10>f8f7</m10>
+			<m11>e1e0</m11>
+		</m06>如走将5平6胜法一样。
+		<m07>e8c7</m07>
+		<m08>d9d8</m08>
+		<m09>c7b9</m09>
+		<m10>d8d7</m10>
+		<m11>e1e2</m11>进攻性停着，困杀黑方。
+	</moves>
+</root>

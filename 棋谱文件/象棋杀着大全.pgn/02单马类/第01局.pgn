@@ -1,0 +1,27 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "3k1a3/9/9/9/1N7/9/9/9/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第01局"]
+[Variation ""]
+[Version "18"]
+ 1. h5g7 f9e8 2. g7e8 d9e9 3. e0e1 
+{助攻性停着，破坏黑方的拴链。}
+ e9d9 
+{如走将5平6胜法一样。}
+ (3. ... e9f9 4. e8g7 f9f8 5. g7h9 f8f7 6. e1e0 ) 4. e8c7 d9d8 5. c7b9 d8d7 6. e1e2 
+{进攻性停着，困杀黑方。}
+ 

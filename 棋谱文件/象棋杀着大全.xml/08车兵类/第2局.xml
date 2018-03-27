@@ -1,0 +1,43 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>5k3/5P3/3a1a3/9/9/9/9/2RAK4/3p1r3/9 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第2局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是车兵成杀的一种定式。
+		<m01>g2g9
+			<m01>d8d9</m01>
+			<m02>f7e8</m02>
+			<m03>d9e9</m03>
+			<m04>f9f8</m04>
+			<m05>g2g8</m05>
+			<m06>f8f7</m06>功亏一篑，反成败局。
+		</m01>这着与下着“顿挫”不可少，是成杀的关键。如直接进兵，不能获胜。
+		<m02>f9f8</m02>
+		<m03>g9g8</m03>上着车三进七与本着战术名称“顿挫”，这是一步不可少的手段，是成杀的关键。如直接进兵，不能获胜。
+		<m04>f8f9</m04>
+		<m05>d8d9</m05>
+		<m06>f7e8</m06>
+		<m07>d9e9</m07>弃兵引将，千里照面杀。
+		<m08>f9e9</m08>
+		<m09>g8g9</m09>
+	</moves>
+</root>

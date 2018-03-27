@@ -1,0 +1,65 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>9/4N4/3k5/9/2b6/9/9/9/9/3K5 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第11局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />高象、将在上三线，马可捉到象。
+		<m01>f0e0</m01>平帅占中，压缩将的活动范围，是入局的要着。
+		<m02>c5e7
+			<m02>d7d8</m02>
+			<m03>e8d6</m03>
+			<m04>d8d7</m04>
+			<m05>e0e1</m05>
+			<m06>c5a7</m06>
+			<m07>d6b7</m07>
+		</m02>
+		<m03>e8g7</m03>
+		<m04>e7g5
+			<m04>e7g9</m04>
+			<m05>g7f9</m05>运马抢占选位，策划抢占上三线大角摛象，是获胜的重要步骤。
+			<m06>g9i7</m06>
+			<m07>f9h8</m07>
+			<m08>i7g5
+				<m08>d7d8</m08>
+				<m09>h8f7</m09>
+				<m10>d8d7</m10>
+				<m11>e0e1</m11>得象胜。
+			</m08>
+			<m09>h8f7</m09>
+			<m10>g5e7</m10>
+			<m11>f7e5</m11>
+			<m12>d7d8</m12>
+			<m13>e5c6</m13>
+		</m04>
+		<m05>g7f9</m05>
+		<m06>g5i7</m06>
+		<m07>f9h8</m07>
+		<m08>i7g5</m08>
+		<m09>h8f7</m09>
+		<m10>g5e7</m10>
+		<m11>f7e5</m11>
+		<m12>d7d8</m12>
+		<m13>e5c6</m13>
+		<m14>d8e8</m14>
+		<m15>c6e7</m15>
+	</moves>
+</root>

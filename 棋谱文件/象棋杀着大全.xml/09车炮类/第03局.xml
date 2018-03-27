@@ -1,0 +1,46 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>2b1k1c2/9/4b4/7C1/2p6/4R4/9/r2A5/5p3/4KA3 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第03局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>b6e6</m01>
+		<m02>e7g5
+			<m02>e9f9</m02>
+			<m03>e4f4</m03>
+		</m02>
+		<m03>e6f6</m03>借车使炮，蹩住象眼，从中路突破，是入局的唯一途径。
+		<m04>c9e7
+			<m04>e9f9
+				<m04>e9d9</m04>
+				<m05>e4d4</m05>
+			</m04>
+			<m05>f6f1</m05>
+		</m04>
+		<m05>e4e7</m05>
+		<m06>e9d9
+			<m06>e9f9</m06>
+			<m07>f6f1</m07>
+		</m06>
+		<m07>e7d7</m07>
+	</moves>
+</root>

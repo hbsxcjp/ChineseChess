@@ -1,0 +1,30 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "3k5/9/9/p8/9/9/9/7N1/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第13局"]
+[Variation ""]
+[Version "18"]
+ 
+{红帅居中，将和卒在同侧，马可捉到卒。
+　　如果边卒在另一边（远边卒），则红方无法取胜。}
+ 1. b2c4 
+{进马控制卒，是捉卒必用的手断。}
+ d9d8 2. c4d6 
+{运用马踩八方的能力，进袭将卒。}
+ d8d9 3. d6b7 
+{进马同时控制卒，黑方欠行必失卒，红胜。}
+ 

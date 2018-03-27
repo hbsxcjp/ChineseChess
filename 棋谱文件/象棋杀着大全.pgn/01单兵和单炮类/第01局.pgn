@@ -1,0 +1,27 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "5a3/5k3/5a3/9/9/2C6/9/3AK4/5p3/9 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第1局"]
+[Variation ""]
+[Version "18"]
+ 1. g4f4 f7e8 2. f4f1 
+{形成炮士必用双士的残局。}
+ e8f7 3. f1f0 
+{具有进攻性的“停”着，可以闷杀黑将，简捷获胜。}
+ f9e8 4. f2e1 
+{红胜。}
+ 

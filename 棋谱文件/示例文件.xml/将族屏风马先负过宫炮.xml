@@ -1,0 +1,126 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>全局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>未知</Result>
+		<Round />
+		<Site />
+		<Title />
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>h0g2</m01>
+		<m02>g6g5</m02>
+		<m03>b0c2</m03>
+		<m04>h9g7</m04>
+		<m05>c3c4</m05>
+		<m06>b7f7</m06>
+		<m07>c2d4</m07>
+		<m08>b9c7</m08>
+		<m09>b2e2</m09>
+		<m10>d9e8</m10>
+		<m11>a0b0</m11>
+		<m12>c9e7</m12>
+		<m13>d4c6
+			<m13>e2d2</m13>
+			<m14>h7h5</m14>
+			<m15>b0b8</m15>
+			<m16>c6c5</m16>
+			<m17>c4c5</m17>
+			<m18>h5c5</m18>
+			<m19>g0e2</m19>
+			<m20>i9h9</m20>
+			<m21>i0h0</m21>
+			<m22>c5d5</m22>
+			<m23>d4b5</m23>
+			<m24>c7b5</m24>
+			<m25>b8b5</m25>
+			<m26>d5c5</m26>
+			<m27>g3g4</m27>
+			<m28>g5g4</m28>
+			<m29>e2g4</m29>
+			<m30>a9d9</m30>
+			<m31>g4e2</m31>
+			<m32>h9h3</m32>
+			<m33>f0e1</m33>
+			<m34>g7f5</m34>
+			<m35>b5b6</m35>
+			<m36>c5c2</m36>
+			<m37>b6e6</m37>
+			<m38>f5d4</m38>
+			<m39>d2d9</m39>
+			<m40>d4e6</m40>
+			<m41>d9d3</m41>
+			<m42>h3h5</m42>
+			<m43>d3d2</m43>
+			<m44>e6d4</m44>
+			<m45>h2i2</m45>
+			<m46>h5g5</m46>
+			<m47>g2h4</m47>
+			<m48>d4b3</m48>
+			<m49>i2i1</m49>
+			<m50>g5g1</m50>
+			<m51>i1h1</m51>
+			<m52>g1f1</m52>
+			<m53>d2d1</m53>
+			<m54>b3c1</m54>
+			<m55>c0a2</m55>
+			<m56>c2b2</m56>
+		</m13>
+		<m14>h7h6</m14>
+		<m15>b0b6</m15>
+		<m16>h6g6</m16>
+		<m17>g0i2</m17>
+		<m18>i9h9</m18>
+		<m19>i0i1</m19>
+		<m20>h9h3</m20>
+		<m21>i1f1</m21>
+		<m22>g5g4</m22>
+		<m23>f1f6</m23>
+		<m24>g6g5</m24>
+		<m25>f6g6</m25>
+		<m26>g4g3</m26>
+		<m27>g2e1</m27>
+		<m28>h3h2</m28>
+		<m29>g6g7</m29>
+		<m30>f7f1</m30>
+		<m31>e1c2</m31>
+		<m32>f1i1</m32>
+		<m33>g7g5</m33>
+		<m34>e7g5</m34>
+		<m35>b6b7</m35>
+		<m36>i1i0</m36>
+		<m37>i2g0</m37>
+		<m38>a9c9</m38>
+		<m39>c4c5</m39>
+		<m40>h2h0</m40>
+		<m41>c2e1</m41>
+		<m42>g3g2</m42>
+		<m43>c6e7</m43>
+		<m44>g5e7</m44>
+		<m45>c5c6</m45>
+		<m46>g2f2</m46>
+		<m47>e1g2</m47>
+		<m48>h0g0</m48>
+		<m49>g2h0</m49>
+		<m50>f2f1</m50>
+		<m51>d0e1</m51>
+		<m52>g0h0</m52>
+		<m53>e0d0</m53>
+		<m54>f1e1</m54>
+	</moves>
+</root>

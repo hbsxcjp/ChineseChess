@@ -1,0 +1,33 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "4ka3/4a4/9/9/9/7N1/1p7/6C1B/4K4/3r5 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第03局"]
+[Variation ""]
+[Version "18"]
+ 
+{这是一种常见的马炮冷着，可作公式记忆。}
+ 1. c2g2 
+{平炮取势，挑起波澜。}
+ e9d9 2. g2g9 
+{入局的正着。先动炮后动马的戟顺序不能差。}
+ (2. b4c6 e8f7 3. g2g9 f9e8 4. c6b8 d9e9 
+{红方胜定。}
+ ) d9d8 3. b4c6 d8d7 4. g9g8 
+{借架使炮，部署隔步成杀，是本局获胜的精华。}
+ e8f7 5. g8a8 
+{下步马七进八，黑方无解。}
+ 

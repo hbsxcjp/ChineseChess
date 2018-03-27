@@ -1,0 +1,31 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "3ak4/4a4/6R2/9/9/9/9/9/3r2p2/4K1C2 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第05局"]
+[Variation ""]
+[Version "18"]
+ 
+{这是车马冷着的一种定式。}
+ 1. c7g7 
+{开车取势，两侧叫杀，逼黑方出将。}
+ e9f9 2. c0c8 
+{借架使炮摧杀，是本局获胜的重要步骤。如走车三进二，没戏。}
+ (2. g7g9 f9f8 3. g9g8 f8f7 4. c0c8 e8d7 5. g8g4 d1f1 6. g4g7 f7f8 7. g7g8 f8f9 
+{红方失去胜机。}
+ ) d1d8 3. g7g9 f9f8 4. g9g8 
+{这步将军不可少，把将请上楼，是获胜的又一重要步骤。}
+ f8f7 (4. ... f8f9 5. c8c9 ) 5. g8g1 f7f8 6. g1f1 

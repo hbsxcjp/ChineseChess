@@ -1,0 +1,39 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3a1k3/9/9/5N3/6b2/9/9/9/9/4K4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第12局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>d6f7</m01>马对士象，捕捉的目标当然是象。
+		<m02>g5e7
+			<m02>g5i7</m02>
+			<m03>f7h8</m03>
+			<m04>f9f8</m04>
+			<m05>h8g6</m05>
+			<m06>f8f9</m06>
+			<m07>g6i7</m07>
+		</m02>
+		<m03>f7h8</m03>
+		<m04>f9e9</m04>
+		<m05>h8g6</m05>得象后成为马胜士的必胜残局，红方胜定。
+	</moves>
+</root>

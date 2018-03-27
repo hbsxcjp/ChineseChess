@@ -1,0 +1,31 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "9/4P4/3k5/4n1N2/9/9/9/9/9/4K4 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第03局"]
+[Variation ""]
+[Version "18"]
+ 
+{只要不是底兵，马兵一定战胜单马（或单炮）。}
+ 1. e0e1 
+{进攻性停着，逼黑马让开中路，发挥帅的助攻作用。}
+ (1. c6b8 
+{这是古谱《适情雅趣》上介绍的胜法，比较曲折。}
+ d7e7 2. e8f8 e7f7 3. b8d7 e6d4 4. f8g8 d4e6 5. e0e1 e6c7 6. d7e9 c7e8 7. e1e0 ) e6c7 2. c6b4 
+{运马先位取势，是入局的好着。}
+ c7b5 3. b4d5 b5d4 4. d5b6 d4c6 5. e1e2 
+{致命性停着，使黑方欠行。}
+ 

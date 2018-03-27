@@ -1,0 +1,38 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>6b2/5k3/2Pn1aN2/9/9/9/9/9/4K4/9 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第05局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />棋战中，一鼓作气把对方杀住当然好，但切忌单纯这样构思，因为得子胜定或困杀对方也是制胜的有效方法。
+		<m01>g7g8</m01>冲兵提象是入局的正确途径。
+		<m02>f8f9</m02>
+		<m03>g8g9</m03>
+		<m04>f9f8</m04>
+		<m05>c7d9</m05>跳马打将，困住黑马是取胜的好着。
+		<m06>d7e9</m06>
+		<m07>e1f1</m07>平帅加强围困，以下平兵捉死黑马，是本局获胜的精华。
+		<m08>f8e8</m08>
+		<m09>g9f9</m09>
+		<m10>e8d8</m10>
+		<m11>f9e9</m11>红方胜定。
+	</moves>
+</root>

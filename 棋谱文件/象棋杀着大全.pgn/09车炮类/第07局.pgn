@@ -1,0 +1,37 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "3k1a3/4a4/r1c1R4/p8/9/4C4/9/3A5/4K4/2BA2B2 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第07局"]
+[Variation ""]
+[Version "18"]
+ 
+{这是根据一则古局改编的“车炮冷着”，是以战术为中心而制胜的典型。}
+ 1. e4d4 
+{平炮封锁肋首，加强围困，是取势的关键。}
+ d9d8 
+{防止红方平车横炮入局，中好上将。}
+ (1. ... a7b7 2. e7d7 d9e9 3. d4h4 b7b1 4. e1e0 b1h1 5. d7c7 
+{叫杀，红方胜定。}
+ ) 2. e7e6 
+{策划借炮使车，强化围困，与前着相联系，是有力的续攻着法。}
+ d8d9 (2. ... c7e7 (2. ... a7a9 3. e6d6 c7d7 4. d6a6 d7a7 
+{以下飞边相、退肋炮，开炮夺炮，红方胜。}
+ ) 3. e6d6 e8d7 4. d6a6 d8e8 5. a6a7 ) 3. e6d6 d9e9 4. d6d7 
+{这是控制僵局的最佳点位，使围困达到了高潮，也是本局制胜的。}
+ a7b7 5. d4h4 b7b1 6. e1e0 b1h1 7. d7c7 e9d9 8. c7c4 
+{红方胜定。}
+ 

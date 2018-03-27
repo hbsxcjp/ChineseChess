@@ -1,0 +1,32 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>4ka3/9/5a2b/9/9/2B3R2/9/4C4/6p1r/2B1K4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>附局4</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>e2e8</m01>
+		<m02>e9d9</m02>
+		<m03>e8i8</m03>
+		<m04>f9e8</m04>
+		<m05>c4c9</m05>
+	</moves>
+</root>

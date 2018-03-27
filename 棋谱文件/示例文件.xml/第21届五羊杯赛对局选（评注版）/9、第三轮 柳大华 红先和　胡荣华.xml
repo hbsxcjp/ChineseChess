@@ -1,0 +1,94 @@
+<root>
+	<info>
+		<Author>郭有志</Author>
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event>9、第三轮 柳大华 红先和　胡荣华</Event>
+		<FEN>rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>全局</PlayType>
+		<RMKWriter>郭有志</RMKWriter>
+		<Red />
+		<RedTeam />
+		<Result>和棋</Result>
+		<Round />
+		<Site />
+		<Title>9、第三轮 柳大华 红先和　胡荣华</Title>
+		<Variation />
+		<Version>16</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>h2e2</m01>
+		<m02>b9c7</m02>
+		<m03>h0g2</m03>
+		<m04>h7f7</m04>
+		<m05>i0h0</m05>
+		<m06>h9g7</m06>
+		<m07>g3g4</m07>
+		<m08>c6c5</m08>
+		<m09>b0a2</m09>
+		<m10>g9e7</m10>
+		<m11>b2c2</m11>
+		<m12>a9b9</m12>
+		<m13>a3a4</m13>
+		<m14>f9e8</m14>
+		<m15>a0a1</m15>
+		<m16>b7b2</m16>
+		<m17>a1b1
+			<m17>a1d1
+				<m17>h0h1</m17>
+				<m18>b2e2</m18>
+				<m19>g0e2</m19>
+				<m20>b9b2</m20>
+				<m21>a1c1</m21>
+				<m22>c7b5</m22>
+				<m23>g2f4</m23>
+				<m24>b5c3</m24>
+				<m25>c2d2</m25>
+				<m26>b2d2</m26>
+				<m27>c1c3</m27>
+				<m28>f7f5</m28>
+			</m17>
+			<m18>b2e2</m18>
+			<m19>g0e2</m19>
+			<m20>b9b2</m20>
+			<m21>c2d2</m21>
+			<m22>c7b5</m22>
+			<m23>f0e1</m23>
+			<m24>b5c3</m24>
+			<m25>d1a1</m25>
+		</m17>
+		<m18>b2e2</m18>
+		<m19>b1b9</m19>
+		<m20>c7b9</m20>
+		<m21>g0e2</m21>
+		<m22>i9h9</m22>
+		<m23>h0h9</m23>
+		<m24>g7h9</m24>
+		<m25>c3c4</m25>
+		<m26>c5c4</m26>
+		<m27>e2c4</m27>
+		<m28>b9c7</m28>
+		<m29>a2b4</m29>
+		<m30>c7d5</m30>
+		<m31>b4c6</m31>
+		<m32>f7g7</m32>
+		<m33>c6d8</m33>
+		<m34>c9a7</m34>
+		<m35>d8e6</m35>
+		<m36>g7g4</m36>
+		<m37>c4e2</m37>
+		<m38>h9f8</m38>
+		<m39>e2g4</m39>
+		<m40>f8e6</m40>
+		<m41>g4e2</m41>
+		<m42>e6f4</m42>
+		<m43>g2f4</m43>
+		<m44>d5f4</m44>
+	</moves>
+</root>

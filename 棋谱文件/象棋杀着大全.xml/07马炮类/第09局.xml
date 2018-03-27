@@ -1,0 +1,77 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3a5/5k3/5aN2/9/9/9/9/4C3B/4K4/3r5 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第09局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是一个高级的马炮冷着定式。
+		<m01>e2f2</m01>明帅控制中路，平炮从肋道发起攻势。
+		<m02>f7e8</m02>
+		<m03>c7e6</m03>
+		<m04>f8f7
+			<m04>f8f9</m04>
+			<m05>e6g7</m05>
+			<m06>f9f8
+				<m06>f9e9</m06>
+				<m07>f2c2</m07>
+			</m06>
+			<m07>g7f5</m07>
+			<m08>e8f7</m08>
+			<m09>f5h4</m09>
+			<m10>f7e8</m10>
+			<m11>h4g6</m11>
+			<m12>f8f9</m12>
+			<m13>g6h8</m13>
+			<m14>f9f8</m14>
+			<m15>f2i2</m15>
+		</m04>
+		<m05>e6g5</m05>
+		<m06>f7f8</m06>
+		<m07>g5h7</m07>
+		<m08>f8f9</m08>
+		<m09>h7f6</m09>借炮使，把　到对将有致命打击的位置上。这是棋战中常用和必须掌握的技巧。
+		<m10>e8f7
+			<m10>f9e9</m10>
+			<m11>f2c2</m11>
+			<m12>e9f9</m12>
+			<m13>c2c9</m13>
+			<m14>f9f8</m14>
+			<m15>f6h7</m15>
+			<m16>f8f7</m16>
+			<m17>c9c8</m17>
+			<m18>e8d7</m18>
+			<m19>c8i8</m19>
+		</m10>
+		<m11>f6h5</m11>
+		<m12>f7e8</m12>
+		<m13>h5g7</m13>
+		<m14>f9f8</m14>
+		<m15>g7f5</m15>
+		<m16>e8f7</m16>
+		<m17>f5h4</m17>
+		<m18>f7e8</m18>
+		<m19>h4g6</m19>
+		<m20>f8f9</m20>
+		<m21>g6h8</m21>红马从左到右，上下盘旋，追杀了十几步，终于管住老将，构成马后炮绝杀。
+		<m22>f9f8</m22>
+		<m23>f2i2</m23>
+	</moves>
+</root>

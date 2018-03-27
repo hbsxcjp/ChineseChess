@@ -1,0 +1,54 @@
+<root>
+	<info>
+		<Author />
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event />
+		<FEN>3k1c3/4R4/5r3/9/9/9/9/1p7/C3A4/4K4 r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>残局</PlayType>
+		<RMKWriter />
+		<Red />
+		<RedTeam />
+		<Result>红胜</Result>
+		<Round />
+		<Site />
+		<Title>第08局</Title>
+		<Variation />
+		<Version>18</Version>
+	</info>
+	<moves>
+		<m00 />这是一局车炮催杀得子制胜的典型。
+		<m01>e1d2
+			<m01>e8e2</m01>
+			<m02>f9e9</m02>伏车6进6抽车，黑反胜。
+		</m01>扬士叫杀，逼黑方伸车拦挡变成低头车，为车炮攻杀创造有利条件，是本局获胜的关键。
+		<m02>f7f1</m02>
+		<m03>e8e4</m03>
+		<m04>f9f8</m04>
+		<m05>i1i8</m05>与前着相联系，借架使炮。伏进车成杀，逼　黑炮平移，从而捉得此炮。
+		<m06>f8a8</m06>
+		<m07>e4e9</m07>
+		<m08>d9d8</m08>
+		<m09>i8a8</m09>
+		<m10>b2c2
+			<m10>f1d1</m10>
+			<m11>a8a9</m11>
+			<m12>b2c2</m12>
+			<m13>a9d9</m13>
+			<m14>c2d2</m14>
+			<m15>e9e5</m15>
+		</m10>
+		<m11>e9e8</m11>
+		<m12>d8d9</m12>
+		<m13>e8e4</m13>
+		<m14>f1f8</m14>
+		<m15>e4e9</m15>
+		<m16>d9d8</m16>
+		<m17>a8f8</m17>红方胜定。
+	</moves>
+</root>

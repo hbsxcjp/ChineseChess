@@ -1,0 +1,102 @@
+<root>
+	<info>
+		<Author>郭有志</Author>
+		<Black />
+		<BlackTeam />
+		<Date />
+		<ECCO />
+		<Event>12、第四轮 陶汉明　红先和　许银川</Event>
+		<FEN>rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 0</FEN>
+		<Format>ICCS</Format>
+		<Game>Chinese Chess</Game>
+		<Opening />
+		<PlayType>全局</PlayType>
+		<RMKWriter>郭有志</RMKWriter>
+		<Red />
+		<RedTeam />
+		<Result>和棋</Result>
+		<Round />
+		<Site />
+		<Title>12、第四轮 陶汉明　红先和　许银川</Title>
+		<Variation />
+		<Version>16</Version>
+	</info>
+	<moves>
+		<m00 />
+		<m01>h2e2</m01>
+		<m02>h7e7</m02>
+		<m03>h0g2</m03>
+		<m04>h9g7</m04>
+		<m05>i0h0</m05>
+		<m06>i9i8</m06>
+		<m07>b0c2</m07>
+		<m08>i8d8</m08>
+		<m09>g3g4</m09>
+		<m10>b9c7</m10>
+		<m11>c3c4</m11>
+		<m12>a9a8</m12>
+		<m13>g2f4</m13>
+		<m14>d8d1</m14>
+		<m15>b2b4</m15>
+		<m16>c6c5</m16>
+		<m17>c4c5</m17>
+		<m18>a8f8</m18>
+		<m19>f4g6</m19>
+		<m20>f8f6</m20>
+		<m21>g4g5</m21>
+		<m22>e6e5</m22>
+		<m23>b4c4</m23>
+		<m24>c7e6</m24>
+		<m25>a0b0</m25>
+		<m26>e6c5</m26>
+		<m27>f0e1</m27>
+		<m28>d9e8</m28>
+		<m29>h0h4</m29>
+		<m30>e5e4</m30>陷井一
+		<m31>e2e4
+			<m31>e3e4</m31>
+			<m32>e7e2</m32>
+			<m33>g0e2</m33>
+			<m34>b7e7</m34>
+			<m35>e2g0
+				<m35>h4h2</m35>
+				<m36>c5e4</m36>
+				<m37>h2g2</m37>
+				<m38>e4d2</m38>
+				<m39>b0b4</m39>
+				<m40>d1c1</m40>
+			</m35>
+			<m36>e9d9</m36>
+			<m37>c4d4</m37>
+			<m38>g7e6</m38>
+			<m39>b0b6</m39>
+			<m40>c5e4</m40>
+			<m41>d4d6</m41>
+			<m42>e4f2</m42>
+			<m43>e0f0</m43>
+			<m44>f2h1</m44>
+			<m45>f0e0</m45>
+			<m46>f6f0</m46>
+		</m31>
+		<m32>g7e6</m32>陷井二
+		<m33>e4e7
+			<m33>g0e2</m33>
+			<m34>e7e4</m34>
+			<m35>e3e4</m35>
+			<m36>b7e7</m36>
+		</m33>
+		<m34>c9e7</m34>
+		<m35>b0b6</m35>
+		<m36>d1d5</m36>
+		<m37>h4g4</m37>
+		<m38>g9i7</m38>
+		<m39>e3e4</m39>
+		<m40>i7g5</m40>
+		<m41>b6e6</m41>
+		<m42>f6e6</m42>
+		<m43>e4e5</m43>
+		<m44>d5e5</m44>
+		<m45>g6e5</m45>
+		<m46>e6e5</m46>
+	</moves>
+</root>

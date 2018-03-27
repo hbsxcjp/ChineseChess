@@ -1,0 +1,30 @@
+[Author ""]
+[Black ""]
+[BlackTeam ""]
+[Date ""]
+[ECCO ""]
+[Event ""]
+[FEN "3ak4/4a4/9/9/6R2/9/6p2/9/5r3/4K1C2 r - - 0 0"]
+[Format "ICCS"]
+[Game "Chinese Chess"]
+[Opening ""]
+[PlayType "残局"]
+[RMKWriter ""]
+[Red ""]
+[RedTeam ""]
+[Result "红胜"]
+[Round ""]
+[Site ""]
+[Title "第06局"]
+[Variation ""]
+[Version "18"]
+ 
+{这是一盘车炮冷着。红方在黑方有双士的情况下，巧妙的构成海底捞月的杀局。
+　　一般情况下，做成海底捞月，车炮方的车必须占得中路，也有一点须要的技巧问题。}
+ 1. c5g5 e9f9 2. g5g9 f9f8 3. g9g8 
+{把将逼上楼，是入局的好着。}
+ f8f7 4. c0c8 
+{借架使炮，黑方势必扬士，为捞月铺平道路，是红方获胜的关键。}
+ e8d7 5. c8f8 
+{平炮打车做成海底捞月，以下退车弃炮成杀。}
+ g3f3 (5. ... f1c1 6. g8g3 ) 6. g8g4 f7f8 7. g4f4 
