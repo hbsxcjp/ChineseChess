@@ -2,8 +2,9 @@
 中国象棋棋谱类型
 '''
 
-from board import Board
-from walks import Walks
+from chessfile import ChessFile # 棋谱文件
+from board import Board, Model # 棋盘与棋子
+from walks import Walks # 棋局着法
 
 
 class ChessBoard(Model):
@@ -13,26 +14,19 @@ class ChessBoard(Model):
 
     # 新棋局
 
-    def __init__(self, chessfile=None):
+    def __init__(self, filename=''):
         super().__init__()
         self.board = Board()
-        self.walks = None
-        self.chessfile = None
-        if chessfile:
-            self.setwalks(chessfile)
+        self.chessfile = ChessFile(filename)
+        self.walks = Walks(self.board, self.chessfile)
 
     def __str__(self):
         return '{}\n{}'.format(str(self.board), str(self.walks))
 
-    def __setside(self, color):
-        self.currentside = color
-
-    def __transside(self):
-        self.__setside(other_color(self.currentside))
-        
     def getfen(self):
         return '{} {} {} {} {} {}'.format(self.board.getafen(), 
-                'b' if self.walks.currentside == BLACK_Piece else 'r', '-', '-', '0', '0')
+                'b' if self.walks.currentside == BLACK_Piece else 'r',
+                '-', '-', '0', '0')
 
     def setfen(self, fen):
         afens = fen.split()
@@ -98,9 +92,6 @@ class ChessBoard(Model):
             self.setfen(self.FEN)
         if hasattr(self, 'views'):
             self.notifyviews()
-
-    def setwalks(self, chessfile):
-        self.walks = Walks(chessfile, self.board)
         
     def changeside(self, changetype='exchange'):
         def __seatpieces_moveseats(changetype):

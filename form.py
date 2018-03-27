@@ -4,7 +4,6 @@
 
 from walkarea import *
 from bdcanvas import *
-
 from subform import *
 
 pgndir = './pgn/'

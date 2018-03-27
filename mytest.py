@@ -4,11 +4,7 @@
 
 import unittest
 import cProfile
-
-from user import User
-
-#from config_et import *
-#from form import *
+from user import User # 用户
 
 
 class Test(unittest.TestCase):

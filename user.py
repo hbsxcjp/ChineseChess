@@ -2,13 +2,12 @@
 中国象棋用户类型
 '''
 
-from config_et import Config
-from chessfile import ChessFile
-from chessboard import ChessBoard
-from form import MainForm
+from config import Config # 配置
+from chessboard import ChessBoard # 模型
+from form import MainForm # 视图
 
 
-filename = 'C:\\360Downloads\\棋谱文件\\示例文件.xml\\第01局.xml'
+filename = '.\\棋谱文件\\示例文件.xml\\第01局.xml'
 
 
 class User(object):
@@ -18,7 +17,7 @@ class User(object):
         self.sn = sn
         self.name = name
         self.config = Config(name)
-        self.chessboard = ChessBoard(ChessFile(filename))       
+        self.chessboard = ChessBoard(filename)       
         self.creatwin()
         
     def creatwin(self):

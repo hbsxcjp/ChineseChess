@@ -29,15 +29,6 @@ class Model(object):
             view.updateview()
 
 
-class View(object):
-    def __init__(self, models):
-        self.chessboard, self.board, self.walks = models
-
-    def updateview(self):
-        # 更新视图（由数据模型发起）
-        pass
-
-
 class Board(Model):
     '棋盘类'
 

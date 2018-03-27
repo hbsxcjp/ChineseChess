@@ -2,7 +2,7 @@
 中国象棋软件棋盘类型
 '''
 
-from config_et import *
+from config import *
 from seats import *
 from walks import *
 
@@ -30,6 +30,15 @@ EatpieStepX = PieWidth * 2 // 3
 EatpieStepY = PieBdWidth + PieWidth
 EatpieEndY = EatpieStartXY + 3 * EatpieStepY
 EatpieEndX = EatpieStartXY + 3 * EatpieStepX
+
+
+class View(object):
+    def __init__(self, models):
+        self.chessboard, self.board, self.walks = models
+
+    def updateview(self):
+        # 更新视图（由数据模型发起）
+        pass
 
 
 class BdCanvas(View, Canvas):
