@@ -8,56 +8,18 @@ import xml.etree.ElementTree as ET
 import sqlite3
 import base
 
+from walks import MoveNode
+
 global movecount, remlenmax
 movecount = 0
 remlenmax = 0
 
-class MoveNode(object):
-    '象棋着法树节点类'
-    colchars = 'abcdefghi'
-        
-    def __init__(self, prev=None):
-        self.stepno = 0
-        self.fseat = (0, 0)
-        self.tseat = (0, 0)
-        self.prev = prev
-        self.next_ = None
-        self.other = None
-        self.remark = ''
-        self.desc = ''
-        
-    @property
-    def coordstr(self):
-        if self.stepno == 0:
-            return ''
-        return '{0}{1}{2}{3}'.format(self.colchars[self.fseat[1]], self.fseat[0],
-                self.colchars[self.tseat[1]], self.tseat[0])    
-
-    @property
-    def coordint(self):
-        return (self.fseat[0] * 10 + self.fseat[1],
-                self.tseat[0] * 10 + self.tseat[1])
-                
-    def setseat_s(self, coordstr):
-        fl, fw, tl, tw = coordstr
-        self.fseat = (int(fw), self.colchars.index(fl))
-        self.tseat = (int(tw), self.colchars.index(tl))
-
-    def setseat_i(self, fi, ti):
-        self.fseat = (fi // 10, fi % 10)
-        self.tseat = (ti // 10, ti % 10)
-
-    def setnext(self, next_):
-        self.next_ = next_
-        self.next_.stepno = self.stepno + 1
-        
-    def setother(self, other):
-        self.other = other
-        self.other.stepno = self.stepno # 与premove的步数相同
-        
 
 class ChessFile(object):
     '象棋文件类'
+    
+    FEN = 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 1'
+    # 新棋局
     
     def __init__(self, filename=''):
         self.info = {'Author': '',
@@ -66,7 +28,7 @@ class ChessFile(object):
                     'Date': '',
                     'ECCO': '',
                     'Event': '',
-                    'FEN': '',
+                    'FEN': self.FEN,
                     'Format': "ICCS",
                     'Game': 'Chinese Chess',
                     'Opening': '',
@@ -81,8 +43,7 @@ class ChessFile(object):
                     'Variation': '',
                     'Version': ''}
         self.rootnode = MoveNode()
-        if filename:
-            self.readfile(filename)
+        self.readfile(filename)
 
     def __strstruct(self, size):
         return struct.Struct('{}s'.format(size))
@@ -309,7 +270,44 @@ class ChessFile(object):
             __readmove(self.rootnode)
         
     def __readpgn(self, filename):
-        pass
+        
+        def __readpgn_ICCS(filename):
+            pass
+            
+        def __readpgn_zh_CN(filename):
+            # ？
+            remark = re.findall('\]\s+(\{[\s\S]*\})?\s+1\. ', pgnstr)
+            if remark:
+                self.remark = remark[0]  # 棋谱评注
+
+            #s = '(\d+)\. (\S{4})\s+(\{.*\})?\s*(\S{4})?\s+(\{.*\})?'
+            s = '(\d+)\.\s+(\S{4})\s+(\{.*\})?\s*(\S{4})?\s*(\{.*\})?'
+            description_remarks = re.findall(s, pgn)  # 走棋信息, 字符串元组
+
+            descriptiones, remarks = [], []
+            for n, des1, remark1, des2, remark2 in description_remarks:
+                descriptiones.extend([des1, des2])
+                remarks.extend([remark1, remark2])
+
+            for n, des in enumerate(descriptiones):
+                if des:
+                    (fromseat, toseat) = self.board.chinese_moveseats(
+                        self.walks.currentside, des)
+                    self.walks.append(fromseat, toseat, remarks[n], self.board)
+            self.walks.move(-self.walks.length)
+            # ？
+            
+        pgnstr = open(filename).read(1024) # 读取info内容
+        infolist = re.findall('\[(\w+) "(.*)"\]', pgnstr)
+        for key, value in infolist:
+            self.info[key] = value  # 棋局信息（在已设置原始key上可能会有增加）
+        resultstr = re.findall('\s(1-0|0-1|1/2-1/2|\*)\s?', pgnstr)
+        if resultstr:
+            self.info['Result'] = resultstr[0]  # 棋局结果
+        if self.info['Format'] == 'ICCS':
+            __readpgn_ICCS(filename)
+        else:  # self.info['Format'] == 'zh_CN'
+            __readpgn_zh_CN(filename)
 
     def __readxml(self, filename):
             
@@ -340,7 +338,7 @@ class ChessFile(object):
             __readelem(movelem, 0, self.rootnode)
         
     def readfile(self, filename):
-        if not (os.path.exists(filename) and os.path.isfile(filename)):
+        if not (filename and os.path.exists(filename) and os.path.isfile(filename)):
             return
         ext = os.path.splitext(os.path.basename(filename))[1]
         if ext == '.xqf':
@@ -388,44 +386,107 @@ class ChessFile(object):
             print('错误：写入 {} 文件不成功！'.format(filename))
 
     def __saveaspgn(self, filename):
+        
+        def __saveaspgn_ICCS(filename):
 
-        def __remarkstr(remark):
-            rem = remark.strip()
-            global remlenmax
-            remlenmax = max(remlenmax, len(rem))
-            return '' if not rem else '\n{{{}}}\n '.format(rem)
+            def __remarkstr(remark):
+                rem = remark.strip()
+                global remlenmax
+                remlenmax = max(remlenmax, len(rem))
+                return '' if not rem else '\n{{{}}}\n '.format(rem)
+            
+            def __addstrl(node, isother=False):
+                prestr = ('({0}. {1}'.format((node.stepno + 1) // 2, 
+                        '... ' if node.stepno % 2 == 0 else '')
+                        if isother else
+                        ('' if node.stepno % 2 == 0 else 
+                        '{}. '.format((node.stepno + 1) // 2)))
+                mergestr = '{0}{1} {2}'.format(prestr,
+                        node.coordstr, __remarkstr(node.remark))
+                movestrl.append(mergestr)
+                if node.other:
+                    __addstrl(node.other, True)
+                    movestrl.append(') ')
+                    global movecount
+                    movecount -= 1 # 修正着法步数                    
+                if node.next_:
+                    __addstrl(node.next_)
         
-        def __addstrl(node, isother=False):
-            prestr = ('({0}. {1}'.format((node.stepno + 1) // 2, 
-                    '... ' if node.stepno % 2 == 0 else '')
-                    if isother else
-                    ('' if node.stepno % 2 == 0 else 
-                    '{}. '.format((node.stepno + 1) // 2)))
-            mergestr = '{0}{1} {2}'.format(prestr,
-                    node.coordstr, __remarkstr(node.remark))
-            movestrl.append(mergestr)
-            if node.other:
-                __addstrl(node.other, True)
-                movestrl.append(') ')
-                global movecount
-                movecount -= 1 # 修正着法步数
+            infostrl = ['[{} "{}"]'.format(name, value)
+                    for name, value in sorted(self.info.items())]
+            movestrl = []
+            __addstrl(self.rootnode)
+            global movecount
+            movecount += len(movestrl) # 计算着法步数
+            
+            data = '{}\n{}'.format('\n'.join(infostrl), ''.join(movestrl))
+            try:
+                open(filename, 'w', encoding='utf-8').write(data)
+            except:
+                print('错误：写入 {} 文件不成功！'.format(filename))
+
+        def __saveaspgn_zh_CN(filename):
+
+            #self.__lineboutnum = 3  # 生成pgn文件的着法文本每行回合数
+            '''                            
+            def __str__(self):
+                result = []
+                remarkes = self.remarkes()
+                line_n = self.__lineboutnum * 2
+                for n, boutstr in enumerate(self.__getboutstrs()):
+                    result.append(boutstr)
+                    colnum = (n + 1) % line_n  # 求得需要填充空格的着数
+                    if colnum == 0:
+                        result.append('\n')
+                    remark = remarkes[n].strip()
+                    if remark:
+                        result.append(' {0}\n{1}'.format(
+                            remark, ' ' * (colnum // 2 * (13+9) + (colnum % 2 * 13))))
+                        # [13, 9, 13, 9, 13, 9, 13, 9...]
+                return ''.join(result)
                 
-            if node.next_:
-                __addstrl(node.next_)
-    
-        infostrl = ['[{} "{}"]'.format(name, value)
-                for name, value in sorted(self.info.items())]
-        movestrl = []
-        __addstrl(self.rootnode)
-        global movecount
-        movecount += len(movestrl) # 计算着法步数
-        
-        data = '{}\n{}'.format('\n'.join(infostrl), ''.join(movestrl))
-        try:
-            open(filename, 'w', encoding='utf-8').write(data)
-        except:
-            print('错误：写入 {} 文件不成功！'.format(filename))
-        
+            def __getboutstrs(self):
+                '着法字符串转换集合成带序号的回合字符串'
+                return ['{0:>3d}. {1!s}'.format(n // 2 + 1, walk)
+                        if n % 2 == 0 else
+                        ' {0!s}'.format(walk)
+                        for n, walk in enumerate(self.__walks)]
+            
+            def getboutstrs_ltbox(self):
+                boutstrs = self.__getboutstrs()
+                for n, remark in enumerate(self.remarkes()):
+                    if remark.strip():
+                        boutstrs[n] += '☆'
+                    if n % 2 == 1:
+                        boutstrs[n] = '    {0}'.format(boutstrs[n])
+                return boutstrs
+                        
+            def setstrcolumn(self, lineboutnum):
+                self.__lineboutnum = lineboutnum # (boutnum % 4) if (boutnum % 4) != 0 else 4
+
+            '''
+            # ?
+            offset = self.walks.cursor + 1
+            self.walks.move(-offset)
+
+            sfen, gfen = self.info.get('FEN'), self.getfen()
+            if sfen:
+                assert sfen.split()[0] == gfen.split()[
+                    0], '\n棋谱FEN：%s, \n生成FEN: %s' % (sfen.split()[0],
+                                                     gfen.split()[0])
+            self.info['FEN'] = gfen
+            strinfo = '\n'.join(
+                ['[{} "{}"]'.format(key, self.info[key]) for key in sorted(self.info)])
+                
+            self.walks.move(offset)
+            return '{}\n{}\n{}\n'.format(strinfo, self.remark, str(self.walks))
+            # ?
+            
+        if self.info['Format'] == 'ICCS':
+            __saveaspgn_ICCS(filename)
+        else:
+            __saveaspgn_zh_CN(filename)
+            
     def __saveasxml(self, filename):
             
         def __createlem(name, value='', remark=''):
@@ -579,7 +640,7 @@ def testtransdir(num, fext, text):
             fc, dc = xqfile.tranxqftodb(dirfrom[i], dirto='C:\\棋谱文件')
         else:
             fc, dc = xqfile.trandir(text, dirfrom[i]+fext, dirfrom[i]+text)
-        print('{}： {}个文件，{}个目录'.format(dirfrom[i], fc, dc))
+        print('{}： {}个文件，{}个目录'.format(dirfrom[i], fc, dc))#.encode('utf-8')cp936
     global movecount, remlenmax
     print('movecount:', movecount, 'remlenmax:', remlenmax) # 计算着法步数 
             

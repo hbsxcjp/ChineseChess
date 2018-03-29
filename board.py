@@ -32,11 +32,12 @@ class Model(object):
 class Board(Model):
     '棋盘类'
 
-    def __init__(self):
+    def __init__(self, afen):
         super().__init__()
         self.allseats = dict.fromkeys(Seats.allseats, BlankPie)
         self.pieces = Pieces()
         self.bottomside = BLACK_Piece
+        self.loadafen(afen)
 
     def __str__(self):
         blankboard = '''
@@ -191,19 +192,22 @@ class Board(Model):
         def __isvalid(charls):
             '判断棋子列表是否有效'
             if len(charls) != 90:
-                return False, '棋局的位置个数不等于90，有误！'
+                return False, 'len(charls) != 90' #'棋局的位置个数不等于90，有误！'
             chars = [c for c in charls if c != BlankChar]
             if len(chars) > 32:
-                return False, '全部的棋子个数大于32个，有误！'
+                return False, 'len(chars) > 32' #'全部的棋子个数大于32个，有误！'
             for c in chars:
                 if chars.count(c) > Pieces.Chars.count(c):
-                    return False, '棋子: %s 的个数大于规定个数，有误！' % c
+                    return False, 'chars.count(c) > Pieces.Chars.count(c)'
+                    #'棋子: %s 的个数大于规定个数，有误！' % c
             return True, ''
 
         fenstr = ''.join(afen.split('/')[::-1])
         charls = list(multrepl(fenstr, __numtolines()))
 
-        assert __isvalid(charls)[0], __isvalid(charls)[1]
+        isvalid, info = __isvalid(charls)
+        #print(afen, len(afen))
+        assert isvalid, info
 
         seatchars = {Seats.getseat(n): char for n, char in enumerate(charls)}
         self.loadseatpieces(self.pieces.getseatpieces(seatchars))

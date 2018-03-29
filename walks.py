@@ -4,49 +4,103 @@ from board import Model
 from piece import BlankPie
 
 
+class MoveNode(object):
+    '象棋着法树节点类'
+    colchars = 'abcdefghi'
+        
+    def __init__(self, prev=None):
+        self.stepno = 0 # 着法图中的行位置
+        self.fseat = (0, 0)
+        self.tseat = (0, 0)
+        self.prev = prev
+        self.next_ = None
+        self.other = None
+        self.remark = ''
+        self.desc = ''
+        self.othcol = 0 # 着法图中的列位置
+        
+    @property
+    def coordstr(self):
+        if self.stepno == 0:
+            return ''
+        return '{0}{1}{2}{3}'.format(self.colchars[self.fseat[1]], self.fseat[0],
+                self.colchars[self.tseat[1]], self.tseat[0])
+
+    @property
+    def coordint(self):
+        return (self.fseat[0] * 10 + self.fseat[1],
+                self.tseat[0] * 10 + self.tseat[1])
+                
+    def setseat_s(self, coordstr):
+        fl, fw, tl, tw = coordstr
+        self.fseat = (int(fw), self.colchars.index(fl))
+        self.tseat = (int(tw), self.colchars.index(tl))
+
+    def setseat_i(self, fi, ti):
+        self.fseat = (fi // 10, fi % 10)
+        self.tseat = (ti // 10, ti % 10)
+
+    def setnext(self, next_):
+        self.next_ = next_
+        self.next_.stepno = self.stepno + 1
+        
+    def setother(self, other):
+        self.other = other
+        self.other.stepno = self.stepno # 与premove的步数相同
+        
+
 class Walks(Model):
     '棋谱着法类-树结构'    
         
-    def __init__(self, board, chessfile):
+    def __init__(self, board, rootnode):
         super().__init__()
         self.board = board
-        self.chessfile = chessfile
-        self.currentnode = chessfile.rootnode
+        self.rootnode = rootnode
+        self.currentnode = rootnode
         self.cureatpiece = BlankPie
-        #self.__lineboutnum = 3  # 生成pgn文件的着法文本每行回合数
         
-    def __str__(self):    
-        def __adddesc(node):
-            if not node:
-                return
-            descls.append(node.desc)
-            __adddesc(node.next_)
-            __adddesc(node.other)    
-                
-        self.setdesc(self.chessfile.rootnode.next_) # 驱动调用递归函数
-        descls = []
-        __adddesc(self.chessfile.rootnode.next_)
-        return ' '.join(descls)
-
-    def setdesc(self, node):
-        if not node:
-            return
-        node.desc = self.board.moveseats_chinese(node.fseat, node.tseat)
-        eatpiece = self.board.movepiece(node.fseat, node.tseat)
-        self.setdesc(node.next_)
-        self.board.movepiece(node.tseat, node.fseat, eatpiece)
-        self.setdesc(node.other)
+    def __str__(self):
     
-    @property
-    def currentside(self):
-        self.currentside = color
+        def __setchar(node):
+            firstcol = node.othcol * 5
+            linestr[node.stepno * 2][firstcol: firstcol + 4] = node.desc
+            if node.next_:
+                linestr[node.stepno * 2 + 1][firstcol + 1: firstcol + 3] = [' ↓', ' ']
+                __setchar(node.next_)
+            if node.other:
+                linef = firstcol + 4
+                linel = node.other.othcol * 5
+                linestr[node.stepno * 2][linef: linel] = '…' * (linel - linef)
+                __setchar(node.other)
+            
+        self.setdesc()
+        linestr = [['　' for _ in range((self.othcol + 1) * 5)]
+                    for _ in range((self.maxrow + 1) * 2)]
+        __setchar(self.rootnode)
+        return '\n'.join([''.join(line) for line in linestr])
 
-    def __transside(self):
-        self.__setside(other_color(self.currentside))
+    def setdesc(self):
+    
+        def __setdesc(node):
+            node.desc = self.board.moveseats_chinese(node.fseat, node.tseat)
+            self.maxrow = max(self.maxrow, node.stepno)
+            node.othcol = self.othcol # 存储节点的列数
+            eatpiece = self.board.movepiece(node.fseat, node.tseat)
+            if node.next_:
+                __setdesc(node.next_)
+            self.board.movepiece(node.tseat, node.fseat, eatpiece)
+            if node.other:
+                self.othcol += 1
+                __setdesc(node.other)
+    
+        self.maxrow = 0 # 存储最大行数
+        self.othcol = 0 # 存储最大列数
+        self.rootnode.desc = '　开始　'
+        __setdesc(self.rootnode.next_) # 驱动调用递归函数
         
     def getprevmoves(self, node):
         result = []
-        while result[-1].prev is not self.chessfile.rootnode:
+        while result[-1].prev is not self.rootnode:
             result.append(result[-1].prev)
         return reversed(result)
                 
@@ -110,42 +164,5 @@ class Walks(Model):
         self.currentnode.other = node
         self.moveother()
         
-    '''                            
-    def __str__(self):
-        result = []
-        remarkes = self.remarkes()
-        line_n = self.__lineboutnum * 2
-        for n, boutstr in enumerate(self.__getboutstrs()):
-            result.append(boutstr)
-            colnum = (n + 1) % line_n  # 求得需要填充空格的着数
-            if colnum == 0:
-                result.append('\n')
-            remark = remarkes[n].strip()
-            if remark:
-                result.append(' {0}\n{1}'.format(
-                    remark, ' ' * (colnum // 2 * (13+9) + (colnum % 2 * 13))))
-                # [13, 9, 13, 9, 13, 9, 13, 9...]
-        return ''.join(result)
-        
-    def __getboutstrs(self):
-        '着法字符串转换集合成带序号的回合字符串'
-        return ['{0:>3d}. {1!s}'.format(n // 2 + 1, walk)
-                if n % 2 == 0 else
-                ' {0!s}'.format(walk)
-                for n, walk in enumerate(self.__walks)]
-    
-    def getboutstrs_ltbox(self):
-        boutstrs = self.__getboutstrs()
-        for n, remark in enumerate(self.remarkes()):
-            if remark.strip():
-                boutstrs[n] += '☆'
-            if n % 2 == 1:
-                boutstrs[n] = '    {0}'.format(boutstrs[n])
-        return boutstrs
-                
-    def setstrcolumn(self, lineboutnum):
-        self.__lineboutnum = lineboutnum # (boutnum % 4) if (boutnum % 4) != 0 else 4
-
-    '''
         
 #
