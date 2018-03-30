@@ -2,6 +2,7 @@
 中国象棋棋盘类型
 '''
 
+import base
 from piece import *
 
 # yapf: disable
@@ -19,48 +20,38 @@ ColChars = 'abcdefghi'
 # yapf: enable
 
 
-class Model(object):
-    def loadviews(self, views):
-        self.views = views
-
-    def notifyviews(self):
-        '通知视图更新'
-        for view in self.views:
-            view.updateview()
-
-
-class Board(Model):
+class Board(object):
     '棋盘类'
 
-    def __init__(self, afen):
-        super().__init__()
+    def __init__(self, fen):
         self.allseats = dict.fromkeys(Seats.allseats, BlankPie)
         self.pieces = Pieces()
         self.bottomside = BLACK_Piece
-        self.loadafen(afen)
+        self.setfen(fen)
 
     def __str__(self):
         blankboard = '''
-            ┏━┯━┯━┯━┯━┯━┯━┯━┓
-            ┃　│　│　│╲│╱│　│　│　┃
-            ┠─┼─┼─┼─╳─┼─┼─┼─┨
-            ┃　│　│　│╱│╲│　│　│　┃
-            ┠─╬─┼─┼─┼─┼─┼─╬─┨
-            ┃　│　│　│　│　│　│　│　┃
-            ┠─┼─╬─┼─╬─┼─╬─┼─┨
-            ┃　│　│　│　│　│　│　│　┃
-            ┠─┴─┴─┴─┴─┴─┴─┴─┨
-            ┃　　　　　　　　　　　　　　　┃
-            ┠─┬─┬─┬─┬─┬─┬─┬─┨
-            ┃　│　│　│　│　│　│　│　┃
-            ┠─┼─╬─┼─╬─┼─╬─┼─┨
-            ┃　│　│　│　│　│　│　│　┃
-            ┠─╬─┼─┼─┼─┼─┼─╬─┨
-            ┃　│　│　│╲│╱│　│　│　┃
-            ┠─┼─┼─┼─╳─┼─┼─┼─┨
-            ┃　│　│　│╱│╲│　│　│　┃
-            ┗━┷━┷━┷━┷━┷━┷━┷━┛
-        ''' # yapf: disable
+┏━┯━┯━┯━┯━┯━┯━┯━┓
+┃　│　│　│╲│╱│　│　│　┃
+┠─┼─┼─┼─╳─┼─┼─┼─┨
+┃　│　│　│╱│╲│　│　│　┃
+┠─╬─┼─┼─┼─┼─┼─╬─┨
+┃　│　│　│　│　│　│　│　┃
+┠─┼─╬─┼─╬─┼─╬─┼─┨
+┃　│　│　│　│　│　│　│　┃
+┠─┴─┴─┴─┴─┴─┴─┴─┨
+┃　　　　　　　　　　　　　　　┃
+┠─┬─┬─┬─┬─┬─┬─┬─┨
+┃　│　│　│　│　│　│　│　┃
+┠─┼─╬─┼─╬─┼─╬─┼─┨
+┃　│　│　│　│　│　│　│　┃
+┠─╬─┼─┼─┼─┼─┼─╬─┨
+┃　│　│　│╲│╱│　│　│　┃
+┠─┼─┼─┼─╳─┼─┼─┼─┨
+┃　│　│　│╱│╲│　│　│　┃
+┗━┷━┷━┷━┷━┷━┷━┷━┛
+'''
+        # yapf: disable
         # 边框粗线
 
         def __getname(piece):
@@ -79,7 +70,7 @@ class Board(Model):
                         2][Seats.getcol(seat) * 2] = __getname(piece)
             return [''.join(line) for line in linestr]
 
-        frontstr = '\n　　　　'
+        frontstr = '\n'
         return '{}{}{}'.format(frontstr, frontstr.join(__fillingname()), '\n')
 
     def clear(self):
@@ -181,7 +172,7 @@ class Board(Model):
         [self.setpiece(seat, piece) for seat, piece in seatpieces.items()]
         self.setbottomside()
 
-    def loadafen(self, afen):
+    def setfen(self, fen):
         def __numtolines():
             '数字字符: 下划线字符串'
             numtolines = {}
@@ -202,17 +193,17 @@ class Board(Model):
                     #'棋子: %s 的个数大于规定个数，有误！' % c
             return True, ''
 
-        fenstr = ''.join(afen.split('/')[::-1])
-        charls = list(multrepl(fenstr, __numtolines()))
+        fenstr = ''.join(fen.split('/')[::-1])
+        charls = list(base.multrepl(fenstr, __numtolines()))
 
         isvalid, info = __isvalid(charls)
-        #print(afen, len(afen))
+        #print(fen, len(fen))
         assert isvalid, info
 
         seatchars = {Seats.getseat(n): char for n, char in enumerate(charls)}
         self.loadseatpieces(self.pieces.getseatpieces(seatchars))
 
-    def getafen(self):
+    def getfen(self):
         def __linetonums():
             '下划线字符串对应数字字符元组 列表'
             return [('_' * i, str(i)) for i in range(9, 0, -1)]
@@ -224,10 +215,10 @@ class Board(Model):
             piecechars[rowno * NumCols:(rowno + 1) * NumCols]
             for rowno in range(NumRows)
         ]
-        afen = '/'.join([''.join(chars) for chars in charls[::-1]])
+        fen = '/'.join([''.join(chars) for chars in charls[::-1]])
         for _str, nstr in __linetonums():
-            afen = afen.replace(_str, nstr)
-        return afen
+            fen = fen.replace(_str, nstr)
+        return fen
         
     def __sortpawnseats(self, isbottomside, pawnseats):
         '多兵排序'

@@ -4,6 +4,7 @@
 
 from seats import *
 
+
 BlankChar = '_'
 CharToNames = {'K':'帅', 'A':'仕', 'B':'相', 'N':'马',
                'R':'车', 'C':'炮', 'P':'兵',

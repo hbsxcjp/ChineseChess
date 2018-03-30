@@ -2,6 +2,16 @@
 中国象棋棋谱文件基础信息
 '''
 
+import re
+    
+
+def multrepl(text, xdict):
+    '一次替换多个子字符串（字典定义）（方法来源于PythonCook）'
+    rx = re.compile('|'.join(map(re.escape, xdict)))  # 模式
+    def one_xlat(match):
+        return xdict[match.group(0)]  # 替换值
+    return rx.sub(one_xlat, text)  # 执行替换
+
 
 def linetonums():
     '下划线字符串对应数字字符元组 列表'
@@ -132,5 +142,79 @@ getlastmovid = '''
     SELECT seq FROM sqlite_sequence WHERE name="moves"
     '''
 
+class xqftodb(object):
+
+    def tranxqftodb(self, dirnamefrom, dirto='.\\'):
+
+        def __addinfomove():
+        
+            def __addmove(node, preid):
+                self.moves.append((None, self.manid, preid, node.stepno,
+                            node.coordstr, node.remark))
+                self.lastmovid += 1
+                node.movid = self.lastmovid # 重要!保存当前move的id
+                if node.other:
+                    __addmove(node.other, preid)
+                if node.next_:
+                    __addmove(node.next_, node.movid)
+                    
+            info = ([None, self.dirname, self.filename, self.rootnode.remark] + 
+                    [value for key, value in sorted(self.info.items())])
+            self.infos.append(info)
+            self.manid += 1            
+            __addmove(self.rootnode, 0)
+            
+        def __getinfomove(dirfrom):
+            fcount = dcount = 0        
+            for subname in os.listdir(dirfrom):
+                subname = os.path.normcase(subname)
+                pathfrom = os.path.join(dirfrom, subname)
+                if os.path.isfile(pathfrom):
+                    extension = os.path.splitext(os.path.basename(pathfrom))[1]
+                    if extension == '.xqf':
+                        self.__readxqf(pathfrom)
+                        __addinfomove()
+                        fcount += 1
+                    elif extension == '.txt':
+                        content = open(pathfrom).read()
+                        cur.execute(base.insertmanual,
+                                (None, os.path.splitdrive(dirfrom)[1], subname, content))
+                        fcount += 1
+                else:
+                    below = __getinfomove(pathfrom)
+                    fcount += below[0]
+                    dcount += below[1]
+                    dcount += 1
+            return (fcount, dcount)
+
+        #if not os.path.exists(dirto):
+        #    os.mkdir(dirto)
+        dbname = dirto + '\\chessmanual.db'
+        #if os.path.exists(dbname):
+        #    os.remove(dbname)
+        con = sqlite3.connect(dbname)
+        con.execute('PRAGMA synchronous = OFF')
+        cur = con.cursor()
+        cur.executescript(base.initdbsql) # 执行sql脚本，多个sql语句
+        
+        cur.execute(base.getlastmanid)
+        res = cur.fetchone()
+        self.manid = 0 if res is None else res[0]
+        cur.execute(base.getlastmovid)
+        res = cur.fetchone()
+        self.lastmovid = 0 if res is None else res[0]
+        
+        self.infos = []
+        self.moves = []
+        fcount, dcount = __getinfomove(dirnamefrom)
+        con.execute('BEGIN;')
+        cur.executemany(base.insertinfo, self.infos)
+        cur.executemany(base.insertmove, self.moves)
+        
+        cur.close()
+        con.commit()
+        con.close()
+        return (fcount, dcount)   
+   
     
 #                

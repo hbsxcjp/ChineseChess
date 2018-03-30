@@ -1,6 +1,5 @@
 ﻿'中国象棋棋盘位置交叉类型'
 
-import re
 
 BLACK_Piece = True
 RED_Piece = False
@@ -161,12 +160,3 @@ Seats = Seats()
 def other_color(color):
     return RED_Piece if color == BLACK_Piece else BLACK_Piece
     
-    
-def multrepl(text, xdict):
-    '一次替换多个子字符串（字典定义）（方法来源于PythonCook）'
-    rx = re.compile('|'.join(map(re.escape, xdict)))  # 模式
-
-    def one_xlat(match):
-        return xdict[match.group(0)]  # 替换值
-
-    return rx.sub(one_xlat, text)  # 执行替换
