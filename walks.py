@@ -117,7 +117,6 @@ class Walks(Model):
             self.currentnode = self.currentnode.next_   
             self.cureatpiece = self.board.movepiece(self.currentnode.fseat, 
                     self.currentnode.tseat)
-        self.notifyviews()            
 
     def movebackward(self, inc=1):                    
         for _ in range(inc):
@@ -126,7 +125,6 @@ class Walks(Model):
             self.board.movepiece(self.currentnode.tseat, 
                     self.currentnode.fseat, self.cureatpiece)
             self.currentnode = self.currentnode.prev
-        self.notifyviews()
 
     def moveother(self):
         '移动到当前节点的另一变着'
@@ -137,7 +135,6 @@ class Walks(Model):
         self.board.movepiece(self.currentnode.other.fseat, 
                         self.currentnode.other.tseat)
         self.currentnode = self.currentnode.other
-        self.notifyviews()
 
     def movefirst(self):
         self.movebackward(len(self.getprevmoves(self.currentnode))+1)
@@ -151,7 +148,6 @@ class Walks(Model):
             self.board.movepiece(node.fseat, node.tseat)
         self.cureatpiece = self.board.movepiece(node.fseat, node.tseat)
         self.currentnode = node
-        self.notifyviews()
             
     def cutfollow(self):
         self.currentnode.next_ = None
@@ -159,10 +155,12 @@ class Walks(Model):
     def addnext(self, node):
         self.currentnode.next_ = node
         self.moveforward()
+        self.notifyviews()        
         
     def addother(self, node):
         self.currentnode.other = node
         self.moveother()
+        self.notifyviews()
         
         
 #

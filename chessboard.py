@@ -4,18 +4,63 @@
 
 import cProfile, os, sys, glob, re
 import struct, shutil #, chardet
-import xml.etree.ElementTree as ET    
+import xml.etree.ElementTree as ET
 import sqlite3
 import base
 
+from piece import BlankPie
 from board import Board, Model # 棋盘与棋子
-from walks import MoveNode, Walks # 棋局着法
 
 global movecount, remlenmax
 movecount = 0
 remlenmax = 0
 
 
+class MoveNode(object):
+    '象棋着法树节点类'
+    colchars = 'abcdefghi'
+        
+    def __init__(self, prev=None):
+        self.stepno = 0 # 着法图中的行位置
+        self.fseat = (0, 0)
+        self.tseat = (0, 0)
+        self.prev = prev
+        self.next_ = None
+        self.other = None
+        self.remark = ''
+        self.desc = ''
+        self.othcol = 0 # 着法图中的列位置
+        
+    @property
+    def coordstr(self):
+        if self.stepno == 0:
+            return ''
+        return '{0}{1}{2}{3}'.format(self.colchars[self.fseat[1]], self.fseat[0],
+                self.colchars[self.tseat[1]], self.tseat[0])
+
+    @property
+    def coordint(self):
+        return (self.fseat[0] * 10 + self.fseat[1],
+                self.tseat[0] * 10 + self.tseat[1])
+                
+    def setseat_s(self, coordstr):
+        fl, fw, tl, tw = coordstr
+        self.fseat = (int(fw), self.colchars.index(fl))
+        self.tseat = (int(tw), self.colchars.index(tl))
+
+    def setseat_i(self, fi, ti):
+        self.fseat = (fi // 10, fi % 10)
+        self.tseat = (ti // 10, ti % 10)
+
+    def setnext(self, next_):
+        self.next_ = next_
+        self.next_.stepno = self.stepno + 1
+        
+    def setother(self, other):
+        self.other = other
+        self.other.stepno = self.stepno # 与premove的步数相同
+        
+        
 class ChessBoard(Model):
     '棋局类（含一副棋盘、棋子、棋谱）'
 
@@ -24,29 +69,129 @@ class ChessBoard(Model):
     
     def __init__(self, filename=''):
         super().__init__()
-        self.loadfile(filename)
+        self.__loadfile(filename)
         
     def __str__(self):
-        #return '\n'.join([self.__infostr(), str(self.board)])
-        return '\n'.join([self.__infostr(), str(self.board), str(self.walks)])
-        
-    def __infostr(self):
-        return '\n'.join(
+    
+        def __setchar(node):
+            firstcol = node.othcol * 5
+            linestr[node.stepno * 2][firstcol: firstcol + 4] = node.desc
+            if node.next_:
+                linestr[node.stepno * 2 + 1][firstcol + 1: firstcol + 3] = [' ↓', ' ']
+                __setchar(node.next_)
+            if node.other:
+                linef = firstcol + 4
+                linel = node.other.othcol * 5
+                linestr[node.stepno * 2][linef: linel] = '…' * (linel - linef)
+                __setchar(node.other)
+            
+        infostr = '\n'.join(
                 ['[{} "{}"]'.format(key, self.info[key]) for key in sorted(self.info)])
-                
-    def loadfile(self, filename):
+        linestr = [['　' for _ in range((self.othcol + 1) * 5)]
+                    for _ in range((self.maxrow + 1) * 2)]
+        __setchar(self.rootnode)
+        walkstr = '\n'.join([''.join(line) for line in linestr])
+        return '\n'.join([infostr, str(self.board), walkstr])        
+    
+    def __setdesc(self):
+    
+        def __setdesc(node):
+            node.desc = self.board.moveseats_chinese(node.fseat, node.tseat)
+            self.maxrow = max(self.maxrow, node.stepno)
+            node.othcol = self.othcol # 存储节点的列数
+            eatpiece = self.board.movepiece(node.fseat, node.tseat)
+            if node.next_:
+                __setdesc(node.next_)
+            self.board.movepiece(node.tseat, node.fseat, eatpiece)
+            if node.other:
+                self.othcol += 1
+                __setdesc(node.other)
+    
+        self.maxrow = 0 # 存储最大行数
+        self.othcol = 0 # 存储最大列数
+        self.rootnode.desc = '　开始　'
+        if self.rootnode.next_:
+            __setdesc(self.rootnode.next_) # 驱动调用递归函数
+        
+    def __loadfile(self, filename):
         self.readfile(filename)
         self.board = Board(self.info['FEN'].split()[0])
-        self.walks = Walks(self.board, self.rootnode)
+        self.currentnode = self.rootnode
+        self.cureatpiece = BlankPie
+        self.__setdesc()
         
+    def getprevmoves(self, node):
+        result = []
+        while result[-1].prev is not self.rootnode:
+            result.append(result[-1].prev)
+        return reversed(result)
+                
+    def getnextmoves(self, node):
+        result = [node]
+        while result[-1].next_ is not None:
+            result.append(result[-1].next_)
+        return result
+                
+    def moveforward(self, inc=1):
+        for _ in range(inc):
+            if self.currentnode.next_ is None:
+                break
+            self.currentnode = self.currentnode.next_   
+            self.cureatpiece = self.board.movepiece(self.currentnode.fseat, 
+                    self.currentnode.tseat)
+
+    def movebackward(self, inc=1):                    
+        for _ in range(inc):
+            if self.currentnode.prev is None:
+                break
+            self.board.movepiece(self.currentnode.tseat, 
+                    self.currentnode.fseat, self.cureatpiece)
+            self.currentnode = self.currentnode.prev
+
+    def moveother(self):
+        '移动到当前节点的另一变着'
+        if self.currentnode.other is None:
+            return        
+        self.board.movepiece(self.currentnode.tseat, 
+                self.currentnode.fseat, self.cureatpiece)
+        self.board.movepiece(self.currentnode.other.fseat, 
+                        self.currentnode.other.tseat)
+        self.currentnode = self.currentnode.other
+
+    def movefirst(self):
+        self.movebackward(len(self.getprevmoves(self.currentnode))+1)
+    
+    def movelast(self):
+        self.moveforward(len(self.getnextmoves(self.currentnode)))
+        
+    def moveassign(self, node):
+        self.movefirst()
+        for node in self.getprevmoves(node):
+            self.board.movepiece(node.fseat, node.tseat)
+        self.cureatpiece = self.board.movepiece(node.fseat, node.tseat)
+        self.currentnode = node
+            
+    def cutfollow(self):
+        self.currentnode.next_ = None
+
+    def addnext(self, node):
+        self.currentnode.next_ = node
+        self.moveforward()
+        self.notifyviews()        
+        
+    def addother(self, node):
+        self.currentnode.other = node
+        self.moveother()
+        self.notifyviews()        
+                
     @property
     def currentside(self):
         return (BLACK_Piece if (self.info['FEN'][1] == 'b')
-                    == (self.walks.currentnode.stepno % 2 == 0) else RED_Piece)
+                    == (self.currentnode.stepno % 2 == 0) else RED_Piece)
         
     def getfen(self):
         return '{} {} {} {} {} {}'.format(self.board.getafen(), 
-                'b' if self.walks.currentside == BLACK_Piece else 'r',
+                'b' if self.currentside == BLACK_Piece else 'r',
                 '-', '-', '0', '0')
 
     def setfen(self, fen):
@@ -333,7 +478,7 @@ class ChessBoard(Model):
             for n, des in enumerate(descriptiones):
                 if des:
                     (fromseat, toseat) = self.board.chinese_moveseats(
-                        self.walks.currentside, des)
+                        self.currentside, des)
                     self.walks.append(fromseat, toseat, remarks[n], self.board)
             self.walks.move(-self.walks.length)
             # ？
@@ -591,7 +736,7 @@ class ChessBoard(Model):
         elif ext == '.xml':
             self.__saveasxml(filename)        
     
-    def trandir(self, text, dirfrom, dirto='.\\'):
+    def transdir(self, dirfrom, dirto, text):
         fcount = dcount = 0
         if not os.path.exists(dirto):
             os.mkdir(dirto)
@@ -602,16 +747,17 @@ class ChessBoard(Model):
             if os.path.isfile(pathfrom): # 文件
                 extension = os.path.splitext(os.path.basename(pathfrom))[1]
                 if extension in ('.xqf', '.bin', '.pgn', '.xml'):
-                    self.readfile(pathfrom)
+                    self.__loadfile(pathfrom)
                     filenameto = os.path.join(dirto, 
                             os.path.splitext(os.path.basename(pathfrom))[0] + text)
                     self.writefile(filenameto, text)
-                    
+                    '''
                     try:
                         print(filenameto)
                     except:
                         print(filenameto.encode())
-                    open(filenameto[:-4] + '.txt', 'w').write(str(self))
+                    '''
+                    #open(filenameto[:-4] + '.txt', 'w').write(str(self))
                     
                     fcount += 1
                 elif extension == '.txt':
@@ -619,11 +765,11 @@ class ChessBoard(Model):
                     open(pathto, 'w').write(data)
                     fcount += 1
             else:
-                below = self.trandir(text, pathfrom, pathto)
+                below = self.transdir(pathfrom, pathto, text)
                 fcount += below[0]
                 dcount += below[1]
                 dcount += 1
-        return (fcount, dcount)
+        return (fcount, dcount)        
         
     def tranxqftodb(self, dirnamefrom, dirto='.\\'):
 
@@ -697,48 +843,31 @@ class ChessBoard(Model):
         con.close()
         return (fcount, dcount)   
    
-dirfrom = ['棋谱文件\\示例文件',
-            '棋谱文件\\象棋杀着大全',
-            '棋谱文件\\疑难文件',
-            '棋谱文件\\中国象棋棋谱大全'
-            ]                
+dirfrom = ['c:\\棋谱文件\\示例文件',
+            'c:\\棋谱文件\\象棋杀着大全',
+            'c:\\棋谱文件\\疑难文件',
+            'c:\\棋谱文件\\中国象棋棋谱大全'
+            ]
 
-def testtransdir(num, fext, text):
-    chessboard = ChessBoard()
-    for i in range(num):
-        if text == '.db':
-            fc, dc = chessboard.tranxqftodb(dirfrom[i], dirto='C:\\')
-        else:
-            fc, dc = chessboard.trandir(text, dirfrom[i] + fext,
-                    'C:\\棋谱文件' + text)
-        print('{}： {}个文件，{}个目录'.format(dirfrom[i], fc, dc))
-    global movecount, remlenmax
-    print('movecount:', movecount, 'remlenmax:', remlenmax) # 计算着法步数
-
-    
-        
             
 if __name__ == '__main__':
 
     import time
     start = time.time()
     
-    #cProfile.run('trandir(2)')
-    #testtransdir(2, '.xqf', '.bin')
-    #testtransdir(2, '.xqf', '.pgn')
-    #testtransdir(2, '.xqf', '.xml')
-    testtransdir(2, '.bin', '_pgn')
-    #testtransdir(2, '.bin', '.xml')
-    #testtransdir(2, '.xml', '.bin')
-    #testtransdir(2, '.xml', '.pgn')
-    #testtransdir(2, '.pgn', '.bin')
-    #testtransdir(2, '.pgn', '.xml')
-    #testtransdir(2, '.xqf', '.db') # 第3级目录生产文件超过1G，不具备可操作性.
-    
+    chboard = ChessBoard()
+    for i in range(2):
+        for text in ['.bin', '.pgn', '.xml']:
+            fcount, dcount = chboard.transdir(dirfrom[i] + '.xqf', dirfrom[i] + text, text)
+            print('{}： {}个文件，{}个目录'.format(dirfrom[i], fcount, dcount))            
+            print('movecount:', movecount, 'remlenmax:', remlenmax) # 计算着法步数
+            
+        #'.db' 生产的db文件超过1G，不具备可操作性.
+        
     #cProfile.run("testtransdir(2, '.xqf', '.xml')")    
     
     end = time.time()
-    print('usetime: %0.3fs' % (end - start))    
+    print('usetime: %0.3fs' % (end - start))
     
     #shutil.rmtree('C:\\中国象棋棋谱大全')
     pass
