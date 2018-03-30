@@ -611,7 +611,7 @@ class ChessBoard(Model):
                         print(filenameto)
                     except:
                         print(filenameto.encode())
-                    open(filenameto + '.txt', 'w').write(str(self))
+                    open(filenameto[:-4] + '.txt', 'w').write(str(self))
                     
                     fcount += 1
                 elif extension == '.txt':
@@ -697,19 +697,20 @@ class ChessBoard(Model):
         con.close()
         return (fcount, dcount)   
    
-dirfrom = ['.\\棋谱文件\\示例文件',
-            '.\\棋谱文件\\象棋杀着大全',
-            '.\\棋谱文件\\疑难文件',
-            '.\\棋谱文件\\中国象棋棋谱大全'
+dirfrom = ['棋谱文件\\示例文件',
+            '棋谱文件\\象棋杀着大全',
+            '棋谱文件\\疑难文件',
+            '棋谱文件\\中国象棋棋谱大全'
             ]                
 
 def testtransdir(num, fext, text):
     chessboard = ChessBoard()
     for i in range(num):
         if text == '.db':
-            fc, dc = chessboard.tranxqftodb(dirfrom[i], dirto='C:\\棋谱文件')
+            fc, dc = chessboard.tranxqftodb(dirfrom[i], dirto='C:\\')
         else:
-            fc, dc = chessboard.trandir(text, dirfrom[i]+fext, dirfrom[i]+text)
+            fc, dc = chessboard.trandir(text, dirfrom[i] + fext,
+                    'C:\\棋谱文件' + text)
         print('{}： {}个文件，{}个目录'.format(dirfrom[i], fc, dc))
     global movecount, remlenmax
     print('movecount:', movecount, 'remlenmax:', remlenmax) # 计算着法步数
@@ -726,7 +727,7 @@ if __name__ == '__main__':
     #testtransdir(2, '.xqf', '.bin')
     #testtransdir(2, '.xqf', '.pgn')
     #testtransdir(2, '.xqf', '.xml')
-    testtransdir(2, '.bin', '.pgn')
+    testtransdir(2, '.bin', '_pgn')
     #testtransdir(2, '.bin', '.xml')
     #testtransdir(2, '.xml', '.bin')
     #testtransdir(2, '.xml', '.pgn')

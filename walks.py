@@ -58,7 +58,7 @@ class Walks(Model):
         self.rootnode = rootnode
         self.currentnode = rootnode
         self.cureatpiece = BlankPie
-        
+                
     def __str__(self):
     
         def __setchar(node):
