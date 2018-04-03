@@ -22,8 +22,8 @@ class MoveNode(object):
         
     def __init__(self, prev=None):
         self.stepno = 0 # 着法图中的行位置
-        self.fseat = (0, 0)
-        self.tseat = (0, 0)
+        self.fseat = ''
+        self.tseat = ''
         self.prev = prev
         self.next_ = None
         self.other = None
@@ -104,18 +104,27 @@ class ChessBoard(object):
     
     def __setseat_zh(self):
         '根据board、zhstr设置树节点的seat'
-        def __setseat(node):
+        def __setseat(node, isother=False):
+
+            def __backward(node, eatpiece):
+                self.inicolor = other_color(self.inicolor)
+                self.board.movepiece(node.tseat, node.fseat, eatpiece)
+            
+            print(node)
             node.fseat, node.tseat = self.board.chinese_moveseats(
                         self.currentside, node.zhstr)
-            eatpiece = self.board.movepiece(node.fseat, node.tseat)
             self.inicolor = other_color(self.inicolor)
-            if node.next_:                
-                __setseat(node.next_)
-            self.board.movepiece(node.tseat, node.fseat, eatpiece)
-            self.inicolor = other_color(self.inicolor)
-            if node.other:
-                __setseat(node.other)
+            eatpiece = self.board.movepiece(node.fseat, node.tseat)                        
+            if node.next_:
+                __setseat(node.next_)            
+            if not isother:
+                __backward(node, eatpiece)
                 
+            if node.other:            
+                __setseat(node.other, True)                
+            if isother:
+                __backward(node, eatpiece)           
+                    
         if self.rootnode.next_:
             __setseat(self.rootnode.next_) # 驱动调用递归函数        
             
@@ -496,7 +505,7 @@ class ChessBoard(object):
         
             def __readmoves(node, mvstr, isother):  # 非递归                
                 lastnode = node
-                for mstr, remark in moverg.findall(mvstr):
+                for i, (mstr, remark) in enumerate(moverg.findall(mvstr)):
                     newnode = MoveNode(lastnode)
                     if fmt == 'ICCS':
                         newnode.setseat_ICCS(mstr)
@@ -504,7 +513,7 @@ class ChessBoard(object):
                         newnode.zhstr = mstr
                     if remark:
                         newnode.remark = remark
-                    if isother: # 第一步为变着
+                    if isother and (i == 0): # 第一步为变着
                         lastnode.setother(newnode)                    
                     else:
                         lastnode.setnext(newnode)
@@ -543,7 +552,8 @@ class ChessBoard(object):
         if fmt == 'cc':
             __readmove_cc(movestr)  # 待完善
         else:
-            moverg = re.compile('\s+(\S{4})(\s+\{.*\})?') # 走棋信息
+            moverg = re.compile(' ([^\.\{\}\s]{4})(\s+\{[\s\S]*?\})?')
+            # 走棋信息 注解[\s\S]*? 非贪婪
             __readmove_ICCSzh(self.rootnode, movestr)
             
     def __readxml(self, filename):
@@ -783,22 +793,18 @@ def testtransdir():
                 ]
     fexts = ['.bin', '.xml', '.pgn', '.xqf']
     texts = ['.bin', '.xml', '.pgn']
-    pgnfmt = ['ICCS', 'zh', 'cc']
+    fmts = ['ICCS', 'zh', 'cc']
     
     chboard = ChessBoard()
     result = []
-    for dir in dirfrom[:1]:
-    
-        for text in texts[:3]:
-            fext, fmt = fexts[2], pgnfmt[1] # 设置输入文件格式            
-            fcount, dcount = chboard.transdir(dir + fext, dir + text, text, fmt)
-            result.append('{}： {}个文件，{}个目录'.format(dir, fcount, dcount))
-            result.append('着法数量：{}，注释数量：{}'.format(movecount, remlenmax))
-        for fext in fexts[1:1]:
-            fcount, dcount = chboard.transdir(dir + fext, dir + texts[0], texts[0])
-            result.append('{}： {}个文件，{}个目录'.format(dir, fcount, dcount))
-            result.append('着法数量：{}，注释数量：{}'.format(movecount, remlenmax))
-            # 计算着法步数            
+    for dir in dirfrom[0:1]:    
+        for fext in fexts[2:3]:
+            for text in texts[1:2]:
+                for fmt in fmts[1:2]: # 设置输入文件格式            
+                    fcount, dcount = chboard.transdir(dir+fext, dir+text, text, fmt)
+                    result.append('{}：{}个文件，{}个目录转换成功！'.format(dir, fcount, dcount))
+                    result.append('着法数量：{}，注释数量：{}'.format(movecount, remlenmax))
+                    # 计算着法步数            
     open('c:\\棋谱文件\\result.txt', 'w').write('\n'.join(result))    
            
             
