@@ -11,8 +11,9 @@ import base
 from piece import *
 from board import * # 棋盘与棋子
 
-global movecount, remlenmax
+global movecount, remcount, remlenmax
 movecount = 0
+remcount = 0
 remlenmax = 0
 
 
@@ -22,8 +23,8 @@ class MoveNode(object):
         
     def __init__(self, prev=None):
         self.stepno = 0 # 着法图中的行位置
-        self.fseat = ''
-        self.tseat = ''
+        self.fseat = (0, 0)
+        self.tseat = (0, 0)
         self.prev = prev
         self.next_ = None
         self.other = None
@@ -32,22 +33,22 @@ class MoveNode(object):
         self.othcol = 0 # 着法图中的列位置
         
     def __str__(self):
-        return '{} {} {} {}'.format(self.stepno, self.fseat, self.tseat, self.zhstr)
+        return '{}_{} [{} {}] {}'.format(self.stepno, self.othcol,
+                self.fseat, self.tseat, self.zhstr)
         
     @property
     def binint(self):
         return (self.fseat[0] * 10 + self.fseat[1],
                 self.tseat[0] * 10 + self.tseat[1])
                 
-    @property
-    def ICCSstr(self):
+    def __ICCSstr(self):
         if self.stepno == 0:
             return ''
         return '{0}{1}{2}{3}'.format(self.colchars[self.fseat[1]], self.fseat[0],
                 self.colchars[self.tseat[1]], self.tseat[0])
 
     def ICCSzhstr(self, fmt):
-        return self.ICCSstr if fmt == 'ICCS' else self.zhstr
+        return self.__ICCSstr if fmt == 'ICCS' else self.zhstr
          
     def setseat_i(self, fi, ti):
         self.fseat = (fi // 10, fi % 10)
@@ -55,7 +56,6 @@ class MoveNode(object):
             
     def setseat_ICCS(self, ICCSstr):
         fl, fw, tl, tw = ICCSstr
-        #print(ICCSstr)
         self.fseat = (int(fw), self.colchars.index(fl))
         self.tseat = (int(tw), self.colchars.index(tl))
         
@@ -104,19 +104,15 @@ class ChessBoard(object):
     
     def __setseat_zh(self):
         '根据board、zhstr设置树节点的seat'
-        def __setseat(node):
-
-            def __backward(node, eatpiece):
-                self.inicolor = other_color(self.inicolor)
-                self.board.movepiece(node.tseat, node.fseat, eatpiece)
-            
+        def __setseat(node):            
             node.fseat, node.tseat = self.board.chinese_moveseats(
                         self.currentside, node.zhstr)
             self.inicolor = other_color(self.inicolor)
             eatpiece = self.board.movepiece(node.fseat, node.tseat)
             if node.next_:
-                __setseat(node.next_)
-            __backward(node, eatpiece)
+                __setseat(node.next_)                
+            self.inicolor = other_color(self.inicolor)
+            self.board.movepiece(node.tseat, node.fseat, eatpiece)
             if node.other:            
                 __setseat(node.other)          
                     
@@ -125,10 +121,14 @@ class ChessBoard(object):
             
     def __setzhstr(self):
         '根据board设置树节点的zhstr'
+        self.othcol = 0 # 存储本节点列数
         def __zhstr(node):
             node.zhstr = self.board.moveseats_chinese(node.fseat, node.tseat)
-            self.maxrow = max(self.maxrow, node.stepno)
             node.othcol = self.othcol # 存储节点的列数
+            self.maxrow = max(self.maxrow, node.stepno)
+            self.maxcol = max(self.maxcol, self.othcol)
+            print(node)
+            
             eatpiece = self.board.movepiece(node.fseat, node.tseat)
             if node.next_:                
                 __zhstr(node.next_)
@@ -136,9 +136,10 @@ class ChessBoard(object):
             if node.other:
                 self.othcol += 1                
                 __zhstr(node.other)
+                self.othcol -= 1
     
         self.maxrow = 0 # 存储最大行数
-        self.othcol = 0 # 存储最大列数
+        self.maxcol = 0 # 存储最大列数
         self.rootnode.zhstr = '【开始】'
         if self.rootnode.next_:
             __zhstr(self.rootnode.next_) # 驱动调用递归函数
@@ -504,12 +505,12 @@ class ChessBoard(object):
                     newnode = MoveNode(lastnode)
                     if fmt == 'ICCS':
                         newnode.setseat_ICCS(mstr)
-                    else:
+                    elif fmt == 'zh':
                         newnode.zhstr = mstr
                     if remark:
-                        newnode.remark = remark
+                        newnode.remark = remrg.findall(remark)[0]
                     if isother and (i == 0): # 第一步为变着
-                        lastnode.setother(newnode)                    
+                        lastnode.setother(newnode)
                     else:
                         lastnode.setnext(newnode)
                     lastnode = newnode
@@ -534,11 +535,14 @@ class ChessBoard(object):
             pass            
         
         #print(filename)
+        remrg = re.compile('\{([\s\S]*?)\}')
+        moverg = re.compile(' ([^\.\{\}\s]{4})(\s+\{[\s\S]*?\})?')
+        # 走棋信息 注解[\s\S]*? 非贪婪            
         infostr, p, movestr = open(filename).read().partition('\n1.')
         for key, value in re.findall('\[(\w+) "(.*)"\]', infostr):
             self.info[key] = value
         # 读取info内容（在已设置原始key上可能会有增加）
-        remark = re.findall('\]\s+(\{[\s\S]*\})?', infostr)
+        remark = remrg.findall(infostr)
         if remark:
             self.rootnode.remark = remark[0]  # 棋谱评注
         resultstr = re.findall('\s(1-0|0-1|1/2-1/2|\*)\s?', movestr)
@@ -548,8 +552,6 @@ class ChessBoard(object):
         if fmt == 'cc':
             __readmove_cc(movestr)  # 待完善
         else:
-            moverg = re.compile(' ([^\.\{\}\s]{4})(\s+\{[\s\S]*?\})?')
-            # 走棋信息 注解[\s\S]*? 非贪婪
             __readmove_ICCSzh(self.rootnode, movestr)
             
     def __readxml(self, filename):
@@ -625,10 +627,11 @@ class ChessBoard(object):
                         else RED_Piece)
         self.currentnode = self.rootnode
         self.cureatpiece = BlankPie        
-        if self.info['Format'] == 'zh':
+        if ext in ['.xml', '.pgn'] and self.info['Format'] == 'zh':
             self.__setseat_zh()
         else:
             self.__setzhstr()
+            pass
             
     def __saveasbin(self, filename):
     
@@ -638,10 +641,11 @@ class ChessBoard(object):
             hasothernextrem = ((0x80 if node.other else 0) |
                                 (0x40 if node.next_ else 0) |
                                 (0x20 if rembytes else 0))
-            global movecount, remlenmax
+            global movecount, remcount, remlenmax
             movecount += 1 # 着法步数 
             reslutbytes.extend(movestruct1.pack(hasothernextrem, fint, tint))
             if rembytes:
+                remcount += 1
                 remlenmax = max(remlenmax, len(node.remark.strip()))
                 
                 reslutbytes.extend(movestruct2.pack(len(rembytes)))
@@ -660,6 +664,8 @@ class ChessBoard(object):
         movestruct1 = struct.Struct('3B')
         movestruct2 = struct.Struct('H')
         __addmoves(self.rootnode)
+        global movecount, remcount, remlenmax
+        movecount -= 1 # 减去rootnode
         try:
             open(filename, 'wb').write(reslutbytes)
         except:
@@ -671,31 +677,33 @@ class ChessBoard(object):
                
             def __remarkstr(remark):
                 rem = remark.strip()
-                global remlenmax
-                remlenmax = max(remlenmax, len(rem))
-                return '' if not rem else '\n{{{}}}\n '.format(rem)
+                global remcount, remlenmax                
+                if rem:
+                    remlenmax = max(remlenmax, len(rem))
+                    remcount += 1
+                return '' if not rem else '\n{{{}}}\n'.format(rem)
             
             def __addstrl(node, isother=False):
                 prestr = ('({0}. {1}'.format((node.stepno + 1) // 2, 
                         '... ' if node.stepno % 2 == 0 else '')
                         if isother else
-                        ('' if node.stepno % 2 == 0 else 
+                        (' ' if node.stepno % 2 == 0 else 
                         '{}. '.format((node.stepno + 1) // 2)))
                 mergestr = '{0}{1} {2}'.format(prestr,
                         node.ICCSzhstr(fmt), __remarkstr(node.remark))
                 movestrl.append(mergestr)
+                global movecount
+                movecount += 1 # 着法步数 
+                
                 if node.other:
                     __addstrl(node.other, True)
-                    movestrl.append(') ')
-                    global movecount
-                    movecount -= 1 # 修正着法步数                    
+                    movestrl.append(') ')                   
                 if node.next_:
                     __addstrl(node.next_)
         
-            movestrl = []
-            __addstrl(self.rootnode.next_)
-            global movecount
-            movecount += len(movestrl) # 计算着法步数            
+            movestrl = [__remarkstr(self.rootnode.remark)]
+            if self.rootnode.next_:
+                __addstrl(self.rootnode.next_)          
             return movestrl
             
         self.info['Format'] = fmt
@@ -711,12 +719,15 @@ class ChessBoard(object):
             reselem.tail = remark
             return reselem
             
-        def __addelem(elem, node, fmt):    
+        def __addelem(elem, node, fmt):
+            rem = node.remark.strip()
             thissub = __createlem('m{0:02d}'.format(node.stepno),
-                    node.ICCSzhstr(fmt), node.remark.strip())
-            global movecount, remlenmax
+                    node.ICCSzhstr(fmt), rem)
+            global movecount, remcount, remlenmax
             movecount += 1  # 计算着法步数
-            remlenmax = max(remlenmax, len(node.remark.strip()))
+            if rem:
+                remcount += 1
+                remlenmax = max(remlenmax, len(rem))
             
             if node.other: # 有变着
                 __addelem(thissub, node.other, fmt)                
@@ -733,6 +744,8 @@ class ChessBoard(object):
         
         movelem = __createlem('moves', '', '')
         __addelem(movelem, self.rootnode, fmt)
+        global movecount, remcount, remlenmax
+        movecount -= 1  # 减去rootnode
         rootelem.append(movelem)
         base.xmlindent(rootelem)  # 美化
         ET.ElementTree(rootelem).write(filename, encoding='utf-8')
@@ -745,7 +758,7 @@ class ChessBoard(object):
         elif ext == '.pgn':
             self.__saveaspgn(filename, fmt)
     
-    def transdir(self, dirfrom, dirto, text, pgnfmt): #='ICCS'
+    def transdir(self, dirfrom, dirto, text, pgnfmt):
         fcount = dcount = 0
         if not os.path.exists(dirto):
             os.mkdir(dirto)
@@ -756,6 +769,7 @@ class ChessBoard(object):
             if os.path.isfile(pathfrom): # 文件
                 extension = os.path.splitext(os.path.basename(pathfrom))[1]
                 if extension in ('.xqf', '.bin', '.xml', '.pgn'):
+                    print(pathfrom)
                     self.readfile(pathfrom)
                     filenameto = os.path.join(dirto, 
                             os.path.splitext(os.path.basename(pathfrom))[0] + text)
@@ -793,13 +807,18 @@ def testtransdir():
     
     chboard = ChessBoard()
     result = []
-    for dir in dirfrom[0:2]:    
-        for fext in fexts[2:3]:
-            for text in texts[1:2]:
-                for fmt in fmts[1:2]: # 设置输入文件格式            
+    for dir in dirfrom[2:3]:    
+        for fext in fexts[:1]:
+            for text in texts[1:]:
+                if text == fext:
+                    continue
+                for fmt in fmts[1:2]: # 设置输入文件格式                    
+                    global movecount, remcount, remlenmax
+                    movecount = remcount = remlenmax = 0
                     fcount, dcount = chboard.transdir(dir+fext, dir+text, text, fmt)
                     print('{}：{}个文件，{}个目录转换成功！'.format(dir, fcount, dcount))
-                    print('着法数量：{}，注释数量：{}'.format(movecount, remlenmax))
+                    print('着法数量：{}，注释数量：{}, 注释最大长度：{}'.format(
+                            movecount, remcount, remlenmax))
                     # 计算着法步数            
     #open('c:\\棋谱文件\\result.txt', 'w').write('\n'.join(result))    
            
