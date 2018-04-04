@@ -104,26 +104,21 @@ class ChessBoard(object):
     
     def __setseat_zh(self):
         '根据board、zhstr设置树节点的seat'
-        def __setseat(node, isother=False):
+        def __setseat(node):
 
             def __backward(node, eatpiece):
                 self.inicolor = other_color(self.inicolor)
                 self.board.movepiece(node.tseat, node.fseat, eatpiece)
             
-            print(node)
             node.fseat, node.tseat = self.board.chinese_moveseats(
                         self.currentside, node.zhstr)
             self.inicolor = other_color(self.inicolor)
-            eatpiece = self.board.movepiece(node.fseat, node.tseat)                        
+            eatpiece = self.board.movepiece(node.fseat, node.tseat)
             if node.next_:
-                __setseat(node.next_)            
-            if not isother:
-                __backward(node, eatpiece)
-                
+                __setseat(node.next_)
+            __backward(node, eatpiece)
             if node.other:            
-                __setseat(node.other, True)                
-            if isother:
-                __backward(node, eatpiece)           
+                __setseat(node.other)          
                     
         if self.rootnode.next_:
             __setseat(self.rootnode.next_) # 驱动调用递归函数        
@@ -522,22 +517,23 @@ class ChessBoard(object):
             
             othnodes = [node]
             isother = False
+            thisnode = None
             leftstrs = movestr.split('(')
             while leftstrs:
                 thisnode = othnodes[-1] if isother else othnodes.pop()
-                if leftstrs[0].find(')') < 0: # 无')'符号
+                if leftstrs[0].find(')') < 0: # 无')'符号                    
                     othnodes.append(__readmoves(thisnode, leftstrs.pop(0), isother))
                     isother = True
                 else:
                     lftstr, p, leftstrs[0] = leftstrs[0].partition(')')
                     __readmoves(thisnode, lftstr, isother)
-                    isother = False
+                    isother = False                    
             
         def __readmove_cc(movestr):
         
             pass            
         
-        print(filename)
+        #print(filename)
         infostr, p, movestr = open(filename).read().partition('\n1.')
         for key, value in re.findall('\[(\w+) "(.*)"\]', infostr):
             self.info[key] = value
@@ -797,15 +793,15 @@ def testtransdir():
     
     chboard = ChessBoard()
     result = []
-    for dir in dirfrom[0:1]:    
+    for dir in dirfrom[0:2]:    
         for fext in fexts[2:3]:
             for text in texts[1:2]:
                 for fmt in fmts[1:2]: # 设置输入文件格式            
                     fcount, dcount = chboard.transdir(dir+fext, dir+text, text, fmt)
-                    result.append('{}：{}个文件，{}个目录转换成功！'.format(dir, fcount, dcount))
-                    result.append('着法数量：{}，注释数量：{}'.format(movecount, remlenmax))
+                    print('{}：{}个文件，{}个目录转换成功！'.format(dir, fcount, dcount))
+                    print('着法数量：{}，注释数量：{}'.format(movecount, remlenmax))
                     # 计算着法步数            
-    open('c:\\棋谱文件\\result.txt', 'w').write('\n'.join(result))    
+    #open('c:\\棋谱文件\\result.txt', 'w').write('\n'.join(result))    
            
             
 if __name__ == '__main__':
