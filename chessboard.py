@@ -321,7 +321,7 @@ class ChessBoard(object):
                 
             piechars = 'RNBAKABNRCCPPPPPrnbakabnrccppppp' # QiziXY设定的棋子顺序 
             #self.Signature = data[:2] # 2字节 文件标记 'XQ' = $5158;
-            self.info['Version'] = data[2] # 版本号
+            self.info['Version_xqf'] = data[2] # 版本号
             headKeyMask = data[3] # 加密掩码
             #self.ProductId = data[4] # 4字节 产品号(厂商的产品号)
             headKeyOrA = data[5] #
@@ -377,10 +377,10 @@ class ChessBoard(object):
                 print('文件标记不对。xqfinfo.Signature != (0x58, 0x51)')
             if (headKeysSum + headKeyXY + headKeyXYf + headKeyXYt) % 256 != 0:
                 print('检查密码校验和不对，不等于0。')
-            if self.info['Version'] > 18: 
+            if self.info['Version_xqf'] > 18: 
                 print('这是一个高版本的XQF文件，您需要更高版本的XQStudio来读取这个文件')
             '''            
-            if self.info['Version'] <= 10: # 兼容1.0以前的版本
+            if self.info['Version_xqf'] <= 10: # 兼容1.0以前的版本
                 KeyXY = 0
                 KeyXYf = 0
                 KeyXYt = 0
@@ -390,7 +390,7 @@ class ChessBoard(object):
                 KeyXYf = __calkey(headKeyXYf, KeyXY)
                 KeyXYt = __calkey(headKeyXYt, KeyXYf)
                 KeyRMKSize = ((headKeysSum * 256 + headKeyXY) % 65536 % 32000) + 767
-                if self.info['Version'] >= 12: # 棋子位置循环移动
+                if self.info['Version_xqf'] >= 12: # 棋子位置循环移动
                     for i, xy in enumerate(headQiziXY[:]):
                         headQiziXY[(i + KeyXY + 1) % 32] = xy
                 for i in range(32): # 棋子位置解密           
@@ -431,7 +431,7 @@ class ChessBoard(object):
             def __readbytes(size):
                 pos = fileobj.tell()
                 bytestr = fileobj.read(size)                
-                if self.info['Version'] <= 10:
+                if self.info['Version_xqf'] <= 10:
                     return bytestr 
                 else: # '字节串解密'
                     barr = bytearray(len(bytestr))  # 字节数组才能赋值，字节串不能赋值
@@ -450,7 +450,7 @@ class ChessBoard(object):
             ChildTag = data[2]
             
             RemarkSize = 0
-            if self.info['Version'] <= 0x0A:
+            if self.info['Version_xqf'] <= 0x0A:
                 b = 0
                 if (ChildTag & 0xF0) != 0: 
                     b = b | 0x80
@@ -489,7 +489,7 @@ class ChessBoard(object):
             bytestr = infostruct.unpack(fileobj.read(1024))
             KeyXYf, KeyXYt, KeyRMKSize, F32Keys = __readinfo(bytestr)
             __readmove(self.rootnode)
-        self.info['Version'] = str(self.info['Version'])
+        self.info['Version_xqf'] = str(self.info['Version_xqf'])
             
     def __readbin(self, filename):
     
@@ -542,6 +542,15 @@ class ChessBoard(object):
                     lastnode = newnode
                 return lastnode
             
+            remrg = re.compile('\{([\s\S]*?)\}')
+            moverg = re.compile(' ([^\d\.\{\}\s]{4})(\s+\{[\s\S]*?\})?')
+            # 走棋信息 注解[\s\S]*? 非贪婪
+            remark = remrg.findall(infostr)
+            if remark:
+                self.rootnode.remark = remark[0]  # 棋谱评注
+            resultstr = re.findall('\s(1-0|0-1|1/2-1/2|\*)\s?', movestr)
+            if resultstr:
+                self.info['Result'] = resultstr[0]  # 棋局结果
             othnodes = [self.rootnode]
             isother = False
             thisnode = None
@@ -559,43 +568,34 @@ class ChessBoard(object):
         def __readmove_cc(movestr):
             
             def __readmove(node, row, col, isother=False):
-                zhstr = moverg.findall(moves[row][col])
-                if not zhstr:
-                    return
-                newnode = MoveNode(node)
-                newnode.stepno = row
-                newnode.zhstr = zhstr[:4]
-                newnode.remark = rems.get((row, col), '')
-                if isother:
-                    node.setother(newnode)
-                else:
-                    node.setnext(newnode)
-                for c in range(col+1, maxcol+1):
-                    if zhstr.find('…'):
-                        
-                        if moves[row][c]:
-                            __readmove(newnode, row, c, True)
-                            
-                            
-                for r in range(row+1, maxrow+1):
-                    if moves[r][col]:
-                    
-                        __readmove(newnode, r, col)
+                zhstr = moverg.findall(moves[row][col])                
+                if zhstr:
+                    newnode = MoveNode(node)
+                    newnode.stepno = row
+                    newnode.zhstr = zhstr[0][:4]
+                    newnode.remark = rems.get((row, col), '')
+                    if isother:
+                        node.setother(newnode)
+                    else:
+                        node.setnext(newnode)    
+                    if zhstr[0][4] == '…':
+                        __readmove(newnode, row, col+1, True)
+                elif isother and moves[row][col] == '……………':
+                    __readmove(node, row, col+1, True)
+                if zhstr and row < len(moves)-1 and moves[row+1]:
+                    __readmove(newnode, row+1, col)
                         
             movestr, p, remstr = movestr.partition('\n(')
-            moverg0 = re.compile('.{5}')
+            mstrrg = re.compile('.{5}')
             moverg = re.compile('([^…　]{4}[…　])')
-            othrg = re.compile('…{5}')
-            moves = [moverg0.findall(linestr) for linestr
+            moves = [mstrrg.findall(linestr) for linestr
                     in [line for i, line in enumerate(movestr.split('\n')) if i % 2 == 0]]
-            maxrow = len(moves) - 1
-            maxcol = len(moves[1]) - 1
             remrg = re.compile('\(\s*(\d+),\s*(\d+)\): \{([\s\S]*?)\}')
             rems = {(int(rowstr), int(colstr)): remark
-                    for rowstr, colstr, remark in remrg.findall('(' + remstr)}
-                    
+                    for rowstr, colstr, remark in remrg.findall('(' + remstr)}                    
             self.rootnode.remark = rems.get((0, 0), '')
-            __readmove(self.rootnode, 1, 0)
+            if moves[1]:
+                __readmove(self.rootnode, 1, 0)
             
         #print(filename)
         infostr, p, movestr = open(filename).read().partition('\n1.')
@@ -606,15 +606,6 @@ class ChessBoard(object):
         if fmt == 'cc':
             __readmove_cc(movestr)
         else:
-            remrg = re.compile('\{([\s\S]*?)\}')
-            moverg = re.compile(' ([^\d\.\{\}\s]{4})(\s+\{[\s\S]*?\})?')
-            # 走棋信息 注解[\s\S]*? 非贪婪
-            remark = remrg.findall(infostr)
-            if remark:
-                self.rootnode.remark = remark[0]  # 棋谱评注
-            resultstr = re.findall('\s(1-0|0-1|1/2-1/2|\*)\s?', movestr)
-            if resultstr:
-                self.info['Result'] = resultstr[0]  # 棋局结果
             __readmove_ICCSzh(movestr, fmt)
             
     def __readxml(self, filename):
@@ -691,11 +682,10 @@ class ChessBoard(object):
         self.currentnode = self.rootnode
         self.cureatpiece = BlankPie
         self.__setcols()
-        if ext in ['.xml', '.pgn'] and self.info['Format'] == 'zh':
+        if ext in {'.xml', '.pgn'} and self.info['Format'] in {'zh', 'cc'}:
             self.__setseat_zh()
         else:
             self.__setzhstr()
-            pass
             
     def __saveasbin(self, filename):
     
