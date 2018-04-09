@@ -125,7 +125,7 @@ class ChessBoard(object):
             node.othcol = node.prev.othcol + (1 if isother else 0) # 变着层数
             node.maxcol = self.maxcol # 在视图中的列数
             self.othcol = max(self.othcol, node.othcol)
-            self.maxrow = max(self.maxrow, node.stepno-1)
+            self.maxrow = max(self.maxrow, node.stepno)
             if node.next_:
                 __cols(node.next_)
             if node.other:
@@ -580,8 +580,10 @@ class ChessBoard(object):
                         node.setnext(newnode)    
                     if zhstr[0][4] == '…':
                         __readmove(newnode, row, col+1, True)
-                elif isother and moves[row][col] == '……………':
-                    __readmove(node, row, col+1, True)
+                elif isother:
+                    while moves[row][col][0] == '…':
+                        col += 1
+                    __readmove(node, row, col, True)
                 if zhstr and row < len(moves)-1 and moves[row+1]:
                     __readmove(newnode, row+1, col)
                         
@@ -823,7 +825,7 @@ class ChessBoard(object):
             if os.path.isfile(pathfrom): # 文件
                 extension = os.path.splitext(os.path.basename(pathfrom))[1]
                 if extension in ('.xqf', '.bin', '.xml', '.pgn'):
-                    #print(pathfrom)
+                    print(pathfrom)
                     self.readfile(pathfrom)
                     filenameto = os.path.join(dirto, 
                             os.path.splitext(os.path.basename(pathfrom))[0] + text)
@@ -861,9 +863,9 @@ def testtransdir():
     
     chboard = ChessBoard()
     result = []
-    for dir in dirfrom[:2]:    
+    for dir in dirfrom[2:3]:    
         for fext in fexts[2:3]:
-            for text in texts[1:2]:
+            for text in texts[:1]:
                 if text == fext:
                     continue
                 for fmt in fmts[2:]: # 设置输入文件格式                    
@@ -873,8 +875,7 @@ def testtransdir():
                     print('{}：{}个文件，{}个目录转换成功！'.format(dir, fcount, dcount))
                     print('着法数量：{}，注释数量：{}, 注释最大长度：{}'.format( 
                             movecount, remcount, remlenmax))
-                    # 计算着法步数            
-    #open('c:\\棋谱文件\\result.txt', 'w').write('\n'.join(result))    
+                    # 计算着法步数
            
             
 if __name__ == '__main__':
@@ -885,7 +886,7 @@ if __name__ == '__main__':
     testtransdir()
     
     #'.db' 生产的db文件超过1G，不具备可操作性.        
-    #cProfile.run("testtransdir()")    
+    #cProfile.run("testtransdir()")
     
     end = time.time()
     print('usetime: %0.3fs' % (end - start))
