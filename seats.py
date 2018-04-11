@@ -77,13 +77,15 @@ class Seats(object):
           for col in range(MinColNo, MaxColNo + 1, 2)})
     }
     
-    sorted_allseats = sorted(allseats)
+    #sorted_allseats = sorted(allseats)
 
     def getindex(self, seat):
-        return self.sorted_allseats.index(seat)
+        #return self.sorted_allseats.index(seat)
+        return seat[0]*9 + seat[1]
 
     def getseat(self, index):
-        return self.sorted_allseats[index]
+        #return self.sorted_allseats[index]
+        return (index//9, index%9)
 
     def getrow(self, seat):
         return seat[0]
@@ -96,9 +98,8 @@ class Seats(object):
 
     def getsamecolseats(self, seat, otherseat):
         row, col = seat
-        otherrow, othercol = otherseat
-        step = 1 if row < otherrow else -1
-        return [(r, col) for r in range(row + step, otherrow, step)]
+        step = 1 if row < otherseat[0] else -1
+        return [(r, col) for r in range(row + step, otherseat[0], step)]
 
     def getrotateseat(self, seat):
         row, col = seat

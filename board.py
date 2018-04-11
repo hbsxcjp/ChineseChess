@@ -16,18 +16,18 @@ ChineseToNum = {'一':1, '二':2, '三':3, '四':4, '五':5,
                 '６':6, '７':7, '８':8, '９':9,
                 '前':0, '中':1, '后':-1, # 走棋文字转换成数字
                 '进':1, '退':-1, '平':0 }
-ColChars = 'abcdefghi'
 # yapf: enable
 
 
 class Board(object):
     '棋盘类'
 
-    def __init__(self, fen):
+    def __init__(self, fen=''):
         self.allseats = dict.fromkeys(Seats.allseats, BlankPie)
         self.pieces = Pieces()
         self.bottomside = BLACK_Piece
-        self.setfen(fen)
+        if fen:
+            self.setfen(fen)
 
     def __str__(self):
         blankboard = '''
@@ -203,14 +203,15 @@ class Board(object):
         seatchars = {Seats.getseat(n): char for n, char in enumerate(charls)}
         self.loadseatpieces(self.pieces.getseatpieces(seatchars))
 
-    def getfen(self):
+    def getfen(self, piecechars=None):
         def __linetonums():
             '下划线字符串对应数字字符元组 列表'
             return [('_' * i, str(i)) for i in range(9, 0, -1)]
-
-        piecechars = [
-            piece.char for seat, piece in sorted(self.allseats.items())
-        ]
+            
+        if not piecechars:
+            piecechars = [
+                piece.char for seat, piece in sorted(self.allseats.items())
+            ]
         charls = [
             piecechars[rowno * NumCols:(rowno + 1) * NumCols]
             for rowno in range(NumRows)
@@ -347,19 +348,5 @@ class Board(object):
 
         return '{}{}'.format(firstStr, lastStr)
 
-    def coord_moveseat(self, coord):
-        '根据坐标字符串取得移动位置'
-        return ((int(coord[1]), ColChars.index(coord[0])), (int(coord[3]),
-                                                            ColChars.index(
-                                                                coord[2])))
-
-    def moveseat_coord(self, moveseat):
-        '根据移动位置取得坐标字符串'
-        fromseat, toseat = moveseat
-        fromrow, fromcol = Seats.getrow(fromseat), Seats.getcol(fromseat)
-        torow, tocol = Seats.getrow(toseat), Seats.getcol(toseat)
-        return '{}{}{}{}'.format(ColChars[fromcol], str(fromrow),
-                                 ColChars[tocol], str(torow))
-
-
+    
 #

@@ -3,6 +3,7 @@
 '''
 
 import re
+#import sqlite3
     
 
 def multrepl(text, xdict):
@@ -12,11 +13,6 @@ def multrepl(text, xdict):
         return xdict[match.group(0)]  # 替换值
     return rx.sub(one_xlat, text)  # 执行替换
 
-
-def linetonums():
-    '下划线字符串对应数字字符元组 列表'
-    return [('_' * i, str(i)) for i in range(9, 0, -1)]
-    
 
 def xmlindent(elem, islast=False, level=0):
     'Get pretty look 取得漂亮的外观'
@@ -141,7 +137,7 @@ getlastmanid = '''
 getlastmovid = '''
     SELECT seq FROM sqlite_sequence WHERE name="moves"
     '''
-
+'''
 class xqftodb(object):
 
     def tranxqftodb(self, dirnamefrom, dirto='.\\'):
@@ -216,5 +212,6 @@ class xqftodb(object):
         con.close()
         return (fcount, dcount)   
    
+'''
     
 #                
