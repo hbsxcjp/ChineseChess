@@ -4,8 +4,33 @@
 
 import re
 #import sqlite3
-    
+#import chardet
 
+    
+blankboard = '''
+┏━┯━┯━┯━┯━┯━┯━┯━┓
+┃　│　│　│╲│╱│　│　│　┃
+┠─┼─┼─┼─╳─┼─┼─┼─┨
+┃　│　│　│╱│╲│　│　│　┃
+┠─╬─┼─┼─┼─┼─┼─╬─┨
+┃　│　│　│　│　│　│　│　┃
+┠─┼─╬─┼─╬─┼─╬─┼─┨
+┃　│　│　│　│　│　│　│　┃
+┠─┴─┴─┴─┴─┴─┴─┴─┨
+┃　　　　　　　　　　　　　　　┃
+┠─┬─┬─┬─┬─┬─┬─┬─┨
+┃　│　│　│　│　│　│　│　┃
+┠─┼─╬─┼─╬─┼─╬─┼─┨
+┃　│　│　│　│　│　│　│　┃
+┠─╬─┼─┼─┼─┼─┼─╬─┨
+┃　│　│　│╲│╱│　│　│　┃
+┠─┼─┼─┼─╳─┼─┼─┼─┨
+┃　│　│　│╱│╲│　│　│　┃
+┗━┷━┷━┷━┷━┷━┷━┷━┛
+'''
+# yapf: disable
+# 边框粗线
+        
 def multrepl(text, xdict):
     '一次替换多个子字符串（字典定义）（方法来源于PythonCook）'
     rx = re.compile('|'.join(map(re.escape, xdict)))  # 模式
@@ -212,6 +237,15 @@ class xqftodb(object):
         con.close()
         return (fcount, dcount)   
    
+'''
+
+'''
+try:  # encoding=GB2312 GB18030 utf-8 GBK
+    return bstr.decode('GBK', errors='ignore')
+except:
+    coding = chardet.detect(bstr)
+    print(coding)
+    return bstr.decode(coding['encoding'], errors='ignore')                
 '''
     
 #                

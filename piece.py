@@ -2,7 +2,8 @@
 中国象棋棋子类型 by-cjp
 '''
 
-from seats import *
+BLACK_P = True
+RED_P = False
 
 
 BlankChar = '_'
@@ -16,11 +17,11 @@ AdvisorBishopNames = {'仕', '相', '士', '象'}
 StrongePieceNames = {'车', '马', '炮', '兵', '卒'}
 LineMovePieceNames = {'帅', '将', '车', '炮', '兵', '卒'}
 
-
+ 
 class Piece(object):
     '棋子类'
     def __init__(self, char):
-        self.__color = BLACK_Piece if char.islower() else RED_Piece
+        self.__color = BLACK_P if char.islower() else RED_P
         self.__char = char
         self.__seat = None
 
@@ -52,7 +53,7 @@ class Piece(object):
 
     def getallseats(self, board):
         '全部活动范围集合(默认：车马炮的活动范围)'
-        return Seats.allseats
+        return board.allseats
 
     def intersectionseats(self, moveseats, board):
         '棋子规则移动范围与全部移动范围的交集，再筛除本方棋子占用范围'
@@ -82,28 +83,28 @@ class BlankPie(Piece):
 
 class King(Piece):
     def getallseats(self, board):
-        return Seats.kingseats[board.getboardside(self.color)]
+        return board.kingseats[board.getboardside(self.color)]
 
     def getmoveseats(self, board):
         return self.intersectionseats(
-            Seats.getkingmoveseats(self.seat), board)
+            board.getkingmoveseats(self.seat), board)
 
 
 class Advisor(Piece):
     def getallseats(self, board):
-        return Seats.advisorseats[board.getboardside(self.color)]
+        return board.advisorseats[board.getboardside(self.color)]
 
     def getmoveseats(self, board):
         return self.intersectionseats(
-            Seats.getadvisormoveseats(self.seat), board)
+            board.getadvisormoveseats(self.seat), board)
 
 
 class Bishop(Piece):
     def getallseats(self, board):
-        return Seats.bishopseats[board.getboardside(self.color)]
+        return board.bishopseats[board.getboardside(self.color)]
 
     def getmoveseats(self, board):
-        move_centreseats = Seats.getbishopmove_centreseats(self.seat)
+        move_centreseats = board.getbishopmove_centreseats(self.seat)
         return {
             seat
             for seat in self.intersectionseats(move_centreseats.keys(), board)
@@ -113,7 +114,7 @@ class Bishop(Piece):
 
 class Knight(Piece):
     def getmoveseats(self, board):
-        move_legseats = Seats.getknightmove_legseats(self.seat)
+        move_legseats = board.getknightmove_legseats(self.seat)
         return {
             seat
             for seat in self.intersectionseats(move_legseats.keys(), board)
@@ -124,7 +125,7 @@ class Knight(Piece):
 class Rook(Piece):
     def getmoveseats(self, board):
         result = set()
-        lines = Seats.rookcannonmoveseat_lines(self.seat)
+        lines = board.rookcannonmoveseat_lines(self.seat)
         for seatline in lines:
             for seat in seatline:
                 if board.isblank(seat):
@@ -139,7 +140,7 @@ class Rook(Piece):
 class Cannon(Piece):
     def getmoveseats(self, board):
         result = set()
-        lines = Seats.rookcannonmoveseat_lines(self.seat)
+        lines = board.rookcannonmoveseat_lines(self.seat)
         for seatline in lines:
             skip = False
             for seat in seatline:
@@ -157,7 +158,7 @@ class Cannon(Piece):
 
 class Pawn(Piece):
     def getallseats(self, board):
-        return Seats.pawnseats[board.getboardside(self.color)]
+        return board.pawnseats[board.getboardside(self.color)]
 
     def getmoveseats(self, board):
         row = self.seat[0]
@@ -165,7 +166,7 @@ class Pawn(Piece):
         return {
             (r, c)
             for r, c in self.intersectionseats(
-                Seats.getpawnmoveseats(self.seat), board)
+                board.getpawnmoveseats(self.seat), board)
             if (isbottomside and r >= row) or (not isbottomside and r <= row)
         }
 
@@ -206,7 +207,7 @@ class Pieces(object):
         return result
 
     def getkingpiece(self, color):
-        return self.__pieces[0 if color == RED_Piece else 16]
+        return self.__pieces[0 if color == RED_P else 16]
 
     def getothersidepiece(self, piece):
         n = self.__pieces.index(piece)
@@ -224,3 +225,6 @@ class Pieces(object):
 
 
 BlankPie = BlankPie(BlankChar)
+
+
+#

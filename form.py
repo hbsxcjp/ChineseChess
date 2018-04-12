@@ -11,14 +11,6 @@ pgnext = '.pgn'
 pgntitle = 'pgn棋谱文件'
 
 
-import chardet
-def readpgnstr(filename):
-    bstr = open(filename, 'rb').read()
-    coding = chardet.detect(bstr)
-    return bstr.decode(coding['encoding'], errors='ignore') 
-    # encoding=GB2312 GB18030 utf-8 GBK
-
-
 class MainForm(View, ttk.Frame):
     '棋盘与棋子视图类'
 

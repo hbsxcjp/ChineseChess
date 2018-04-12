@@ -5,10 +5,32 @@
 import base
 from piece import *
 
+
+TOP_SIDE = True
+BOTTOM_SIDE = False
+
+NumCols = 9
+NumRows = 10
+
+MinCol_K = 3
+MaxCol_K = 5
+MinRow_KB = 0
+MaxRow_KB = 2
+MinRow_KT = 7
+MaxRow_KT = 9
+
+MinColNo = 0
+MaxColNo = 8
+MinRowNo_B = 0
+MaxRowNo_B = 4
+MinRowNo_T = 5
+MaxRowNo_T = 9
+
+
 # yapf: disable
-NumToChinese = {RED_Piece: {1:'一', 2:'二', 3:'三', 4:'四', 5:'五',
+NumToChinese = {RED_P: {1:'一', 2:'二', 3:'三', 4:'四', 5:'五',
                     6:'六', 7:'七', 8:'八', 9:'九'}, # 数字转换成中文
-                BLACK_Piece: {1:'１', 2:'２', 3:'３', 4:'４', 5:'５',
+                BLACK_P: {1:'１', 2:'２', 3:'３', 4:'４', 5:'５',
                     6:'６', 7:'７', 8:'８', 9:'９'}}
 ChineseToNum = {'一':1, '二':2, '三':3, '四':4, '五':5,
                 '六':6, '七':7, '八':8, '九':9, # 中文转换成数字
@@ -18,56 +40,173 @@ ChineseToNum = {'一':1, '二':2, '三':3, '四':4, '五':5,
                 '进':1, '退':-1, '平':0 }
 # yapf: enable
 
-
+ 
 class Board(object):
     '棋盘类'
+    
+    sideseats = {
+        BOTTOM_SIDE: {(row, col)
+                      for row in range(MinRowNo_B, MaxRowNo_B + 1)
+                      for col in range(NumCols)},
+        TOP_SIDE: {(row, col)
+                   for row in range(MinRowNo_T, MaxRowNo_T + 1)
+                   for col in range(NumCols)}
+    }
+
+    allseats = sideseats[BOTTOM_SIDE] | sideseats[TOP_SIDE]
+
+    kingseats = {
+        BOTTOM_SIDE: {(row, col)
+                      for row in range(MinRow_KB, MaxRow_KB + 1)
+                      for col in range(MinCol_K, MaxCol_K + 1)},
+        TOP_SIDE: {(row, col)
+                   for row in range(MinRow_KT, MaxRow_KT + 1)
+                   for col in range(MinCol_K, MaxCol_K + 1)}
+    }
+
+    advisorseats = {
+        BOTTOM_SIDE: {(row, col)
+                      for row, col in kingseats[BOTTOM_SIDE]
+                      if (row + col) % 2 == 1},
+        TOP_SIDE: {(row, col)
+                   for row, col in kingseats[TOP_SIDE] if (row + col) % 2 == 0}
+    }
+
+    bishopseats = {
+        BOTTOM_SIDE: {(row, col)
+                      for row, col in sideseats[BOTTOM_SIDE]
+                      if (row % 2 == 0) and (row - col) in (2, -2, -6)},
+        TOP_SIDE: {(row, col)
+                   for row, col in sideseats[TOP_SIDE]
+                   if (row % 2 == 1) and (row - col) in (-1, 3, 7)}
+    }
+
+    pawnseats = {
+        TOP_SIDE:
+        sideseats[BOTTOM_SIDE] |
+        ({(row, col)
+          for row in range(MinRowNo_T, MinRowNo_T + 2)
+          for col in range(MinColNo, MaxColNo + 1, 2)}),
+        BOTTOM_SIDE:
+        sideseats[TOP_SIDE] |
+        ({(row, col)
+          for row in range(MaxRowNo_B - 1, MaxRowNo_B + 1)
+          for col in range(MinColNo, MaxColNo + 1, 2)})
+    }
+    
+    #sorted_allseats = sorted(allseats)
+
+    @classmethod
+    def getindex(cls, seat):
+        #return cls.sorted_allseats.index(seat)
+        return seat[0]*9 + seat[1]
+
+    @classmethod
+    def getseat(cls, index):
+        #return cls.sorted_allseats[index]
+        return (index//9, index%9)
+
+    @classmethod
+    def getrow(cls, seat):
+        return seat[0]
+
+    @classmethod
+    def getcol(cls, seat):
+        return seat[1]
+
+    @classmethod
+    def issamecol(cls, seat, otherseat):
+        return seat[1] == otherseat[1]
+
+    @classmethod
+    def getsamecolseats(cls, seat, otherseat):
+        row, col = seat
+        step = 1 if row < otherseat[0] else -1
+        return [(r, col) for r in range(row + step, otherseat[0], step)]
+
+    @classmethod
+    def getrotateseat(cls, seat):
+        row, col = seat
+        return (abs(row - MaxRowNo_T), abs(col - MaxColNo))
+
+    @classmethod
+    def getsymmetryseat(cls, seat):
+        row, col = seat
+        return (row, abs(col - MaxColNo))
+
+    @classmethod
+    def getkingmoveseats(cls, seat):
+        row, col = seat
+        return {(row, col + 1), (row, col - 1), (row - 1, col), (row + 1, col)}
+
+    @classmethod
+    def getadvisormoveseats(cls, seat):
+        row, col = seat
+        return {(row + 1, col + 1), (row - 1, col + 1), (row - 1, col - 1),
+                (row + 1, col - 1)}
+
+    @classmethod
+    def getbishopmove_centreseats(cls, seat):
+        '获取移动、象心行列值'
+        row, col = seat
+        moveseats = {(row + 2, col + 2), (row - 2, col + 2),
+                     (row - 2, col - 2), (row + 2, col - 2)}
+        return {(r, c): ((row + r) // 2, (col + c) // 2) for r, c in moveseats}
+
+    @classmethod
+    def getknightmove_legseats(cls, seat):
+        '获取移动、马腿行列值'
+
+        def __legx(first, to):
+            x = to - first
+            return first + ((x // 2) if abs(x) == 2 else 0)
+
+        row, col = seat
+        moveseats = {(row + 2, col - 1), (row + 2, col + 1),
+                     (row + 1, col + 2), (row - 1, col + 2), (row - 2,
+                                                              col + 1),
+                     (row - 2, col - 1), (row - 1, col - 2), (row + 1,
+                                                              col - 2)}
+        return {(r, c): (__legx(row, r), __legx(col, c)) for r, c in moveseats}
+
+    @classmethod
+    def rookcannonmoveseat_lines(cls, seat):
+        '车炮可走的四个方向位置'
+        row, col = seat
+        return (
+            [(row, c) for c in range(col - 1, MinColNo - 1, -1)],  # 左边位置列表
+            [(r, col) for r in range(row - 1, MinRowNo_B - 1, -1)],  # 下边位置列表
+            [(row, c) for c in range(col + 1, MaxColNo + 1)],  # 右边位置列表
+            [(r, col) for r in range(row + 1, MaxRowNo_T + 1)])  # 上边位置列表
+
+    @classmethod
+    def getpawnmoveseats(cls, seat):
+        row, col = seat
+        return {(row, col + 1), (row, col - 1), (row - 1, col), (row + 1, col)}
 
     def __init__(self, fen=''):
-        self.allseats = dict.fromkeys(Seats.allseats, BlankPie)
+        self.seat_pies = dict.fromkeys(self.allseats, BlankPie)
         self.pieces = Pieces()
-        self.bottomside = BLACK_Piece
+        self.bottomside = BLACK_P
         if fen:
             self.setfen(fen)
 
     def __str__(self):
-        blankboard = '''
-┏━┯━┯━┯━┯━┯━┯━┯━┓
-┃　│　│　│╲│╱│　│　│　┃
-┠─┼─┼─┼─╳─┼─┼─┼─┨
-┃　│　│　│╱│╲│　│　│　┃
-┠─╬─┼─┼─┼─┼─┼─╬─┨
-┃　│　│　│　│　│　│　│　┃
-┠─┼─╬─┼─╬─┼─╬─┼─┨
-┃　│　│　│　│　│　│　│　┃
-┠─┴─┴─┴─┴─┴─┴─┴─┨
-┃　　　　　　　　　　　　　　　┃
-┠─┬─┬─┬─┬─┬─┬─┬─┨
-┃　│　│　│　│　│　│　│　┃
-┠─┼─╬─┼─╬─┼─╬─┼─┨
-┃　│　│　│　│　│　│　│　┃
-┠─╬─┼─┼─┼─┼─┼─╬─┨
-┃　│　│　│╲│╱│　│　│　┃
-┠─┼─┼─┼─╳─┼─┼─┼─┨
-┃　│　│　│╱│╲│　│　│　┃
-┗━┷━┷━┷━┷━┷━┷━┷━┛
-'''
-        # yapf: disable
-        # 边框粗线
 
         def __getname(piece):
             rookcannonpawn_name = {'车': '車', '马': '馬', '炮': '砲'}
             name = piece.name
             return (rookcannonpawn_name.get(name, name)
-                    if piece.color == BLACK_Piece else name)
+                    if piece.color == BLACK_P else name)
 
         def __fillingname():
             linestr = [
-                list(line.strip()) for line in blankboard.strip().splitlines()
+                list(line.strip()) for line in base.blankboard.strip().splitlines()
             ]
             for piece in self.getlivepieces():
                 seat = piece.seat
-                linestr[(MaxRowNo_T - Seats.getrow(seat)) *
-                        2][Seats.getcol(seat) * 2] = __getname(piece)
+                linestr[(MaxRowNo_T - self.getrow(seat)) *
+                        2][self.getcol(seat) * 2] = __getname(piece)
             return [''.join(line) for line in linestr]
 
         frontstr = '\n'
@@ -75,35 +214,35 @@ class Board(object):
 
     def clear(self):
         for seat in self.allseats:
-            self.allseats[seat] = BlankPie
+            self.seat_pies[seat] = BlankPie
         self.pieces.clear()
 
     def setpiece(self, seat, piece):
-        self.allseats[seat] = piece
+        self.seat_pies[seat] = piece
         piece.setseat(seat)
 
     def movepiece(self, fromseat, toseat, backpiece=BlankPie):
-        eatpiece = self.allseats[toseat]
+        eatpiece = self.seat_pies[toseat]
         eatpiece.setseat(None)
-        self.setpiece(toseat, self.allseats[fromseat])
+        self.setpiece(toseat, self.seat_pies[fromseat])
         self.setpiece(fromseat, backpiece)
         return eatpiece
 
     def setbottomside(self):
-        self.bottomside = (RED_Piece if Seats.getrow(
-            self.getkingseat(RED_Piece)) < MaxRowNo_B else BLACK_Piece)
+        self.bottomside = (RED_P if self.getrow(
+            self.getkingseat(RED_P)) < MaxRowNo_B else BLACK_P)
 
     def isbottomside(self, color):
         return BOTTOM_SIDE == self.getboardside(color)
 
     def isblank(self, seat):
-        return not bool(self.allseats[seat]) # is BlankPie
+        return not bool(self.seat_pies[seat]) # is BlankPie
 
     def getpiece(self, seat):
-        return self.allseats[seat]
+        return self.seat_pies[seat]
 
     def getcolorside(self, seat):
-        return self.allseats[seat].color
+        return self.seat_pies[seat].color
 
     def getboardside(self, color):
         return BOTTOM_SIDE if self.bottomside == color else TOP_SIDE
@@ -133,17 +272,17 @@ class Board(object):
         return {
             piece
             for piece in self.getlivesidenamepieces(color, name)
-            if Seats.getcol(piece.seat) == col
+            if self.getcol(piece.seat) == col
         }
 
     def iskilled(self, color):
-        othercolor = other_color(color)
+        othercolor = not color
         kingseat, otherseat = self.getkingseat(color), self.getkingseat(
             othercolor)
-        if Seats.issamecol(kingseat, otherseat):  # 将帅是否对面
+        if self.issamecol(kingseat, otherseat):  # 将帅是否对面
             if all([
                     self.isblank(seat)
-                    for seat in Seats.getsamecolseats(kingseat, otherseat)
+                    for seat in self.getsamecolseats(kingseat, otherseat)
             ]):
                 return True
         for piece in self.getlivesidepieces(othercolor):
@@ -200,7 +339,7 @@ class Board(object):
         #print(fen, len(fen))
         assert isvalid, info
 
-        seatchars = {Seats.getseat(n): char for n, char in enumerate(charls)}
+        seatchars = {self.getseat(n): char for n, char in enumerate(charls)}
         self.loadseatpieces(self.pieces.getseatpieces(seatchars))
 
     def getfen(self, piecechars=None):
@@ -210,7 +349,7 @@ class Board(object):
             
         if not piecechars:
             piecechars = [
-                piece.char for seat, piece in sorted(self.allseats.items())
+                piece.char for seat, piece in sorted(self.seat_pies.items())
             ]
         charls = [
             piecechars[rowno * NumCols:(rowno + 1) * NumCols]
@@ -224,9 +363,9 @@ class Board(object):
     def __sortpawnseats(self, isbottomside, pawnseats):
         '多兵排序'
         result = []
-        pawnseatdict = {Seats.getcol(seat): [] for seat in pawnseats}
+        pawnseatdict = {self.getcol(seat): [] for seat in pawnseats}
         for seat in pawnseats:
-            pawnseatdict[Seats.getcol(seat)].append(seat)  # 列内排序
+            pawnseatdict[self.getcol(seat)].append(seat)  # 列内排序
         for col, seats in sorted(pawnseatdict.items()):
             if len(seats) > 1:
                 result.extend(seats)  # 按列排序
@@ -254,14 +393,14 @@ class Board(object):
 
         def __linename_toseat(fromseat, movdir, tocol, tochar):
             '获取直线走子toseat'
-            row, col = Seats.getrow(fromseat), Seats.getcol(fromseat)
+            row, col = self.getrow(fromseat), self.getcol(fromseat)
             return ((row, tocol)
                     if movdir == 0 else (
                         row + movdir * ChineseToNum[tochar], col))
 
         def __obliquename_toseat(fromseat, movdir, tocol, isAdvisorBishop):
             '获取斜线走子：仕、相、马toseat'
-            row, col = Seats.getrow(fromseat), Seats.getcol(fromseat)
+            row, col = self.getrow(fromseat), self.getcol(fromseat)
             step = tocol - col  # 相距1或2列
             inc = abs(step) if isAdvisorBishop else (2
                                                      if abs(step) == 1 else 1)
@@ -310,7 +449,7 @@ class Board(object):
         frompiece = self.getpiece(fromseat)
         color, name = frompiece.color, frompiece.name
         isbottomside = self.isbottomside(color)
-        fromrow, fromcol = Seats.getrow(fromseat), Seats.getcol(fromseat)
+        fromrow, fromcol = self.getrow(fromseat), self.getcol(fromseat)
         seats = sorted([
             pie.seat
             for pie in self.getlivesidenamecolpieces(color, name, fromcol)
@@ -333,7 +472,7 @@ class Board(object):
             #仕(士)和相(象)不用“前”和“后”区别，因为能退的一定在前，能进的一定在后
             firstStr = name + __col_chcol(color, fromcol)
 
-        torow, tocol = Seats.getrow(toseat), Seats.getcol(toseat)
+        torow, tocol = self.getrow(toseat), self.getcol(toseat)
         chcol = __col_chcol(color, tocol)
         tochar = ('平' if torow == fromrow else
                   ('进' if isbottomside == (torow > fromrow) else '退'))
@@ -341,11 +480,13 @@ class Board(object):
                    else NumToChinese[color][abs(torow - fromrow)])
         lastStr = tochar + tochcol
 
+        '''
         assert (fromseat, toseat) == self.chinese_moveseats(
             color, firstStr + lastStr), '棋谱着法: %s 生成着法: %s 不等！' % (
                 (fromseat, toseat),
                 self.chinese_moveseats(color, firstStr + lastStr))
-
+        '''
+        
         return '{}{}'.format(firstStr, lastStr)
 
     

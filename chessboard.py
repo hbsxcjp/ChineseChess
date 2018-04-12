@@ -94,7 +94,7 @@ class ChessBoard(object):
         self.movecount = -1 # 消除根节点
         self.remcount = 0
         self.remlenmax = 0
-        self.board = Board()        
+        self.board = Board()
     
     def __str__(self):
     
@@ -153,11 +153,11 @@ class ChessBoard(object):
             #print(node.zhstr)
             node.fseat, node.tseat = self.board.chinese_moveseats(
                         self.currentside, node.zhstr)
-            self.curcolor = other_color(self.curcolor)
+            self.curcolor = not self.curcolor
             eatpiece = self.board.movepiece(node.fseat, node.tseat)
             if node.next_:
                 __setseat(node.next_)                
-            self.curcolor = other_color(self.curcolor)
+            self.curcolor = not self.curcolor
             self.board.movepiece(node.tseat, node.fseat, eatpiece)
             if node.other:            
                 __setseat(node.other)          
@@ -181,8 +181,7 @@ class ChessBoard(object):
         
     @property
     def currentside(self):
-        return self.curcolor if (
-                self.currentnode.stepno % 2 == 0) else other_color(self.curcolor)
+        return self.curcolor if (self.currentnode.stepno % 2 == 0) else not self.curcolor
     
     def getprevmoves(self, node):
         result = []
@@ -256,14 +255,13 @@ class ChessBoard(object):
         self.moveother()
         self.notifyviews()
                 
-    def __getfen_(self, piecechars, whoplay):
-        return '{} {} - - 0 0'.format(piecechars, 'b' if whoplay == 1 else 'r')        
+    def __getfen_(self, fen, whoplay):
+        return '{} {} - - 0 0'.format(fen, 'b' if whoplay else 'r')
         
     def getfen(self):
         assignnode = self.currentnode
         self.movefirst()
-        fen = '{} {} - - 0 0'.format(self.board.getfen(), 
-                    'b' if self.currentside == BLACK_Piece else 'r')
+        fen = self.__getfen_(self.board.getfen(), self.currentside == BLACK_P)
         self.moveassign(assignnode)
         assert self.info['FEN'] == fen, '\n原始:{}\n生成:{}'.format(self.info['FEN'], fen)
         return fen
@@ -273,43 +271,47 @@ class ChessBoard(object):
             fen = self.info['FEN']
         else:
             self.info['FEN'] = fen
-        self.board.setfen(fen.split()[0])
-        self.curcolor = BLACK_Piece if (fen.split(' ')[1] == 'b') else RED_Piece
+        afens = fen.split(' ')
+        self.board.setfen(afens[0])
+        self.curcolor = BLACK_P if (afens[1] == 'b') else RED_P
         self.currentnode = self.rootnode
         self.cureatpiece = BlankPie
-        
-    '''
+
     def changeside(self, changetype='exchange'):
-        def __seatpieces_moveseats(changetype):
-            self.walks.move(-self.walks.length)
-            if changetype == 'exchange':
-                self.walks.transcurrentside()
-                return ({
-                    piece.seat: self.board.pieces.getothersidepiece(piece)
-                    for piece in self.board.getlivepieces()
-                }, self.walks.moveseats())
-            else:
-                if changetype == 'rotate':
-                    transfun = Seats.getrotateseat
-                elif changetype == 'symmetry':
-                    transfun = Seats.getsymmetryseat
-                return ({
-                    transfun(piece.seat): piece
-                    for piece in self.board.getlivepieces()
-                }, [(transfun(fromseat), transfun(toseat))
-                    for fromseat, toseat in self.walks.moveseats()])
-
-        offset = self.walks.cursor + 1
-        seatpieces, moveseats = __seatpieces_moveseats(changetype)
-
+    
+        def __changeseat(self, transfun):            
+            '根据transfun改置每个node的fseat,tseat'
+            
+            def __seat(node, isother=False):
+                node.fseat = transfun(node.fseat)
+                node.tseat = transfun(node.tseat)
+                if node.next_:
+                    __seat(node.next_)
+                if node.other:
+                    __seat(node.other, True)
+        
+            if self.rootnode.next_:
+                __seat(self.rootnode.next_) # 驱动调用递归函数
+            if self.movecount < 300: # 步数太多则太慢
+                self.__setzhstr()
+                
+        assignnode = self.currentnode
+        self.movefirst()
+        if changetype == 'exchange':
+            self.curcolor = not self.curcolor
+            seatpieces = {piece.seat: self.board.pieces.getothersidepiece(piece)
+                for piece in self.board.getlivepieces()}
+        else:
+            if changetype == 'rotate':
+                transfun = Board.getrotateseat
+            elif changetype == 'symmetry':
+                transfun = Board.getsymmetryseat
+            self.__changeseat(transfun)
+            seatpieces = {transfun(piece.seat): piece
+                    for piece in self.board.getlivepieces()}        
         self.board.loadseatpieces(seatpieces)
-        self.walks.loadmoveseats(moveseats, self.walks.remarkes(), self.board)
-        # 备注里如有棋子走法，则未作更改？
-        self.walks.move(offset)
-
+        self.moveassign(assignnode)
         self.notifyviews()
-
-    '''
     
     def __setcounts(self, node):
         self.movecount += 1
@@ -321,14 +323,6 @@ class ChessBoard(object):
         
         def __tostr(bstr):
             return bstr.decode('GBK', errors='ignore').strip()
-            '''
-            try:  # encoding=GB2312 GB18030 utf-8 GBK
-                return bstr.decode('GBK', errors='ignore')
-            except:
-                coding = chardet.detect(bstr)
-                print(coding)
-                return bstr.decode(coding['encoding'], errors='ignore')                
-            '''
             
         def __subbyte(a, b):
             return (a - b + 1024) % 256
@@ -566,26 +560,27 @@ class ChessBoard(object):
                     lastnode = newnode
                 return lastnode
                 
-            moverg = re.compile(r' ([^\.\{\}\s]{4})(?:\s+\{([\s\S]*?)\})?')
+            moverg = re.compile(' ([^\.\{\}\s]{4})(?:\s+\{([\s\S]*?)\})?')
             # 走棋信息 (?:pattern)匹配pattern,但不获取匹配结果;  注解[\s\S]*?: 非贪婪
-            resultstr = re.findall(r'\s(1-0|0-1|1/2-1/2|\*)\s?', movestr)
+            resultstr = re.findall('\s(1-0|0-1|1/2-1/2|\*)\s?', movestr)
             if resultstr:
                 self.info['Result'] = resultstr[0]  # 棋局结果
-            remark = re.findall(r'\{([\s\S]*?)\}', infostr)
+            remark = re.findall('\{([\s\S]*?)\}', infostr)
             if remark:
                 self.rootnode.remark = remark[0]
             self.__setcounts(self.rootnode) # 设置内部计数值
             othnodes = [self.rootnode]
             isother = False
             thisnode = None
-            leftstrs = re.split(r'\(\d+\.', movestr) # 如果注解里存在‘\(\d+\.’的情况，则可能会有误差
+            leftstrs = re.split('\(\d+\.', movestr) # 如果注解里存在‘\(\d+\.’的情况，则可能会有误差
             while leftstrs:
                 thisnode = othnodes[-1] if isother else othnodes.pop()
-                if not re.search(r'\) ', leftstrs[0]): # 如果注解里存在‘\) ’的情况，则可能会有误差                  
+                if not re.search('\) ', leftstrs[0]):
+                    # 如果注解里存在‘\) ’的情况，则可能会有误差                  
                     othnodes.append(__readmoves(thisnode, leftstrs.pop(0), isother))
                     isother = True
                 else:
-                    lftstr, leftstrs[0] = re.split(r'\) ', leftstrs[0], maxsplit=1)
+                    lftstr, leftstrs[0] = re.split('\) ', leftstrs[0], maxsplit=1)
                     __readmoves(thisnode, lftstr, isother)
                     isother = False                    
             
@@ -612,26 +607,24 @@ class ChessBoard(object):
                 if zhstr and row < len(moves)-1 and moves[row+1]:
                     __readmove(newnode, row+1, col)
                         
-            movestr, p, remstr = movestr.partition(r'\n\(')
+            movestr, p, remstr = movestr.partition('\n(')
             moves, rems = [], {}
             if movestr:
-                mstrrg = re.compile(r'.{5}')
-                moverg = re.compile(r'([^…　]{4}[…　])')
+                mstrrg = re.compile('.{5}')
+                moverg = re.compile('([^…　]{4}[…　])')
                 moves = [mstrrg.findall(linestr) for linestr
-                        in [line for i, line in enumerate(movestr.split(r'\n')) if i % 2 == 0]]
+                        in [line for i, line in enumerate(movestr.split('\n')) if i % 2 == 0]]
             if remstr:
-                remrg = re.compile(r'\(\s*(\d+),\s*(\d+)\): \{([\s\S]*?)\}')
+                remrg = re.compile('\(\s*(\d+),\s*(\d+)\): \{([\s\S]*?)\}')
                 rems = {(int(rowstr), int(colstr)): remark
-                        for rowstr, colstr, remark in remrg.findall('(' + remstr)}                    
-                self.rootnode.remark = rems.get((0, 0), '') #.strip()
+                        for rowstr, colstr, remark in remrg.findall('(' + remstr)}
+                self.rootnode.remark = rems.get((0, 0), '')
             self.__setcounts(self.rootnode) # 设置内部计数值
             if len(moves) > 1:
                 __readmove(self.rootnode, 1, 0)
-            else:
-                print(filename)
             
-        infostr, p, movestr = open(filename).read().partition(r'\n1.')
-        for key, value in re.findall(r'\[(\w+) "(.*)"\]', infostr):
+        infostr, p, movestr = open(filename).read().partition('\n1.')
+        for key, value in re.findall('\[(\w+) "(.*)"\]', infostr):
             self.info[key] = value
         # 读取info内容（在已设置原始key上可能会有增加）
         fmt = self.info['Format']
@@ -693,8 +686,9 @@ class ChessBoard(object):
         self.setfen()
         if ext in {'.xml', '.pgn'} and self.info['Format'] in {'zh', 'cc'}:
             self.__setseat_zh()
-        else:
+        elif self.movecount < 300: # 步数太多则太慢
             self.__setzhstr()
+            pass
             
     def __saveasbin(self, filename):
     
@@ -858,12 +852,12 @@ def testtransdir():
     fmts = ['ICCS', 'zh', 'cc']
     
     chboard = ChessBoard()
-    for dir in dirfrom[:2]:    
-        for fext in fexts[:]:
-            for text in texts[:]:
+    for dir in dirfrom[:1]:    
+        for fext in fexts[3:]:
+            for text in texts[1:2]:
                 if text == fext:
                     continue
-                for fmt in fmts[:2]: # 设置输入文件格式  
+                for fmt in fmts[:]: # 设置输入文件格式  
                     chboard.transdir(dir+fext, dir+text, text, fmt)
            
             
