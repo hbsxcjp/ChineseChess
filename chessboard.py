@@ -18,7 +18,7 @@ class MoveNode(object):
         self.maxcol = 0 # 图中列位置
         self.fseat = (0, 0)
         self.tseat = (0, 0)
-        self.zhstr = '' # 中文描述
+        self.zhstr = '' if prev else '1.开始' # 中文描述
         self.remark = ''
         self.prev = prev
         self.next_ = None
@@ -40,7 +40,7 @@ class MoveNode(object):
                 self.colchars[self.tseat[1]], self.tseat[0])
 
     def ICCSzhstr(self, fmt):
-        return self.__ICCSstr if fmt == 'ICCS' else self.zhstr
+        return self.__ICCSstr() if fmt == 'ICCS' else self.zhstr
          
     def setseat_i(self, fi, ti):
         self.fseat = (fi // 10, fi % 10)
@@ -176,7 +176,6 @@ class ChessBoard(object):
             if node.other:
                 __zhstr(node.other, True)
     
-        self.rootnode.zhstr = '1.开始'
         if self.rootnode.next_:
             __zhstr(self.rootnode.next_) # 驱动调用递归函数
         
@@ -558,9 +557,7 @@ class ChessBoard(object):
                         newnode.zhstr = mstr
                     #print(mstr)
                     if remark:
-                        newnode.remark = remark.strip()[1:-1]
-                        #print(self.remcount, newnode.remark)
-                            
+                        newnode.remark = remark
                     self.__setcounts(newnode) # 设置内部计数值
                     if isother and (i == 0): # 第一步为变着
                         lastnode.setother(newnode)
@@ -569,26 +566,26 @@ class ChessBoard(object):
                     lastnode = newnode
                 return lastnode
                 
-            moverg = re.compile(' ([^\.\{\}\s]{4})(\s+\{[\s\S]*?\})?')
-            # 走棋信息 注解[\s\S]*? 非贪婪
-            resultstr = re.findall('\s(1-0|0-1|1/2-1/2|\*)\s?', movestr)
+            moverg = re.compile(r' ([^\.\{\}\s]{4})(?:\s+\{([\s\S]*?)\})?')
+            # 走棋信息 (?:pattern)匹配pattern,但不获取匹配结果;  注解[\s\S]*?: 非贪婪
+            resultstr = re.findall(r'\s(1-0|0-1|1/2-1/2|\*)\s?', movestr)
             if resultstr:
                 self.info['Result'] = resultstr[0]  # 棋局结果
-            remark = re.findall('\{([\s\S]*?)\}', infostr)
+            remark = re.findall(r'\{([\s\S]*?)\}', infostr)
             if remark:
                 self.rootnode.remark = remark[0]
             self.__setcounts(self.rootnode) # 设置内部计数值
             othnodes = [self.rootnode]
             isother = False
             thisnode = None
-            leftstrs = movestr.split('(')
+            leftstrs = re.split(r'\(\d+\.', movestr) # 如果注解里存在‘\(\d+\.’的情况，则可能会有误差
             while leftstrs:
                 thisnode = othnodes[-1] if isother else othnodes.pop()
-                if leftstrs[0].find(')') < 0: # 无')'符号                    
+                if not re.search(r'\) ', leftstrs[0]): # 如果注解里存在‘\) ’的情况，则可能会有误差                  
                     othnodes.append(__readmoves(thisnode, leftstrs.pop(0), isother))
                     isother = True
                 else:
-                    lftstr, p, leftstrs[0] = leftstrs[0].partition(')')
+                    lftstr, leftstrs[0] = re.split(r'\) ', leftstrs[0], maxsplit=1)
                     __readmoves(thisnode, lftstr, isother)
                     isother = False                    
             
@@ -615,21 +612,26 @@ class ChessBoard(object):
                 if zhstr and row < len(moves)-1 and moves[row+1]:
                     __readmove(newnode, row+1, col)
                         
-            movestr, p, remstr = movestr.partition('\n(')
-            mstrrg = re.compile('.{5}')
-            moverg = re.compile('([^…　]{4}[…　])')
-            moves = [mstrrg.findall(linestr) for linestr
-                    in [line for i, line in enumerate(movestr.split('\n')) if i % 2 == 0]]
-            remrg = re.compile('\(\s*(\d+),\s*(\d+)\): \{([\s\S]*?)\}')
-            rems = {(int(rowstr), int(colstr)): remark
-                    for rowstr, colstr, remark in remrg.findall('(' + remstr)}                    
-            self.rootnode.remark = rems.get((0, 0), '') #.strip()
+            movestr, p, remstr = movestr.partition(r'\n\(')
+            moves, rems = [], {}
+            if movestr:
+                mstrrg = re.compile(r'.{5}')
+                moverg = re.compile(r'([^…　]{4}[…　])')
+                moves = [mstrrg.findall(linestr) for linestr
+                        in [line for i, line in enumerate(movestr.split(r'\n')) if i % 2 == 0]]
+            if remstr:
+                remrg = re.compile(r'\(\s*(\d+),\s*(\d+)\): \{([\s\S]*?)\}')
+                rems = {(int(rowstr), int(colstr)): remark
+                        for rowstr, colstr, remark in remrg.findall('(' + remstr)}                    
+                self.rootnode.remark = rems.get((0, 0), '') #.strip()
             self.__setcounts(self.rootnode) # 设置内部计数值
-            if moves[1]:
+            if len(moves) > 1:
                 __readmove(self.rootnode, 1, 0)
+            else:
+                print(filename)
             
-        infostr, p, movestr = open(filename).read().partition('\n1.')
-        for key, value in re.findall('\[(\w+) "(.*)"\]', infostr):
+        infostr, p, movestr = open(filename).read().partition(r'\n1.')
+        for key, value in re.findall(r'\[(\w+) "(.*)"\]', infostr):
             self.info[key] = value
         # 读取info内容（在已设置原始key上可能会有增加）
         fmt = self.info['Format']
@@ -646,7 +648,7 @@ class ChessBoard(object):
                 nstr = elem[i].text.strip()
                 if fmt == 'ICCS':
                     node.setseat_ICCS(nstr)
-                elif fmt == 'zh':
+                else:
                     node.zhstr = nstr
             node.remark = elem[i].tail.strip()
             self.__setcounts(node) # 设置内部计数值         
@@ -728,10 +730,10 @@ class ChessBoard(object):
 
     def __saveaspgn(self, filename, fmt):
     
-        def __nodestr(filename, fmt):
+        def __nodestr(fmt):
                
             def __remarkstr(node):
-                rem = node.remark #.strip()
+                rem = node.remark
                 return '' if not rem else '\n{{{}}}\n'.format(rem)
             
             def __addstrl(node, isother=False):
@@ -755,7 +757,7 @@ class ChessBoard(object):
             
         self.info['Format'] = fmt
         fullstr = str(self) if fmt == 'cc' else ('\n'.join([self.__infostr(),
-                    ''.join(__nodestr(filename, fmt))]))
+                    ''.join(__nodestr(fmt))]))
         open(filename, 'w').write(fullstr)
             
     def __saveasxml(self, filename, fmt):
@@ -811,15 +813,14 @@ class ChessBoard(object):
                 if os.path.isfile(pathfrom): # 文件
                     extension = os.path.splitext(os.path.basename(pathfrom))[1]
                     if extension in ('.xqf', '.bin', '.xml', '.pgn'):
+                        #print(pathfrom, count)   
                         self.readfile(pathfrom)
                         filenameto = os.path.join(dirto, 
                                 os.path.splitext(os.path.basename(pathfrom))[0] + text)
                         self.writefile(filenameto, text, pgnfmt)
                         count[0] += self.movecount
                         count[1] += self.remcount
-                        count[2] = max(count[2], self.remlenmax)
-                        print(pathfrom, count)   
-                        
+                        count[2] = max(count[2], self.remlenmax)                        
                         fcount += 1
                     elif extension == '.txt':
                         data = open(pathfrom).read()
@@ -833,7 +834,7 @@ class ChessBoard(object):
             return (fcount, dcount)
             
         fcount, dcount = __transdir(dirfrom, dirto, text, pgnfmt)
-        print('{}：{}个文件，{}个目录转换成功！'.format(dirfrom, fcount, dcount))
+        print('{}==>：{}_{} 共有{}个文件，{}个目录转换成功！'.format(dirfrom, text, pgnfmt, fcount, dcount))
         print('着法数量：{}，注释数量：{}, 注释最大长度：{}'.format(
                 count[0], count[1], count[2]))
             
@@ -857,12 +858,12 @@ def testtransdir():
     fmts = ['ICCS', 'zh', 'cc']
     
     chboard = ChessBoard()
-    for dir in dirfrom[:1]:    
-        for fext in fexts[3:]:
-            for text in texts[1:2]:
+    for dir in dirfrom[:2]:    
+        for fext in fexts[:]:
+            for text in texts[:]:
                 if text == fext:
                     continue
-                for fmt in fmts[1:2]: # 设置输入文件格式  
+                for fmt in fmts[:2]: # 设置输入文件格式  
                     chboard.transdir(dir+fext, dir+text, text, fmt)
            
             
