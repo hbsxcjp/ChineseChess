@@ -3,8 +3,8 @@
 '''
 
 from config import *
-from seats import *
-from walks import *
+from chessboard import *
+
 
 BorderWidth = 521
 BoardHeight = 577
@@ -32,19 +32,10 @@ EatpieEndY = EatpieStartXY + 3 * EatpieStepY
 EatpieEndX = EatpieStartXY + 3 * EatpieStepX
 
 
-class View(object):
-    def __init__(self, models):
-        self.chessboard, self.board = models
-
-    def updateview(self):
-        # 更新视图（由数据模型发起）
-        pass
-
-
 class BdCanvas(View, Canvas):
     '棋盘与棋子'
-    def __init__(self, master, models):
-        View.__init__(self, models)
+    def __init__(self, master, model):
+        View.__init__(self, model)
         Canvas.__init__(self, master, width=CanvasWidth, height=CanvasHeight)
 
         self.createwidgets()
@@ -58,7 +49,7 @@ class BdCanvas(View, Canvas):
         self.selectedseat = None
 
     def __canvastexts(self):
-        def __textxys(bottomside=RED_Piece):
+        def __textxys(bottomside=RED_P):
             '图形框内文字坐标'
             PondTopTextX, PondTopTextY = ImgBdStartX // 2, CanvasHeight // 2 - PieHeight // 2
             PondBottomTextX, PondBottomTextY = ImgBdStartX // 2, CanvasHeight // 2 + PieHeight // 2
@@ -75,7 +66,7 @@ class BdCanvas(View, Canvas):
                                 NumToChinese[bottomside][NumCols - i]))
             return textxys
 
-        PondText = {BLACK_Piece: '黑方吃子', RED_Piece: '红方吃子'}
+        PondText = {BLACK_P: '黑方吃子', RED_P: '红方吃子'}
         self.delete('side_tag')
         for x, y, astr in __textxys(self.board.bottomside):
             self.create_text(
@@ -134,14 +125,14 @@ class BdCanvas(View, Canvas):
                         OutsideXY, image=self.imgs[-1], tag='pie'))
             self.board.pieces.setpieimgids(pieimgids)
 
-            for color, char in {RED_Piece: 'KING', BLACK_Piece: 'king'}.items():
+            for color, char in {RED_P: 'KING', BLACK_P: 'king'}.items():
                 self.imgs.append(
                     PhotoImage(file=pimgpath + Config.imgflnames[char]))
                 self.board.getkingpiece(color).eatimgid = self.create_image(
                     OutsideXY, image=self.imgs[-1], tag='pie')
 
-        bdimgname = self.master.config.getelement('bdimgname').text
-        pimgpath = self.master.config.getelement('pimgpath').text
+        bdimgname = self.master.config.getelement('face').attrib['bdimgname']
+        pimgpath = self.master.config.getelement('face').attrib['pimgpath']
         __canvasrects()
         __createimgs(bdimgname, pimgpath)
 
@@ -168,7 +159,7 @@ class BdCanvas(View, Canvas):
             abs(x + PieWidth // 2 - BoardStartX) // PieWidth)
 
     def seat_xy(self, seat):
-        row, col = Seats.getrow(seat), Seats.getcol(seat)
+        row, col = seat # Board.getrow(seat), Board.getcol(seat)
         return (BoardStartX + col * PieWidth,
                 BoardStartY + (NumRows - row - 1) * PieHeight)
 
@@ -194,38 +185,38 @@ class BdCanvas(View, Canvas):
         return (x, y)
 
     def onLeftKey(self, event):
-        col = Seats.getcol(self.locatedseat)
+        col = Board.getcol(self.locatedseat)
         self.setlocatedseat((
-                Seats.getrow(self.locatedseat), col - 1
+                Board.getrow(self.locatedseat), col - 1
                 if col > MinColNo else MaxColNo))
 
     def onRightKey(self, event):
-        col = Seats.getcol(self.locatedseat)
+        col = Board.getcol(self.locatedseat)
         self.setlocatedseat((
-                Seats.getrow(self.locatedseat), col + 1
+                Board.getrow(self.locatedseat), col + 1
                 if col < MaxColNo else MinColNo))
 
     def onUpKey(self, event):
-        row = Seats.getrow(self.locatedseat)
+        row = Board.getrow(self.locatedseat)
         self.setlocatedseat((row + 1 if row < MaxRowNo_T else MinRowNo_B,
-                             Seats.getcol(self.locatedseat)))
+                             Board.getcol(self.locatedseat)))
 
     def onDownKey(self, event):
-        row = Seats.getrow(self.locatedseat)
+        row = Board.getrow(self.locatedseat)
         self.setlocatedseat((row - 1 if row > MinRowNo_B else MaxRowNo_T,
-                             Seats.getcol(self.locatedseat)))
+                             Board.getcol(self.locatedseat)))
 
     def onHomeKey(self, event):
-        self.setlocatedseat((MaxRowNo_T, Seats.getcol(self.locatedseat)))
+        self.setlocatedseat((MaxRowNo_T, Board.getcol(self.locatedseat)))
 
     def onEndKey(self, event):
-        self.setlocatedseat((MinRowNo_B, Seats.getcol(self.locatedseat)))
+        self.setlocatedseat((MinRowNo_B, Board.getcol(self.locatedseat)))
 
     def onDeleteKey(self, event):
-        self.setlocatedseat((Seats.getrow(self.locatedseat), MinColNo))
+        self.setlocatedseat((Board.getrow(self.locatedseat), MinColNo))
 
     def onPgdnKey(self, event):
-        self.setlocatedseat((Seats.getrow(self.locatedseat), MaxColNo))
+        self.setlocatedseat((Board.getrow(self.locatedseat), MaxColNo))
 
     def setlocatedseat(self, seat):
         self.locatedseat = seat
@@ -257,29 +248,27 @@ class BdCanvas(View, Canvas):
         def __movepie(fromseat, toseat):
             def __change():
                 if askyesno('提示', '改变当前着法，' '将删除原棋局的全部后续着法！\n是否删除？'):
-                    self.walks.cutfollow()
+                    self.chessboard.cutfollow()
                     return True
 
             if toseat in self.board.canmoveseats(
                     self.board.getpiece(fromseat)):
-                if self.walks.islast or __change():
-                    self.walks.append(fromseat, toseat, '',
-                                      self.chessboard.board)
-                    self.walks.notifyviews()
+                if self.chessboard.islast or __change():
+                    self.chessboard.addnext #(fromseat, toseat, '',
+                                      #self.board)
                     self.selectedseat = None
             else:
                 playsound('ILLEGAL')  # 点击位置不正确声音
 
-        currentside = self.walks.currentside
-        if self.board.isdied(currentside):  # 已被将死
+        if self.board.isdied(self.chessboard.curcolor):  # 已被将死
             return
         if mouseclick:
             self.setlocatedseat(self.xy_seat(event.x, event.y))
-        if self.board.getcolorside(self.locatedseat) == currentside:
+        if (self.board.getcolorside(self.locatedseat)
+                == self.chessboard.curcolor):
             __drawselectedseat()
         elif self.selectedseat:
-            __movepie(self.selectedseat, self.locatedseat)
-        
+            __movepie(self.selectedseat, self.locatedseat)        
 
     def updateview(self):
         def __drawallpies():
@@ -289,7 +278,7 @@ class BdCanvas(View, Canvas):
                 in self.board.getlivepieces()
             ]
             eatpies = self.board.geteatedpieces()
-            for color in [RED_Piece, BLACK_Piece]:
+            for color in [RED_P, BLACK_P]:
                 eatpieimgids = sorted(
                     [pie.imgid for pie in eatpies if pie.color == color])
                 [
@@ -298,17 +287,18 @@ class BdCanvas(View, Canvas):
                 ]
 
         def __drawtraces():
-            if self.walks.isstart:
+            if self.chessboard.isstart:
                 fromxy, toxy = OutsideXY, OutsideXY
             else:
-                fromseat, toseat = self.walks.curmoveseat()
+                currentnode = self.chessboard.currentnode
+                fromseat, toseat = currentnode.fseat, currentnode.tseat
                 fromxy, toxy = self.seat_xy(fromseat), self.seat_xy(toseat)
             self.delete('walk')
             self.coords('from', fromxy)
             self.coords('to', toxy)
 
         def __moveeffect():
-            currentside = self.walks.currentside
+            currentside = self.chessboard.currentside
             kingseat = self.board.getkingseat(currentside)
             kingpie = self.board.getkingpiece(currentside)
             otherkingpie = self.board.getkingpiece(not currentside)
@@ -319,19 +309,19 @@ class BdCanvas(View, Canvas):
                 self.coords(kingpie.eatimgid, self.seat_xy(kingseat))
                 playsound('WIN')
             elif self.board.iskilled(currentside):  # 走棋后，将军
-                color = 'black' if currentside == RED_Piece else 'red'
+                color = 'black' if currentside == RED_P else 'red'
                 self.create_oval(
                     self.getoval_xy(kingseat),
                     outline=color,
                     fill=color,
                     tag='walk')  # , width=4
                 playsound('CHECK2')
-            elif not self.walks.isstart:
-                eatpiece = self.walks.cureatpiece()
+            elif not self.chessboard.isstart:
+                eatpiece = self.chessboard.cureatpiece
                 playsound('MOVE' if not bool(eatpiece) else (
                     'CAPTURE2' if eatpiece.isStronge else 'CAPTURE'))# is BlankPie
 
-        assert self.board.getkingseat(RED_Piece), '将帅不在棋盘上？'
+        assert self.board.getkingseat(RED_P), '将帅不在棋盘上？'
         self.__canvastexts()
         __drawallpies()
         __drawtraces()

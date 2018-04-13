@@ -2,9 +2,6 @@
 中国象棋棋谱类型
 '''
 
-import cProfile, os, re #, sys, glob
-import struct #, shutil #, chardet
-import xml.etree.ElementTree as ET
 from board import * # 棋盘与棋子
 
 
@@ -90,6 +87,9 @@ class ChessBoard(object):
         self.remcount = 0
         self.remlenmax = 0
         self.board = Board()
+        self.curcolor = RED_P
+        self.currentnode = self.rootnode
+        self.cureatpiece = BlankPie
     
     def __str__(self):
     
@@ -176,8 +176,17 @@ class ChessBoard(object):
         
     @property
     def currentside(self):
-        return self.curcolor if (self.currentnode.stepno % 2 == 0) else not self.curcolor
-    
+        return self.curcolor if (
+                self.currentnode.stepno % 2 == 0) else not self.curcolor
+
+    @property
+    def isstart(self):
+        return self.currentnode is self.rootnode
+                
+    @property
+    def islast(self):
+        return self.currentnode.next_ is None
+                
     def getprevmoves(self, node):
         result = []
         while node.prev is not None:

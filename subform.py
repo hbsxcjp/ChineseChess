@@ -2,7 +2,7 @@
 中国象棋软件子窗口类型
 '''
 
-from config_et import *
+from config import *
 
 
 class PopForm(Toplevel):

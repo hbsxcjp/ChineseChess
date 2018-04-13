@@ -2,38 +2,7 @@
 中国象棋软件配置类型
 '''
 
-import os
-import sys
-
-from os.path import *
-from random import randint
-
-import pyperclip
-import itertools
-import xml.etree.ElementTree as ET
-import winsound
-
-from tkinter import *
-import tkinter.ttk as ttk
-from tkinter.filedialog import askopenfilename, asksaveasfilename
-from tkinter.messagebox import *
-from PIL.ImageTk import PhotoImage
-
-
-def set_application_icons(application, path):
-    """Sets the application/window icon for all top-level windows.
-    Assumes that the application has two icons in the given path,
-    icon_16x16.gif and icon_32x32.gif. (Does nothing on Mac OS X.)
-    """
-    icon32 = PhotoImage(file=os.path.join(path, "icon_32x32.gif"))
-    icon16 = PhotoImage(file=os.path.join(path, "icon_16x16.gif"))
-    application.tk.call("wm", "iconphoto", application, "-default", icon32,
-                        icon16)
-
-
-def playsound(soundname):
-    soundpath = './SOUNDS/'  # 声音文件目录
-    winsound.PlaySound(soundpath + soundname + '.WAV', winsound.SND_ASYNC)
+from base import *
 
 
 class Config(object):
@@ -66,28 +35,30 @@ class Config(object):
 
     userdata = [
         ('file',
-               [('pgnfile', [('lastpgnfilename', )])]),
+               [('lastfile', [])]),
         ('option',
-               [('action', [('openlastpgn', 'text_yes')]),
-                ('sound', [('isopen', 'text_yes')]),
-                ('cartoon', [('isopen', 'text_no')]),
-                ('face', [('imgpath', 'text_./IMAGES_L/')],
-                        [('pimgpath', 'text_./IMAGES_L/WOOD/')],
-                        [('bdimgname', 'text_./IMAGES_L/WOOD.JPG')])])]
-    # 条目格式：[('str', 'text_xxx', {}, [], 'tail_xxx')，...], 'str'必须在第一个位置
+               [('action', {'openlast': 'yes'}),
+                ('sound', {'open': 'yes'}),
+                ('cartoon', {'open': 'no'}),
+                ('face', {'imgpath': './IMAGES_L/',
+                        'pimgpath': './IMAGES_L/WOOD/',
+                        'bdimgname': './IMAGES_L/WOOD.JPG'})])]
+    # 条目格式：[('name', 'text_xxx', {}, [], 'tail_xxx')，...],
+    #           'name'元素名,'text_'元素文本，{}属性，[]子元素，'tail_'元素尾巴
     # yapf: enable
 
     def __init__(self, username):
         self.username = username
         try:
-            self.etree = ET.ElementTree(file='./config.xml')
+            self.etree = ET.ElementTree(file='config.xml')
         except:
             self.etree = ET.ElementTree(ET.Element('root'))
             allusrelem = ET.SubElement(self.etree.getroot(), '所有用户')
-            self.iniconfig(allusrelem, Config.publicdata)
+            self.iniconfig(allusrelem, self.publicdata)
         if self.etree.find(username) is None:
             usrelem = ET.SubElement(self.etree.getroot(), username)
-            self.iniconfig(usrelem, Config.userdata)
+            self.iniconfig(usrelem, self.userdata)
+            self.save()
 
     def getelement(self, tag):
         return self.etree.find('{}//{}'.format(self.username, tag))
@@ -97,27 +68,6 @@ class Config(object):
 
     def setelement(self, tag, value):
         self.getelement(tag).text = value
-
-    @classmethod
-    def indent(self, elem, islast=False, level=0):
-        'Get pretty look 取得漂亮的外观'
-        def __isblank(text):
-            return not text or not text.expandtabs(4).strip()
-
-        def __addblank(text):
-            return '{}{}'.format(text.expandtabs(4).strip(), tabstr)
-
-        def __cuttab(tail, islast):
-            return tail[:-1] if islast else tail
-
-        tabstr = '\n' + level * '\t'
-        if len(elem):
-            elem.text = '{}\t'.format(
-                tabstr if __isblank(elem.text) else __addblank(elem.text))
-        for n, e in enumerate(elem):
-            self.indent(e, bool(len(elem) - 1 == n), level + 1)
-        elem.tail = __cuttab(
-            tabstr if __isblank(elem.tail) else __addblank(elem.tail), islast)
 
     def iniconfig(self, elem, items):
         for item in items:
@@ -137,7 +87,7 @@ class Config(object):
             elem.append(subelem)
 
     def save(self):
-        self.indent(self.etree.getroot())
+        xmlindent(self.etree.getroot())
         self.etree.write('config.xml', encoding='utf-8')
 
 

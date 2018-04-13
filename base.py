@@ -2,9 +2,23 @@
 中国象棋棋谱文件基础信息
 '''
 
-import re
+import os, sys, re
+import cProfile
+import struct
+import xml.etree.ElementTree as ET
+import pyperclip
+import winsound
+#import itertools
 #import sqlite3
-#import chardet
+#import chardet, shutil
+
+from tkinter import *
+import tkinter.ttk as ttk
+from tkinter.filedialog import askopenfilename, asksaveasfilename
+from tkinter.messagebox import *
+from PIL.ImageTk import PhotoImage
+#from os.path import *
+#from random import randint
 
     
 blankboard = '''
@@ -58,6 +72,32 @@ def xmlindent(elem, islast=False, level=0):
         xmlindent(e, bool(len(elem) - 1 == n), level + 1)
     elem.tail = __cuttab(
         tabstr if __isblank(elem.tail) else __addblank(elem.tail), islast)
+        
+
+def set_application_icons(application, path):
+    """Sets the application/window icon for all top-level windows.
+    Assumes that the application has two icons in the given path,
+    icon_16x16.gif and icon_32x32.gif. (Does nothing on Mac OS X.)
+    """
+    icon32 = PhotoImage(file=os.path.join(path, "icon_32x32.gif"))
+    icon16 = PhotoImage(file=os.path.join(path, "icon_16x16.gif"))
+    application.tk.call("wm", "iconphoto", application, "-default", icon32,
+                        icon16)
+                        
+
+def playsound(soundname):
+    soundpath = './SOUNDS/'  # 声音文件目录
+    winsound.PlaySound(soundpath + soundname + '.WAV', winsound.SND_ASYNC)
+
+
+class View(object):
+    def __init__(self, model):
+        self.chessboard = model
+        self.board = self.chessboard.board
+
+    def updateview(self):
+        # 更新视图（由数据模型发起）
+        pass
 
         
 initdbsql = '''

@@ -2,36 +2,35 @@
 中国象棋软件主窗口类型
 '''
 
-from movearea import *
 from bdcanvas import *
+from movearea import *
 from subform import *
 
-pgndir = './pgn/'
-pgnext = '.pgn'
-pgntitle = 'pgn棋谱文件'
+#dir = './/'
+#ext = '.bin'
+#title = '棋谱文件'
 
 
 class MainForm(View, ttk.Frame):
     '棋盘与棋子视图类'
 
-    def __init__(self, master, config, models):
-        View.__init__(self, models)
+    def __init__(self, master, config, model):
+        View.__init__(self, model)
         ttk.Frame.__init__(self, master, padding=2)
 
         self.config = config
-        self.createwidgets(models)
+        self.createwidgets(model)
         self.createlayout()
         self.createbindings()
 
-        for model in models:
-            model.loadviews([self, self.bdcanvas, self.movearea])
+        model.loadviews([self, self.bdcanvas]) #, self.movearea
         self.makemenu()
         self.master.protocol('WM_DELETE_WINDOW', self.quitmain)
-        self.updateview()
+        #self.updateview()
 
-    def createwidgets(self, models):
-        self.bdcanvas = BdCanvas(self, models)
-        self.movearea = MoveArea(self, models)
+    def createwidgets(self, model):
+        self.bdcanvas = BdCanvas(self, model)
+        #self.movearea = MoveArea(self, model)
         self.aboutForm = None
 
     def createlayout(self):
@@ -56,60 +55,60 @@ class MainForm(View, ttk.Frame):
 
     def __getopenfilename(self):
         return (askopenfilename(
-            initialdir=pgndir,
+            initialdir=dir,
             title='打开棋局文件',
-            defaultextension=pgnext,
-            filetypes=[(pgntitle, pgnext)]))
+            defaultextension=ext,
+            filetypes=[(title, ext)]))
 
     def __getsaveasfilename(self):
         return (asksaveasfilename(
-            initialdir=pgndir,
+            initialdir=dir,
             title='保存棋局文件',
-            defaultextension=pgnext,
-            filetypes=[(pgntitle, pgnext)]))
+            defaultextension=ext,
+            filetypes=[(title, ext)]))
 
     def __settitle(self, title):
         self.master.title('{}{}'.format(title, ' --中国象棋'))
 
-    def __asksavepgn(self, title):
+    def __asksave(self, title):
         result = askyesnocancel(title, '是否需要保存当前的棋局？')
         if result == True:
-            self.savethispgn(self.config.getelement('lastpgnfilename').text)
+            self.savethis(self.config.getelement('lastfilename').text)
         return result
 
-    def opennewpgn(self):
-        if self.__asksavepgn('打开棋局文件') is None:
+    def opennew(self):
+        if self.__asksave('打开棋局文件') is None:
             return
-        self.config.setelement('lastpgnfilename', '')
-        self.chessboard.setpgn('')
+        self.config.setelement('lastfilename', '')
+        self.chessboard.set('')
 
-    def openotherpgn(self):
-        if self.__asksavepgn('打开棋局文件') is None:
+    def openother(self):
+        if self.__asksave('打开棋局文件') is None:
             return
         filename = self.__getopenfilename()
         if filename:
-            self.config.setelement('lastpgnfilename', filename)
-            self.chessboard.setpgn(readpgnstr(filename))
+            self.config.setelement('lastfilename', filename)
+            self.chessboard.set(readstr(filename))
 
-    def savethispgn(self, filename):
+    def savethis(self, filename):
         if filename:
-            self.config.setelement('lastpgnfilename', filename)
+            self.config.setelement('lastfilename', filename)
             with open(filename, 'w') as file:
-                file.write(self.chessboard.getpgn())
+                file.write(self.chessboard.get())
             self.updateview()
         else:
-            self.saveotherpgn()
+            self.saveother()
 
-    def saveotherpgn(self):
+    def saveother(self):
         filename = self.__getsaveasfilename()
         if filename:
-            self.savethispgn(filename)
+            self.savethis(filename)
 
-    def lastpgn(self):
-        #PgnfileForm('整理近期pgn文件', self.config.filenames)
+    def last(self):
+        #PgnfileForm('整理近期文件', self.config.filenames)
         pass
 
-    def deducepgn(self):
+    def deduce(self):
         #新窗口推演
         pass
 
@@ -128,7 +127,7 @@ class MainForm(View, ttk.Frame):
             self.aboutForm.deiconify()
 
     def quitmain(self):
-        if self.__asksavepgn('退出对局') is not None:
+        if self.__asksave('退出对局') is not None:
             self.config.save()
             self.quit()
 
@@ -136,13 +135,13 @@ class MainForm(View, ttk.Frame):
         '生成主菜单'
         menuBar = [
             ('文件(F)',
-                   [('新的对局(N)', self.opennewpgn, 5),
-                    ('打开(O)...', self.openotherpgn, 3),
-                    #('近期文件...', self.lastpgn, 3),
-                    ('保存(S)', self.savethispgn, 3),
-                    ('另存为(A)...', self.saveotherpgn, 4),
+                   [('新的对局(N)', self.opennew, 5),
+                    ('打开(O)...', self.openother, 3),
+                    #('近期文件...', self.last, 3),
+                    ('保存(S)', self.savethis, 3),
+                    ('另存为(A)...', self.saveother, 4),
                     'separator',
-                    ('查看文本棋谱(V)',lambda: PgnForm(self, self.chessboard.getpgn()), 7),
+                    ('查看文本棋谱(V)',lambda: PgnForm(self, self.chessboard.get()), 7),
                     ('编辑标签(A)', lambda: TagForm(self, self.chessboard.info), 5),
                     'separator',
                     ('退出(X)', self.quitmain, 3)],
@@ -152,10 +151,10 @@ class MainForm(View, ttk.Frame):
                     ('左右对称(M)', lambda: self.chessboard.changeside('symmetry'), 5),
                     ('对换棋局(D)', self.chessboard.changeside, 5),
                     'separator',
-                    #('新窗口推演(A)', self.deducepgn, 6),
+                    #('新窗口推演(A)', self.deduce, 6),
                     #('编辑局面(E)', self.modifyfen, 5),
                     #'separator',
-                    ('复制局面(C)', lambda: pyperclip.copy(self.chessboard.getpgn()), 5)],
+                    ('复制局面(C)', lambda: pyperclip.copy(self.chessboard.get()), 5)],
              3),
             ('着法(M)',
                    [('起始局面(S)', lambda: self.movearea.onHomeKey(None), 5),
@@ -197,7 +196,7 @@ class MainForm(View, ttk.Frame):
 
     def updateview(self):
         '更新视图（由数据模型发起）'
-        self.__settitle(self.config.getelement('lastpgnfilename').text)
+        self.__settitle(self.config.getelement('lastfilename').text)
 
 
 #

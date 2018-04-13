@@ -2,14 +2,12 @@
 中国象棋软件着法区域类型
 '''
 
-from config_et import *
-from seats import *
-from walks import *
+from config import *
 
 
 class MoveArea(View, ttk.Frame):
-    def __init__(self, master, models):
-        View.__init__(self, models)
+    def __init__(self, master, model):
+        View.__init__(self, model)
         ttk.Frame.__init__(self, master, padding=2)
 
         self.createwidgets()

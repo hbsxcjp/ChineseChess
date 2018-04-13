@@ -2,7 +2,7 @@
 中国象棋棋盘类型
 '''
 
-import base
+from base import *
 from piece import *
 
 
@@ -201,7 +201,7 @@ class Board(object):
 
         def __fillingname():
             linestr = [
-                list(line.strip()) for line in base.blankboard.strip().splitlines()
+                list(line.strip()) for line in blankboard.strip().splitlines()
             ]
             for piece in self.getlivepieces():
                 seat = piece.seat
@@ -333,7 +333,7 @@ class Board(object):
             return True, ''
 
         fenstr = ''.join(fen.split('/')[::-1])
-        charls = list(base.multrepl(fenstr, __numtolines()))
+        charls = list(multrepl(fenstr, __numtolines()))
 
         isvalid, info = __isvalid(charls)
         #print(fen, len(fen))
