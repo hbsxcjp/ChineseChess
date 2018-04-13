@@ -7,7 +7,7 @@ from seats import *
 from walks import *
 
 
-class WalkArea(View, ttk.Frame):
+class MoveArea(View, ttk.Frame):
     def __init__(self, master, models):
         View.__init__(self, models)
         ttk.Frame.__init__(self, master, padding=2)

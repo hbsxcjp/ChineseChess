@@ -2,7 +2,7 @@
 中国象棋软件主窗口类型
 '''
 
-from walkarea import *
+from movearea import *
 from bdcanvas import *
 from subform import *
 
@@ -24,14 +24,14 @@ class MainForm(View, ttk.Frame):
         self.createbindings()
 
         for model in models:
-            model.loadviews([self, self.bdcanvas, self.walkarea])
+            model.loadviews([self, self.bdcanvas, self.movearea])
         self.makemenu()
         self.master.protocol('WM_DELETE_WINDOW', self.quitmain)
         self.updateview()
 
     def createwidgets(self, models):
         self.bdcanvas = BdCanvas(self, models)
-        self.walkarea = WalkArea(self, models)
+        self.movearea = MoveArea(self, models)
         self.aboutForm = None
 
     def createlayout(self):
@@ -46,10 +46,10 @@ class MainForm(View, ttk.Frame):
         self.bdcanvas.focus_set()
 
     def onCtrlrightKey(self, event):
-        self.walkarea.focus_set()
+        self.movearea.focus_set()
 
     def copyfen(self):
-        pyperclip.copy(self.board.getfen())
+        pyperclip.copy(self.chessboard.getfen())
 
     def pastefen(self):
         self.chessboard.setfen(pyperclip.paste())
@@ -158,10 +158,10 @@ class MainForm(View, ttk.Frame):
                     ('复制局面(C)', lambda: pyperclip.copy(self.chessboard.getpgn()), 5)],
              3),
             ('着法(M)',
-                   [('起始局面(S)', lambda: self.walkarea.onHomeKey(None), 5),
-                    ('上一着(B)', lambda: self.walkarea.onUpKey(None), 4),
-                    ('下一着(F)', lambda: self.walkarea.onDownKey(None), 4),
-                    ('最后局面(E)', lambda: self.walkarea.onEndKey(None), 5)],
+                   [('起始局面(S)', lambda: self.movearea.onHomeKey(None), 5),
+                    ('上一着(B)', lambda: self.movearea.onUpKey(None), 4),
+                    ('下一着(F)', lambda: self.movearea.onDownKey(None), 4),
+                    ('最后局面(E)', lambda: self.movearea.onEndKey(None), 5)],
              3),
             ('帮助(A)',
                    [('关于(O)...', self.about, 3)],

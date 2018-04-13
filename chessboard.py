@@ -33,18 +33,13 @@ class MoveNode(object):
         return (self.fseat[0] * 10 + self.fseat[1],
                 self.tseat[0] * 10 + self.tseat[1])
                 
-    def __ICCSstr(self):
-        if self.stepno == 0:
-            return ''
-        return '{0}{1}{2}{3}'.format(self.colchars[self.fseat[1]], self.fseat[0],
-                self.colchars[self.tseat[1]], self.tseat[0])
-
     def ICCSzhstr(self, fmt):
-        return self.__ICCSstr() if fmt == 'ICCS' else self.zhstr
+        return ('' if self.stepno == 0 else
+                '{0}{1}{2}{3}'.format(self.colchars[self.fseat[1]], self.fseat[0],
+                    self.colchars[self.tseat[1]], self.tseat[0])) if fmt == 'ICCS' else self.zhstr
          
     def setseat_i(self, fi, ti):
-        self.fseat = (fi // 10, fi % 10)
-        self.tseat = (ti // 10, ti % 10)
+        self.fseat, self.tseat = (fi // 10, fi % 10), (ti // 10, ti % 10)
             
     def setseat_ICCS(self, ICCSstr):
         fl, fw, tl, tw = ICCSstr
@@ -52,12 +47,12 @@ class MoveNode(object):
         self.tseat = (int(tw), self.colchars.index(tl))
         
     def setnext(self, next_):
+        next_.stepno = self.stepno + 1
         self.next_ = next_
-        self.next_.stepno = self.stepno + 1
         
     def setother(self, other):
+        other.stepno = self.stepno # 与premove的步数相同
         self.other = other
-        self.other.stepno = self.stepno # 与premove的步数相同
         
 
 class ChessBoard(object):
@@ -838,7 +833,7 @@ class ChessBoard(object):
     def notifyviews(self):
         '通知视图更新'
         for view in self.views:
-            view.updateview()            
+            view.updateview()
 
     
 def testtransdir():

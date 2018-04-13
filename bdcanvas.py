@@ -34,7 +34,7 @@ EatpieEndX = EatpieStartXY + 3 * EatpieStepX
 
 class View(object):
     def __init__(self, models):
-        self.chessboard, self.board, self.walks = models
+        self.chessboard, self.board = models
 
     def updateview(self):
         # 更新视图（由数据模型发起）
