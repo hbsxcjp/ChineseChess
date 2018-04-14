@@ -4,8 +4,39 @@
 
 BLACK_P = True
 RED_P = False
+TOP_SIDE = True
+BOTTOM_SIDE = False
 
+NumCols = 9
+NumRows = 10
 
+MinCol_K = 3
+MaxCol_K = 5
+MinRow_KB = 0
+MaxRow_KB = 2
+MinRow_KT = 7
+MaxRow_KT = 9
+
+MinColNo = 0
+MaxColNo = 8
+MinRowNo_B = 0
+MaxRowNo_B = 4
+MinRowNo_T = 5
+MaxRowNo_T = 9
+
+# yapf: disable
+NumToChinese = {RED_P: {1:'一', 2:'二', 3:'三', 4:'四', 5:'五',
+                    6:'六', 7:'七', 8:'八', 9:'九'}, # 数字转换成中文
+                BLACK_P: {1:'１', 2:'２', 3:'３', 4:'４', 5:'５',
+                    6:'６', 7:'７', 8:'８', 9:'９'}}
+ChineseToNum = {'一':1, '二':2, '三':3, '四':4, '五':5,
+                '六':6, '七':7, '八':8, '九':9, # 中文转换成数字
+                '１':1, '２':2, '３':3, '４':4, '５':5,
+                '６':6, '７':7, '８':8, '９':9,
+                '前':0, '中':1, '后':-1, # 走棋文字转换成数字
+                '进':1, '退':-1, '平':0 }
+# yapf: enable
+ 
 BlankChar = '_'
 CharToNames = {'K':'帅', 'A':'仕', 'B':'相', 'N':'马',
                'R':'车', 'C':'炮', 'P':'兵',
@@ -55,15 +86,15 @@ class Piece(object):
         '全部活动范围集合(默认：车马炮的活动范围)'
         return board.allseats
 
-    def intersectionseats(self, moveseats, board):
+    def intersectionseats(self, mvseats, board):
         '棋子规则移动范围与全部移动范围的交集，再筛除本方棋子占用范围'
         return {
             seat
-            for seat in (self.getallseats(board) & moveseats)
-            if board.getcolorside(seat) != self.color
+            for seat in (self.getallseats(board) & mvseats)
+            if board.getcolor(seat) != self.color
         }
 
-    def getmoveseats(self, board):
+    def getmvseats(self, board):
         '筛除棋子特殊规则后的有效活动范围集合'
         return {}
 
@@ -83,27 +114,27 @@ class BlankPie(Piece):
 
 class King(Piece):
     def getallseats(self, board):
-        return board.kingseats[board.getboardside(self.color)]
+        return board.kingseats[board.getside(self.color)]
 
-    def getmoveseats(self, board):
+    def getmvseats(self, board):
         return self.intersectionseats(
-            board.getkingmoveseats(self.seat), board)
+            board.getkingmvseats(self.seat), board)
 
 
 class Advisor(Piece):
     def getallseats(self, board):
-        return board.advisorseats[board.getboardside(self.color)]
+        return board.advisorseats[board.getside(self.color)]
 
-    def getmoveseats(self, board):
+    def getmvseats(self, board):
         return self.intersectionseats(
-            board.getadvisormoveseats(self.seat), board)
+            board.getadvisormvseats(self.seat), board)
 
 
 class Bishop(Piece):
     def getallseats(self, board):
-        return board.bishopseats[board.getboardside(self.color)]
+        return board.bishopseats[board.getside(self.color)]
 
-    def getmoveseats(self, board):
+    def getmvseats(self, board):
         move_centreseats = board.getbishopmove_centreseats(self.seat)
         return {
             seat
@@ -113,7 +144,7 @@ class Bishop(Piece):
 
 
 class Knight(Piece):
-    def getmoveseats(self, board):
+    def getmvseats(self, board):
         move_legseats = board.getknightmove_legseats(self.seat)
         return {
             seat
@@ -123,7 +154,7 @@ class Knight(Piece):
 
 
 class Rook(Piece):
-    def getmoveseats(self, board):
+    def getmvseats(self, board):
         result = set()
         lines = board.rookcannonmoveseat_lines(self.seat)
         for seatline in lines:
@@ -131,14 +162,14 @@ class Rook(Piece):
                 if board.isblank(seat):
                     result.add(seat)
                 else:
-                    if board.getcolorside(seat) != self.color:
+                    if board.getcolor(seat) != self.color:
                         result.add(seat)
                     break
         return result
 
 
 class Cannon(Piece):
-    def getmoveseats(self, board):
+    def getmvseats(self, board):
         result = set()
         lines = board.rookcannonmoveseat_lines(self.seat)
         for seatline in lines:
@@ -150,7 +181,7 @@ class Cannon(Piece):
                     else:  # 该位置有棋子
                         skip = True
                 elif not board.isblank(seat):
-                    if board.getcolorside(seat) != self.color:
+                    if board.getcolor(seat) != self.color:
                         result.add(seat)
                     break
         return result
@@ -158,15 +189,15 @@ class Cannon(Piece):
 
 class Pawn(Piece):
     def getallseats(self, board):
-        return board.pawnseats[board.getboardside(self.color)]
+        return board.pawnseats[board.getside(self.color)]
 
-    def getmoveseats(self, board):
+    def getmvseats(self, board):
         row = self.seat[0]
         isbottomside = board.isbottomside(self.color)
         return {
             (r, c)
             for r, c in self.intersectionseats(
-                board.getpawnmoveseats(self.seat), board)
+                board.getpawnmvseats(self.seat), board)
             if (isbottomside and r >= row) or (not isbottomside and r <= row)
         }
 
@@ -227,4 +258,56 @@ class Pieces(object):
 BlankPie = BlankPie(BlankChar)
 
 
+class Move(object):
+    '象棋着法树节点类'
+    colchars = 'abcdefghi'
+        
+    def __init__(self, prev=None, fseat=(0, 0), tseat=(0, 0), remark=''):
+        self.prev = prev
+        self.fseat = fseat
+        self.tseat = tseat
+        self.remark = remark
+        
+        self.next_ = None
+        self.other = None
+        self.stepno = 0 # 着法深度
+        self.othcol = 0 # 变着广度
+        
+        self.maxcol = 0 # 图中列位置（需结合board确定）
+        self.zhstr = '' if prev else '1.开始' # 中文描述（需结合board确定）
+        
+    def __str__(self):
+        return '{}_{}({}) [{} {}] {}'.format(self.stepno, self.othcol, self.maxcol,
+                self.fseat, self.tseat, self.zhstr)
+        
+    @property
+    def binint(self):
+        return (self.fseat[0] * 10 + self.fseat[1],
+                self.tseat[0] * 10 + self.tseat[1])
+                
+    def ICCSzhstr(self, fmt):
+        return ('' if self.stepno == 0 else
+                '{0}{1}{2}{3}'.format(self.colchars[self.fseat[1]], self.fseat[0],
+                    self.colchars[self.tseat[1]], self.tseat[0])) if fmt == 'ICCS' else self.zhstr
+         
+    def setseat_i(self, fi, ti):
+        self.fseat, self.tseat = (fi // 10, fi % 10), (ti // 10, ti % 10)
+            
+    def setseat_ICCS(self, ICCSstr):
+        fl, fw, tl, tw = ICCSstr
+        self.fseat = (int(fw), self.colchars.index(fl))
+        self.tseat = (int(tw), self.colchars.index(tl))
+        
+    def setnext(self, next_):
+        next_.stepno = self.stepno + 1
+        next_.othcol = self.othcol # 变着层数
+        self.next_ = next_
+        
+    def setother(self, other):
+        other.stepno = self.stepno # 与premove的步数相同
+        other.othcol = self.othcol + 1 # 变着层数
+        self.other = other
+            
+        
+        
 #

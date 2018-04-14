@@ -235,8 +235,7 @@ class BdCanvas(View, Canvas):
             self.delete('walk')
             self.coords('to', OutsideXY)
             self.coords('from', self.seat_xy(self.selectedseat))
-            for seat in self.board.canmoveseats(
-                    self.board.getpiece(self.selectedseat)):
+            for seat in self.board.canmvseats(self.selectedseat):
                 self.create_oval(
                     self.getoval_xy(seat),
                     outline='blue',
@@ -245,16 +244,15 @@ class BdCanvas(View, Canvas):
             self.tag_raise('walk', 'pie')
             playsound('CLICK')  # 5: 选择声音
 
-        def __movepie(fromseat, toseat):
+        def __movepie(fseat, tseat):
             def __change():
                 if askyesno('提示', '改变当前着法，' '将删除原棋局的全部后续着法！\n是否删除？'):
-                    self.chessboard.cutfollow()
+                    self.chessboard.cutnext()
                     return True
 
-            if toseat in self.board.canmoveseats(
-                    self.board.getpiece(fromseat)):
+            if tseat in self.board.canmvseats(fseat):
                 if self.chessboard.islast or __change():
-                    self.chessboard.addnext #(fromseat, toseat, '',
+                    self.chessboard.addnext #(fseat, tseat, '',
                                       #self.board)
                     self.selectedseat = None
             else:
@@ -264,7 +262,7 @@ class BdCanvas(View, Canvas):
             return
         if mouseclick:
             self.setlocatedseat(self.xy_seat(event.x, event.y))
-        if (self.board.getcolorside(self.locatedseat)
+        if (self.board.getcolor(self.locatedseat)
                 == self.chessboard.curcolor):
             __drawselectedseat()
         elif self.selectedseat:
@@ -290,26 +288,26 @@ class BdCanvas(View, Canvas):
             if self.chessboard.isstart:
                 fromxy, toxy = OutsideXY, OutsideXY
             else:
-                currentnode = self.chessboard.currentnode
-                fromseat, toseat = currentnode.fseat, currentnode.tseat
-                fromxy, toxy = self.seat_xy(fromseat), self.seat_xy(toseat)
+                curmove = self.chessboard.curmove
+                fseat, tseat = curmove.fseat, curmove.tseat
+                fromxy, toxy = self.seat_xy(fseat), self.seat_xy(tseat)
             self.delete('walk')
             self.coords('from', fromxy)
             self.coords('to', toxy)
 
         def __moveeffect():
-            currentside = self.chessboard.currentside
-            kingseat = self.board.getkingseat(currentside)
-            kingpie = self.board.getkingpiece(currentside)
-            otherkingpie = self.board.getkingpiece(not currentside)
+            curcolor = self.chessboard.curcolor
+            kingseat = self.board.getkingseat(curcolor)
+            kingpie = self.board.getkingpiece(curcolor)
+            otherkingpie = self.board.getkingpiece(not curcolor)
             self.coords(kingpie.eatimgid, OutsideXY)
             self.coords(otherkingpie.eatimgid, OutsideXY)
-            if self.board.isdied(currentside):  # 将死后，将帅图像更改
+            if self.board.isdied(curcolor):  # 将死后，将帅图像更改
                 self.coords(kingpie.imgid, OutsideXY)
                 self.coords(kingpie.eatimgid, self.seat_xy(kingseat))
                 playsound('WIN')
-            elif self.board.iskilled(currentside):  # 走棋后，将军
-                color = 'black' if currentside == RED_P else 'red'
+            elif self.board.iskilled(curcolor):  # 走棋后，将军
+                color = 'black' if curcolor == RED_P else 'red'
                 self.create_oval(
                     self.getoval_xy(kingseat),
                     outline=color,
