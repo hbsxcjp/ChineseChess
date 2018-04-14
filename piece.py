@@ -25,6 +25,7 @@ MinRowNo_T = 5
 MaxRowNo_T = 9
 
 # yapf: disable
+colchars = 'abcdefghi'
 NumToChinese = {RED_P: {1:'一', 2:'二', 3:'三', 4:'四', 5:'五',
                     6:'六', 7:'七', 8:'八', 9:'九'}, # 数字转换成中文
                 BLACK_P: {1:'１', 2:'２', 3:'３', 4:'４', 5:'５',
@@ -47,7 +48,9 @@ PawnNames = {'兵', '卒'}
 AdvisorBishopNames = {'仕', '相', '士', '象'}
 StrongePieceNames = {'车', '马', '炮', '兵', '卒'}
 LineMovePieceNames = {'帅', '将', '车', '炮', '兵', '卒'}
-
+FEN = 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 1'
+# 新棋局
+     
  
 class Piece(object):
     '棋子类'
@@ -260,9 +263,8 @@ BlankPie = BlankPie(BlankChar)
 
 class Move(object):
     '象棋着法树节点类'
-    colchars = 'abcdefghi'
         
-    def __init__(self, prev=None, fseat=(0, 0), tseat=(0, 0), remark=''):
+    def __init__(self, prev=None, fseat=(0, 0), tseat=(0, 0), remark='', zhstr=''):
         self.prev = prev
         self.fseat = fseat
         self.tseat = tseat
@@ -274,7 +276,7 @@ class Move(object):
         self.othcol = 0 # 变着广度
         
         self.maxcol = 0 # 图中列位置（需结合board确定）
-        self.zhstr = '' if prev else '1.开始' # 中文描述（需结合board确定）
+        self.zhstr = zhstr if not prev else '1.开始' # 中文描述（需结合board确定）
         
     def __str__(self):
         return '{}_{}({}) [{} {}] {}'.format(self.stepno, self.othcol, self.maxcol,
@@ -287,17 +289,17 @@ class Move(object):
                 
     def ICCSzhstr(self, fmt):
         return ('' if self.stepno == 0 else
-                '{0}{1}{2}{3}'.format(self.colchars[self.fseat[1]], self.fseat[0],
-                    self.colchars[self.tseat[1]], self.tseat[0])) if fmt == 'ICCS' else self.zhstr
+                '{0}{1}{2}{3}'.format(colchars[self.fseat[1]], self.fseat[0],
+                    colchars[self.tseat[1]], self.tseat[0])) if fmt == 'ICCS' else self.zhstr
          
     def setseat_i(self, fi, ti):
         self.fseat, self.tseat = (fi // 10, fi % 10), (ti // 10, ti % 10)
             
     def setseat_ICCS(self, ICCSstr):
         fl, fw, tl, tw = ICCSstr
-        self.fseat = (int(fw), self.colchars.index(fl))
-        self.tseat = (int(tw), self.colchars.index(tl))
-        
+        self.fseat = (int(fw), colchars.index(fl))
+        self.tseat = (int(tw), colchars.index(tl))
+    
     def setnext(self, next_):
         next_.stepno = self.stepno + 1
         next_.othcol = self.othcol # 变着层数

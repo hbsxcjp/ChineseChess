@@ -48,10 +48,10 @@ class MainForm(View, ttk.Frame):
         self.movearea.focus_set()
 
     def copyfen(self):
-        pyperclip.copy(self.chessboard.getfen())
+        pyperclip.copy(self.board.getfen())
 
     def pastefen(self):
-        self.chessboard.setfen(pyperclip.paste())
+        self.board.setfen(pyperclip.paste())
 
     def __getopenfilename(self):
         return (askopenfilename(
@@ -80,7 +80,7 @@ class MainForm(View, ttk.Frame):
         if self.__asksave('打开棋局文件') is None:
             return
         self.config.setelement('lastfilename', '')
-        self.chessboard.set('')
+        self.board.set('')
 
     def openother(self):
         if self.__asksave('打开棋局文件') is None:
@@ -88,13 +88,13 @@ class MainForm(View, ttk.Frame):
         filename = self.__getopenfilename()
         if filename:
             self.config.setelement('lastfilename', filename)
-            self.chessboard.set(readstr(filename))
+            self.board.set(readstr(filename))
 
     def savethis(self, filename):
         if filename:
             self.config.setelement('lastfilename', filename)
             with open(filename, 'w') as file:
-                file.write(self.chessboard.get())
+                file.write(self.board.get())
             self.updateview()
         else:
             self.saveother()
@@ -141,20 +141,20 @@ class MainForm(View, ttk.Frame):
                     ('保存(S)', self.savethis, 3),
                     ('另存为(A)...', self.saveother, 4),
                     'separator',
-                    ('查看文本棋谱(V)',lambda: PgnForm(self, self.chessboard.get()), 7),
-                    ('编辑标签(A)', lambda: TagForm(self, self.chessboard.info), 5),
+                    ('查看文本棋谱(V)',lambda: PgnForm(self, self.board.get()), 7),
+                    ('编辑标签(A)', lambda: TagForm(self, self.board.info), 5),
                     'separator',
                     ('退出(X)', self.quitmain, 3)],
              3),
             ('局面(B)',
-                   [('对换位置(F)', lambda: self.chessboard.changeside('rotate'), 5),
-                    ('左右对称(M)', lambda: self.chessboard.changeside('symmetry'), 5),
-                    ('对换棋局(D)', self.chessboard.changeside, 5),
+                   [('对换位置(F)', lambda: self.board.changeside('rotate'), 5),
+                    ('左右对称(M)', lambda: self.board.changeside('symmetry'), 5),
+                    ('对换棋局(D)', self.board.changeside, 5),
                     'separator',
                     #('新窗口推演(A)', self.deduce, 6),
                     #('编辑局面(E)', self.modifyfen, 5),
                     #'separator',
-                    ('复制局面(C)', lambda: pyperclip.copy(self.chessboard.get()), 5)],
+                    ('复制局面(C)', lambda: pyperclip.copy(self.board.get()), 5)],
              3),
             ('着法(M)',
                    [('起始局面(S)', lambda: self.movearea.onHomeKey(None), 5),
@@ -196,7 +196,8 @@ class MainForm(View, ttk.Frame):
 
     def updateview(self):
         '更新视图（由数据模型发起）'
-        self.__settitle(self.config.getelement('lastfilename').text)
+        self.__settitle(self.board.filename) 
+        #self.config.getelement('lastfilename').text
 
 
 #

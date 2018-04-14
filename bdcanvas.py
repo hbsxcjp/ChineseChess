@@ -3,7 +3,7 @@
 '''
 
 from config import *
-from chessboard import *
+from board import *
 
 
 BorderWidth = 521
@@ -230,6 +230,7 @@ class BdCanvas(View, Canvas):
         self.onspaceKey(event, True)  # 调用空格按键函数
 
     def onspaceKey(self, event, mouseclick=False):
+    
         def __drawselectedseat():
             self.selectedseat = self.locatedseat
             self.delete('walk')
@@ -247,23 +248,22 @@ class BdCanvas(View, Canvas):
         def __movepie(fseat, tseat):
             def __change():
                 if askyesno('提示', '改变当前着法，' '将删除原棋局的全部后续着法！\n是否删除？'):
-                    self.chessboard.cutnext()
+                    self.board.cutnext()
                     return True
 
             if tseat in self.board.canmvseats(fseat):
-                if self.chessboard.islast or __change():
-                    self.chessboard.addnext #(fseat, tseat, '',
-                                      #self.board)
+                if self.board.islast or __change():
+                    self.board.addmove(fseat, tseat) #, remark='', isother=False
                     self.selectedseat = None
             else:
                 playsound('ILLEGAL')  # 点击位置不正确声音
 
-        if self.board.isdied(self.chessboard.curcolor):  # 已被将死
+        if self.board.isdied(self.board.curcolor):  # 已被将死
             return
         if mouseclick:
             self.setlocatedseat(self.xy_seat(event.x, event.y))
         if (self.board.getcolor(self.locatedseat)
-                == self.chessboard.curcolor):
+                == self.board.curcolor):
             __drawselectedseat()
         elif self.selectedseat:
             __movepie(self.selectedseat, self.locatedseat)        
@@ -285,10 +285,10 @@ class BdCanvas(View, Canvas):
                 ]
 
         def __drawtraces():
-            if self.chessboard.isstart:
+            if self.board.isstart:
                 fromxy, toxy = OutsideXY, OutsideXY
             else:
-                curmove = self.chessboard.curmove
+                curmove = self.board.curmove
                 fseat, tseat = curmove.fseat, curmove.tseat
                 fromxy, toxy = self.seat_xy(fseat), self.seat_xy(tseat)
             self.delete('walk')
@@ -296,7 +296,7 @@ class BdCanvas(View, Canvas):
             self.coords('to', toxy)
 
         def __moveeffect():
-            curcolor = self.chessboard.curcolor
+            curcolor = self.board.curcolor
             kingseat = self.board.getkingseat(curcolor)
             kingpie = self.board.getkingpiece(curcolor)
             otherkingpie = self.board.getkingpiece(not curcolor)
@@ -314,8 +314,8 @@ class BdCanvas(View, Canvas):
                     fill=color,
                     tag='walk')  # , width=4
                 playsound('CHECK2')
-            elif not self.chessboard.isstart:
-                eatpiece = self.chessboard.cureatpiece
+            elif not self.board.isstart:
+                eatpiece = self.board.cureatpiece
                 playsound('MOVE' if not bool(eatpiece) else (
                     'CAPTURE2' if eatpiece.isStronge else 'CAPTURE'))# is BlankPie
 

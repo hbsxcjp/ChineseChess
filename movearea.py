@@ -68,10 +68,10 @@ class MoveArea(View, ttk.Frame):
                      BOTTOM), ('起始局面', 8, lambda: self.onHomeKey(None),
                                BOTTOM), ('-------------', 8, lambda: None,
                                          BOTTOM),
-                    ('对换位置', 8, lambda: self.chessboard.changeside('rotate'),
+                    ('对换位置', 8, lambda: self.board.changeside('rotate'),
                      BOTTOM),
-                    ('左右对称', 8, lambda: self.chessboard.changeside('symmetry'),
-                     BOTTOM), ('对换棋局', 8, lambda: self.chessboard.changeside(),
+                    ('左右对称', 8, lambda: self.board.changeside('symmetry'),
+                     BOTTOM), ('对换棋局', 8, lambda: self.board.changeside(),
                                BOTTOM), ('打印棋局', 8, lambda: print(self.board),
                                          BOTTOM)
                 ]
@@ -147,7 +147,7 @@ class MoveArea(View, ttk.Frame):
 
     def updateview(self):
         def __setinfo():
-            info = self.chessboard.info
+            info = self.board.info
             infotext = [
                 info.get('Event', ''), '{}  {}  {}'.format(
                     info.get('Red', ''), info.get('Result', ''),

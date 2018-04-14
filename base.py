@@ -92,8 +92,7 @@ def playsound(soundname):
 
 class View(object):
     def __init__(self, model):
-        self.chessboard = model
-        self.board = self.chessboard.board
+        self.board = model
 
     def updateview(self):
         # 更新视图（由数据模型发起）

@@ -9,9 +9,6 @@ from piece import *
 class Board(object):
     '棋盘类'
 
-    FEN = 'rnbakabnr/9/1c5c1/p1p1p1p1p/9/9/P1P1P1P1P/1C5C1/9/RNBAKABNR r - - 0 1'
-    # 新棋局
-     
     sideseats = {
         BOTTOM_SIDE: {(row, col)
                       for row in range(MinRowNo_B, MaxRowNo_B + 1)
@@ -179,7 +176,10 @@ class Board(object):
         frontstr = '\n'
         return '{}{}{}'.format(frontstr, frontstr.join(__fillingname()), '\n')
         
-        
+    def __infostr(self):
+        return '\n'.join(['[{} "{}"]'.format(key, self.info[key])
+                    for key in sorted(self.info)])   
+       
     def __repr__(self):
     
         def __setchar(move):
@@ -208,10 +208,6 @@ class Board(object):
         remstr = '\n'.join(remstrs)
         return '\n'.join([self.__infostr(), str(self), totalstr, walkstr, remstr])
 
-    def __infostr(self):
-        return '\n'.join(
-                ['[{} "{}"]'.format(key, self.info[key]) for key in sorted(self.info)])
-    
     def __clearseatpieces(self):
         for seat in self.allseats:
             self.seat_pies[seat] = BlankPie
@@ -226,7 +222,7 @@ class Board(object):
                     'Date': '',
                     'ECCO': '',
                     'Event': '',
-                    'FEN': self.FEN,
+                    'FEN': FEN,
                     'Format': 'zh',
                     'Game': 'Chinese Chess',
                     'Opening': '',
@@ -342,7 +338,7 @@ class Board(object):
             self.canmvseats(piece.seat) for piece in self.getlivesidepieces(color)
         ])
 
-    def loadseatpieces(self, seatpieces):
+    def __setseatpieces(self, seatpieces):
         self.__clearseatpieces()
         [self.setpiece(seat, piece) for seat, piece in seatpieces.items()]
         self.setbottomside()
@@ -358,7 +354,7 @@ class Board(object):
                 result.extend(seats)  # 按列排序
         return result[::-1] if isbottomside else result
 
-    def setseats(self, move):
+    def setmvseat(self, move):
         '根据中文纵线着法描述取得源、目标位置: (fseat, tseat)'
 
         def __chcol_col(zhcol):
@@ -414,9 +410,7 @@ class Board(object):
             index, name = ChineseToNum[zhstr[0]], zhstr[1]
             seats = sorted(
                 [pie.seat for pie in self.getlivesidenamepieces(color, name)])
-            assert len(seats) >= 2, 'color: %s name: %s 棋子列表少于2个! \n%s' % (color,
-                                                                          name,
-                                                                          self)
+            assert len(seats) >= 2, 'color: %s name: %s 棋子列表少于2个! \n%s' % (     color, name, self)
             fseat = __indexname_fromseat(index, name, seats)
 
         movdir = __movzh_movdir(zhstr[2])
@@ -424,11 +418,13 @@ class Board(object):
         tseat = (__linename_toseat(fseat, movdir, tocol, zhstr[3])
                   if name in LineMovePieceNames else __obliquename_toseat(
                       fseat, movdir, tocol, name in AdvisorBishopNames))
-                      
-        #assert zhstr == self.setzhstr(fseat, tseat), ('棋谱着法: %s   生成着法: %s 不等！' % (zhstr, self.setzhstr(fseat, tseat)))
-
         move.fseat, move.tseat = fseat, tseat
-
+        '''
+        self.setzhstr(move)
+        assert zhstr == move.zhstr, ('棋谱着法: %s   生成着法: %s 不等！' % (
+                zhstr, move.zhstr))
+        '''        
+        
     def setzhstr(self, move):
         '根据源、目标位置: (fseat, tseat)取得中文纵线着法描述'
         def __col_chcol(color, col):
@@ -469,15 +465,12 @@ class Board(object):
         tochcol = (chcol if torow == fromrow or name not in LineMovePieceNames
                    else NumToChinese[color][abs(torow - fromrow)])
         lastStr = tochar + tochcol
-
-        '''
-        assert (fseat, tseat) == self.getmvseats(
-            color, firstStr + lastStr), '棋谱着法: %s 生成着法: %s 不等！' % (
-                (fseat, tseat),
-                self.getmvseats(color, firstStr + lastStr))
-        '''        
         move.zhstr = '{}{}'.format(firstStr, lastStr)
-
+        '''
+        self.setmvseat(move)
+        assert (fseat, tseat) == (move.fseat, move.tseat), ('棋谱着法: %s   生成着法: %s 不等！' % ((fseat, tseat), (move.fseat, move.tseat)))
+        '''
+        
     def __setcols(self):
         '根据rootmove设置othcol,maxcol,maxrow'
         def __cols(move, isother=False):
@@ -589,7 +582,7 @@ class Board(object):
     def cutother(self):
         self.curmove.other = None
 
-    def addmove(self, fseat, tseat, remark, isother=False):
+    def addmove(self, fseat, tseat, remark='', isother=False):
         move = Move(self.curmove, fseat, tseat, remark)
         if isother:
             self.maxcol += 1 # 在视图中的列数
@@ -665,7 +658,7 @@ class Board(object):
             assert isvalid, info
 
             seatchars = {self.getseat(n): char for n, char in enumerate(charls)}
-            self.loadseatpieces(self.pieces.getseatpieces(seatchars))
+            self.__setseatpieces(self.pieces.getseatpieces(seatchars))
 
         if not fen:
             fen = self.info['FEN']
@@ -703,7 +696,7 @@ class Board(object):
             __changeseat(self.getrotateseat if changetype == 'rotate'
                     else self.getsymmetryseat)
             seatpieces = {piece.seat: piece for piece in self.getlivepieces()}
-        self.loadseatpieces(seatpieces)
+        self.__setseatpieces(seatpieces)
         if changetype != 'rotate':
             self.__setzhstrs()
         self.moveassign(curmove)
@@ -894,8 +887,6 @@ class Board(object):
         movestruct2 = struct.Struct('L')
         with open(filename, 'rb') as fileobj:
             self.__init__()
-            self.dirname = os.path.splitdrive(os.path.dirname(filename))[1]
-            self.filename = os.path.splitext(os.path.basename(filename))[0]
             bytestr = infostruct.unpack(fileobj.read(1024))
             KeyXYf, KeyXYt, KeyRMKSize, F32Keys = __readinfo(bytestr)
             __readmove(self.rootmove)
@@ -921,8 +912,6 @@ class Board(object):
         movestruct2 = struct.Struct('H')
         with open(filename, 'rb') as fileobj:
             self.__init__()
-            self.dirname = os.path.splitdrive(os.path.dirname(filename))[1]
-            self.filename = os.path.splitext(os.path.basename(filename))[0]
             count = struct.Struct('B').unpack(fileobj.read(1))[0]
             infoks = struct.Struct('{}B'.format(count)).unpack(fileobj.read(count))
             infovstruct = struct.Struct(('{}s' * count).format(*infoks))
@@ -930,7 +919,40 @@ class Board(object):
             for n, key in enumerate(sorted(self.info)):
                 self.info[key] = infovs[n].decode()
             __readmove(self.rootmove)
-   
+            
+    def __readxml(self, filename):
+            
+        def __readelem(elem, i, move):
+            move.stepno = int(elem[i].tag[1:]) # 元素名
+            if move.stepno > 0:
+                nstr = elem[i].text.strip()
+                if fmt == 'ICCS':
+                    move.setseat_ICCS(nstr)
+                else:
+                    move.zhstr = nstr
+            move.remark = elem[i].tail.strip()
+            self.__setcounts(move) # 设置内部计数值         
+
+            if len(elem[i]) > 0: # 有子元素(变着)
+                move.setother(Move(move))
+                __readelem(elem[i], 0, move.other)
+            i += 1
+            if len(elem) > i:
+                move.setnext(Move(move))
+                __readelem(elem, i, move.next_)
+                
+        etree = ET.ElementTree(ET.Element('root'), filename)
+        rootelem = etree.getroot()
+        infoelem = rootelem.find('info')
+        for elem in infoelem.getchildren():
+            text = elem.text.strip() if elem.text else ''
+            self.info[elem.tag] = text
+            
+        fmt = self.info['Format']
+        movelem = rootelem.find('moves')
+        if len(movelem) > 0:
+            __readelem(movelem, 0, self.rootmove)
+            
     def __readpgn(self, filename):
     
         def __readmove_ICCSzh(movestr, fmt):                    
@@ -943,9 +965,8 @@ class Board(object):
                         newmove.setseat_ICCS(mstr)
                     elif fmt == 'zh':
                         newmove.zhstr = mstr
-                    #print(mstr)
                     if remark:
-                        newmove.remark = remark
+                        newmove.remark = remark                        
                     self.__setcounts(newmove) # 设置内部计数值
                     if isother and (i == 0): # 第一步为变着
                         lastmove.setother(newmove)
@@ -1025,48 +1046,13 @@ class Board(object):
         if fmt == 'cc':
             __readmove_cc(movestr)
         else:
-            __readmove_ICCSzh(movestr, fmt)
-            
-    def __readxml(self, filename):
-            
-        def __readelem(elem, i, move):
-            move.stepno = int(elem[i].tag[1:]) # 元素名
-            if move.stepno > 0:
-                nstr = elem[i].text.strip()
-                if fmt == 'ICCS':
-                    move.setseat_ICCS(nstr)
-                else:
-                    move.zhstr = nstr
-            move.remark = elem[i].tail.strip()
-            self.__setcounts(move) # 设置内部计数值         
-
-            if len(elem[i]) > 0: # 有子元素(变着)
-                move.setother(Move(move))
-                __readelem(elem[i], 0, move.other)
-            i += 1
-            if len(elem) > i:
-                move.setnext(Move(move))
-                __readelem(elem, i, move.next_)
-                
-        self.dirname = os.path.splitdrive(os.path.dirname(filename))[1]
-        self.filename = os.path.splitext(os.path.basename(filename))[0]
-        etree = ET.ElementTree(ET.Element('root'), filename)
-        rootelem = etree.getroot()
-        infoelem = rootelem.find('info')
-        for elem in infoelem.getchildren():
-            text = elem.text.strip() if elem.text else ''
-            self.info[elem.tag] = text
-            
-        fmt = self.info['Format']
-        movelem = rootelem.find('moves')
-        if len(movelem) > 0:
-            __readelem(movelem, 0, self.rootmove)
-                
+            __readmove_ICCSzh(movestr, fmt)            
+       
     def readfile(self, filename):
     
         def __setseat(move):
             #print(move.zhstr)
-            self.setseats(move)
+            self.setmvseat(move)
             self.__transcolor()
             eatpiece = self.movepiece(move.fseat, move.tseat)
             if move.next_:
@@ -1079,6 +1065,8 @@ class Board(object):
         self.__clear()
         if not (filename and os.path.exists(filename) and os.path.isfile(filename)):
             return
+        self.dirname = os.path.splitdrive(os.path.dirname(filename))[1]
+        self.filename = os.path.splitext(os.path.basename(filename))[0]
         ext = os.path.splitext(os.path.basename(filename))[1]
         if ext == '.xqf':
             self.__readxqf(filename) 
@@ -1157,9 +1145,8 @@ class Board(object):
             return movestrl
             
         self.info['Format'] = fmt
-        fullstr = repr(self) if fmt == 'cc' else ('\n'.join([self.__infostr(),
-                    ''.join(__movestr(fmt))]))
-        open(filename, 'w').write(fullstr)
+        open(filename, 'w').write(repr(self) if fmt == 'cc' else 
+                '\n'.join([self.__infostr(), ''.join(__movestr(fmt))]))
             
     def __saveasxml(self, filename, fmt):
             
@@ -1186,7 +1173,7 @@ class Board(object):
             infoelem.append(__createlem(name, value))
         rootelem.append(infoelem)
         
-        movelem = __createlem('moves', '', '')
+        movelem = __createlem('moves')
         __addelem(movelem, self.rootmove, fmt)
         rootelem.append(movelem)
         xmlindent(rootelem)  # 美化
@@ -1260,11 +1247,11 @@ def testtransdir():
     
     board = Board()
     for dir in dirfrom[:2]:    
-        for fext in fexts[:]:
-            for text in texts[:]:
+        for fext in fexts[3:]:
+            for text in texts[1:2]:
                 if text == fext:
                     continue
-                for fmt in fmts[:]: # 设置输入文件格式  
+                for fmt in fmts[1:2]: # 设置输入文件格式  
                     board.transdir(dir+fext, dir+text, text, fmt)
            
             
@@ -1273,10 +1260,9 @@ if __name__ == '__main__':
     import time
     start = time.time()
     
-    testtransdir()
-    
-    #'.db' 生产的db文件超过1G，不具备可操作性.        
+    testtransdir()    
     #cProfile.run("testtransdir()")
+    #'.db' 生产的db文件超过1G，不具备可操作性.        
     
     end = time.time()
     print('usetime: %0.3fs' % (end - start))
