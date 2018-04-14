@@ -14,23 +14,25 @@ from subform import *
 class MainForm(View, ttk.Frame):
     '棋盘与棋子视图类'
 
-    def __init__(self, master, config, model):
-        View.__init__(self, model)
+    def __init__(self, master, config, filename):
+        self.board = Board()
+        View.__init__(self, self.board)
         ttk.Frame.__init__(self, master, padding=2)
 
         self.config = config
-        self.createwidgets(model)
+        self.createwidgets(self.board)
         self.createlayout()
         self.createbindings()
 
-        model.loadviews([self, self.bdcanvas]) #, self.movearea
+        self.board.loadviews([self, self.bdcanvas]) #, self.movearea
+        self.board.readfile(filename)
         self.makemenu()
         self.master.protocol('WM_DELETE_WINDOW', self.quitmain)
         #self.updateview()
 
-    def createwidgets(self, model):
-        self.bdcanvas = BdCanvas(self, model)
-        #self.movearea = MoveArea(self, model)
+    def createwidgets(self, board):
+        self.bdcanvas = BdCanvas(self, board)
+        self.movearea = MoveArea(self, board)
         self.aboutForm = None
 
     def createlayout(self):

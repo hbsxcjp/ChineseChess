@@ -41,15 +41,16 @@ class BdCanvas(View, Canvas):
         self.createwidgets()
         self.createlayout()
         self.createbindings()
-        self.initseat()
+        self.initattr()
         self.updateview()
 
-    def initseat(self):
+    def initattr(self):
+        self.bottomside = None
         self.locatedseat = (0, 0)
         self.selectedseat = None
 
     def __canvastexts(self):
-        def __textxys(bottomside=RED_P):
+        def __textxys(bottomside):
             '图形框内文字坐标'
             PondTopTextX, PondTopTextY = ImgBdStartX // 2, CanvasHeight // 2 - PieHeight // 2
             PondBottomTextX, PondBottomTextY = ImgBdStartX // 2, CanvasHeight // 2 + PieHeight // 2
@@ -66,9 +67,12 @@ class BdCanvas(View, Canvas):
                                 NumToChinese[bottomside][NumCols - i]))
             return textxys
 
+        if self.bottomside == self.board.bottomside:
+            return
+        self.bottomside = self.board.bottomside
         PondText = {BLACK_P: '黑方吃子', RED_P: '红方吃子'}
         self.delete('side_tag')
-        for x, y, astr in __textxys(self.board.bottomside):
+        for x, y, astr in __textxys(self.bottomside):
             self.create_text(
                 x, y, font=('Consolas', '10'), text=astr, tag='side_tag')
 
@@ -221,14 +225,7 @@ class BdCanvas(View, Canvas):
     def setlocatedseat(self, seat):
         self.locatedseat = seat
         self.coords('to' if self.selectedseat else 'from', self.seat_xy(seat))
-
-    def onMouseLeftclick(self, event):
-        self.focus_set()
-        if (event.x < ImgBdStartX or ImgBdStartY > event.y
-                or event.y > CanvasHeight - ImgBdStartY):
-            return
-        self.onspaceKey(event, True)  # 调用空格按键函数
-
+        
     def onspaceKey(self, event, mouseclick=False):
     
         def __drawselectedseat():
@@ -266,9 +263,17 @@ class BdCanvas(View, Canvas):
                 == self.board.curcolor):
             __drawselectedseat()
         elif self.selectedseat:
-            __movepie(self.selectedseat, self.locatedseat)        
+            __movepie(self.selectedseat, self.locatedseat)
+
+    def onMouseLeftclick(self, event):
+        self.focus_set()
+        if (event.x < ImgBdStartX 
+                or ImgBdStartY > event.y or event.y > CanvasHeight - ImgBdStartY):
+            return
+        self.onspaceKey(event, True)  # 调用空格按键函数
 
     def updateview(self):
+    
         def __drawallpies():
             [
                 self.coords(pie.imgid, self.seat_xy(pie.seat))
@@ -289,27 +294,25 @@ class BdCanvas(View, Canvas):
                 fromxy, toxy = OutsideXY, OutsideXY
             else:
                 curmove = self.board.curmove
-                fseat, tseat = curmove.fseat, curmove.tseat
-                fromxy, toxy = self.seat_xy(fseat), self.seat_xy(tseat)
+                fromxy, toxy = self.seat_xy(curmove.fseat), self.seat_xy(curmove.tseat)
             self.delete('walk')
             self.coords('from', fromxy)
             self.coords('to', toxy)
 
         def __moveeffect():
             curcolor = self.board.curcolor
-            kingseat = self.board.getkingseat(curcolor)
             kingpie = self.board.getkingpiece(curcolor)
             otherkingpie = self.board.getkingpiece(not curcolor)
             self.coords(kingpie.eatimgid, OutsideXY)
             self.coords(otherkingpie.eatimgid, OutsideXY)
             if self.board.isdied(curcolor):  # 将死后，将帅图像更改
                 self.coords(kingpie.imgid, OutsideXY)
-                self.coords(kingpie.eatimgid, self.seat_xy(kingseat))
+                self.coords(kingpie.eatimgid, self.seat_xy(kingpie.seat))
                 playsound('WIN')
             elif self.board.iskilled(curcolor):  # 走棋后，将军
                 color = 'black' if curcolor == RED_P else 'red'
                 self.create_oval(
-                    self.getoval_xy(kingseat),
+                    self.getoval_xy(kingpie.seat),
                     outline=color,
                     fill=color,
                     tag='walk')  # , width=4
@@ -319,11 +322,11 @@ class BdCanvas(View, Canvas):
                 playsound('MOVE' if not bool(eatpiece) else (
                     'CAPTURE2' if eatpiece.isStronge else 'CAPTURE'))# is BlankPie
 
-        assert self.board.getkingseat(RED_P), '将帅不在棋盘上？'
         self.__canvastexts()
         __drawallpies()
         __drawtraces()
-        __moveeffect()
+        if self.board.getkingseat(RED_P): # '将帅在棋盘上'
+            __moveeffect()
 
 
 #

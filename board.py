@@ -90,16 +90,6 @@ class Board(object):
         return [(r, col) for r in range(row + step, otherseat[0], step)]
 
     @classmethod
-    def getrotateseat(cls, seat):
-        row, col = seat
-        return (abs(row - MaxRowNo_T), abs(col - MaxColNo))
-
-    @classmethod
-    def getsymmetryseat(cls, seat):
-        row, col = seat
-        return (row, abs(col - MaxColNo))
-
-    @classmethod
     def getkingmvseats(cls, seat):
         row, col = seat
         return {(row, col + 1), (row, col - 1), (row - 1, col), (row + 1, col)}
@@ -532,39 +522,50 @@ class Board(object):
             result.append(result[-1].next_)
         return result
                 
-    def moveforward(self, isother=False):
+    def moveforward(self, updateview=False):
         if self.curmove.next_ is None:
             return
-        self.curmove = self.curmove.other if isother else self.curmove.next_   
+        self.curmove = self.curmove.next_   
         self.cureatpiece = self.movepiece(self.curmove.fseat, 
                 self.curmove.tseat)
-
-    def movebackward(self):                    
+        if updateview:
+            self.notifyviews()
+        
+    def movebackward(self, updateview=False):                    
         if self.curmove.prev is None:
             return
         self.movepiece(self.curmove.tseat, 
                 self.curmove.fseat, self.cureatpiece)
         self.curmove = self.curmove.prev
-
+        if updateview:
+            self.notifyviews()
+        
     def moveother(self):
         '移动到当前节点的另一变着'
         if self.curmove.other is None:
             return        
         self.movebackward()
-        self.moveforward(True)        
+        self.curmove = self.curmove.other   
+        self.cureatpiece = self.movepiece(self.curmove.fseat, 
+                self.curmove.tseat)
+        self.notifyviews()
 
-    def movefirst(self):
-        while self.curmove.prev is not None:
+    def movefirst(self, updateview=False):
+        while self.curmove is not self.rootmove:
             self.movebackward()
+        if updateview:
+            self.notifyviews()
     
     def movelast(self):
         while self.curmove.next_ is not None:
             self.moveforward()
+        self.notifyviews()
         
-    def move(self, inc=1):
+    def movestep(self, inc=1):
         movefun = self.movebackward if inc < 0 else self.moveforward
         for _ in range(abs(inc)):
             movefun()
+        self.notifyviews()
         
     def moveassign(self, move):
         if move is self.rootmove:
@@ -575,6 +576,7 @@ class Board(object):
             self.movepiece(move.fseat, move.tseat)
         self.cureatpiece = self.movepiece(move.fseat, move.tseat)
         self.curmove = move
+        self.notifyviews()
             
     def cutnext(self):
         self.curmove.next_ = None
@@ -595,8 +597,7 @@ class Board(object):
         else:
             self.curmove.setnext(move)
             self.maxrow = max(self.maxrow, move.stepno)
-            self.moveforward()
-        self.notifyviews()
+            self.moveforward(False, True)
                 
     def __fen(self, piecechars=None):
         def __linetonums():
@@ -669,10 +670,19 @@ class Board(object):
         self.firstcolor = BLACK_P if (afens[1] == 'b') else RED_P
         self.curmove = self.rootmove
         self.cureatpiece = BlankPie
+        self.notifyviews()
 
     def changeside(self, changetype='exchange'):
-    
-        def __changeseat(self, transfun):            
+        
+        def __rotateseat(seat):
+            row, col = seat
+            return (abs(row - MaxRowNo_T), abs(col - MaxColNo))
+
+        def __symmetryseat(seat):
+            row, col = seat
+            return (row, abs(col - MaxColNo))
+
+        def __changeseat(transfun):            
             '根据transfun改置每个move的fseat,tseat'
             
             def __seat(move):
@@ -693,14 +703,13 @@ class Board(object):
             seatpieces = {piece.seat: self.pieces.getothersidepiece(piece)
                     for piece in self.getlivepieces()}
         else:
-            __changeseat(self.getrotateseat if changetype == 'rotate'
-                    else self.getsymmetryseat)
+            __changeseat(__rotateseat if changetype == 'rotate'
+                    else __symmetryseat)
             seatpieces = {piece.seat: piece for piece in self.getlivepieces()}
         self.__setseatpieces(seatpieces)
         if changetype != 'rotate':
             self.__setzhstrs()
         self.moveassign(curmove)
-        self.notifyviews()
     
     def __setcounts(self, move):
         self.movcount += 1

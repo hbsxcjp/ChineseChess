@@ -62,15 +62,15 @@ class TagForm(PopForm):
                        ['确定', self.saveinfo, RIGHT]]
         super().__init__(master, '对局信息', buttoninfos)
         self.info = info
-        self.__createinterfrm()
+        self.__creatfrm()
 
-    def __createinterfrm(self):
+    def __creatfrm(self):
         self.infovars = {}
         for catetags in self.cate_tags:
             frm = Frame(self)
             lbfrm = LabelFrame(
-                frm, relief=SUNKEN, text=catetags[0],
-                labelanchor='nw')  #GROOVE
+                frm, relief=GROOVE, text=catetags[0],
+                labelanchor='nw')  # SUNKEN
             i = 0
             for tag, name in catetags[1]:
                 Label(lbfrm, text=name).grid(row=i, column=0, padx=5, pady=2)

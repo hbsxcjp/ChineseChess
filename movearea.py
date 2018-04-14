@@ -2,7 +2,11 @@
 中国象棋软件着法区域类型
 '''
 
+MoveWidth=200
+MoveHeight=200
+
 from config import *
+from board import *
 
 
 class MoveArea(View, ttk.Frame):
@@ -16,58 +20,52 @@ class MoveArea(View, ttk.Frame):
         self.updateview()
 
     def createwidgets(self):
+    
         def create_topfrm():
-            self.infolabel = []
-            topfrm = ttk.Frame(self, padding=2)
+            topfrm = ttk.Frame(self, padding=2, width=210)#
             Label(
-                topfrm, text='棋局信息', font='Helvetica -14 bold').pack(side=TOP)
-            for n in range(3):
-                self.infolabel.append(Label(topfrm))
-                self.infolabel[-1].pack(side=TOP)
-            topfrm.pack(side=TOP)  # 顶部区域 , fill=X
+                topfrm, text=self.board.info['Title']).pack()
+                # font='Helvetica -14 bold' 
+            topfrm.pack(side=TOP)  # 顶部区域 , fill=X side=TOP
 
         def create_midfrm():
-            def create_midleftfrm(midfrm):
-                self.listvar = StringVar()
-                midleftfrm = ttk.LabelFrame(
-                    midfrm,
-                    relief=GROOVE,
-                    text=' 着法列表 ',
-                    labelanchor='nw',
-                    padding=2)  # padx=6, pady=3,
-                scrollbar = Scrollbar(midleftfrm, orient=VERTICAL)
-                walklistbox = Listbox(
-                    midleftfrm,
-                    width=15,
-                    listvariable=self.listvar,
-                    activestyle='dotbox',
-                    yscrollcommand=scrollbar.set)  # width=13
-                scrollbar.config(command=walklistbox.yview)
-                walklistbox.config(
-                    selectmode=SINGLE,
-                    selectbackground='blue',
-                    selectforeground='white',
-                    font=('Consolas', '10'))  #
-                # 'gray', setgrid=1, #activestyle='dotbox', #,'underline'
-                self.walklistbox = walklistbox
-                scrollbar.pack(side=RIGHT, fill=Y)
-                walklistbox.pack(side=LEFT, fill=BOTH)
-                midleftfrm.pack(side=LEFT, fill=BOTH)
+            #midfrm = ttk.Frame(self, padding=2)
+            midfrm = LabelFrame(
+                self,
+                relief=GROOVE,
+                text=' 图示着法 ',
+                padx=2,
+                pady=2,
+                labelanchor='nw')
+            vbar = Scrollbar(midfrm, orient=VERTICAL)
+            hbar = Scrollbar(midfrm, orient=HORIZONTAL)            
+            mvcanvas = Canvas(
+                midfrm,
+                relief=SUNKEN,
+                width=MoveWidth,
+                height=MoveHeight,
+                scrollregion=(0, 0, MoveWidth*2, MoveHeight*2),
+                #highlightthickness=0,
+                yscrollcommand=vbar.set,
+                xscrollcommand=hbar.set)  # width=13
+            vbar.config(command=mvcanvas.yview)
+            hbar.config(command=mvcanvas.xview)
+            self.mvcanvas = mvcanvas                
+            vbar.pack(side=RIGHT, fill=Y)
+            hbar.pack(side=BOTTOM, fill=X)            
+            mvcanvas.pack(side=LEFT) #fill=BOTH
+            midfrm.pack(expand=YES, fill=BOTH) #  
 
-            def create_midrightfrm(midfrm):
-                def __button(master, name, wid, com, sid):
-                    Button(
-                        master, text=name, width=wid,
-                        command=com).pack(side=sid)
+        def create_bottomfrm():
+        
+            def __button(master, name, wid, com, sid):
+                Button(
+                    master, text=name, width=wid,
+                    command=com, relief=GROOVE).pack(side=sid) #, SUNKEN
 
-                midrightfrm = ttk.Frame(midfrm, padding=2)
+            def create_botleftfrm(bottomfrm):
+                botleftfrm = ttk.Frame(bottomfrm, padding=1)
                 buttdate = [
-                    ('最后局面', 8, lambda: self.onEndKey(None),
-                     BOTTOM), ('下一着', 8, lambda: self.onDownKey(None), BOTTOM),
-                    ('上一着', 8, lambda: self.onUpKey(None),
-                     BOTTOM), ('起始局面', 8, lambda: self.onHomeKey(None),
-                               BOTTOM), ('-------------', 8, lambda: None,
-                                         BOTTOM),
                     ('对换位置', 8, lambda: self.board.changeside('rotate'),
                      BOTTOM),
                     ('左右对称', 8, lambda: self.board.changeside('symmetry'),
@@ -76,37 +74,51 @@ class MoveArea(View, ttk.Frame):
                                          BOTTOM)
                 ]
                 for name, wid, com, sid in buttdate:
-                    __button(midrightfrm, name, wid, com, sid)
-                midrightfrm.pack(side=RIGHT, expand=YES)  #, fill=BOTH
-
-            midfrm = ttk.Frame(self, padding=2)
-            create_midleftfrm(midfrm)
-            create_midrightfrm(midfrm)
-            midfrm.pack(side=TOP, expand=YES, fill=Y)  # 顶部区域
-
-        def create_bottomfrm():
-            bottomfrm = LabelFrame(
-                self,
-                relief=GROOVE,
-                text='评注：',
-                padx=6,
-                pady=6,
-                labelanchor='nw')
-            self.remarktext = Text(
-                bottomfrm,
-                padx=3,
-                pady=3,
-                height=12,
-                width=25,
-                relief=GROOVE,
-                font=('Consolas', '10'))
-            self.remarktext.pack()  # side=TOP, expand=YES, fill=BOTH
-            bottomfrm.pack(side=BOTTOM)  # 底部区域
+                    __button(botleftfrm, name, wid, com, sid)
+                botleftfrm.pack(side=LEFT)  #, fill=BOTH, expand=YES
+                
+            def create_botrightfrm(bottomfrm):
+                botrightfrm = ttk.Frame(bottomfrm, padding=1)
+                buttdate = [
+                    ('最后局面', 8, lambda: self.onEndKey(None),
+                     BOTTOM), ('下一着', 8, lambda: self.onDownKey(None), BOTTOM),
+                    ('上一着', 8, lambda: self.onUpKey(None),
+                     BOTTOM), ('起始局面', 8, lambda: self.onHomeKey(None),
+                               BOTTOM)
+                ]
+                for name, wid, com, sid in buttdate:
+                    __button(botrightfrm, name, wid, com, sid)
+                botrightfrm.pack(side=RIGHT)  #, fill=BOTH, expand=YES
+                
+            def create_botmidfrm(bottomfrm):
+                remfrm = LabelFrame(
+                    bottomfrm,
+                    relief=GROOVE,
+                    text=' 评注：',
+                    padx=2,
+                    pady=2,
+                    labelanchor='nw')
+                self.remarktext = Text(
+                    remfrm,
+                    padx=2,
+                    pady=1,
+                    height=6,
+                    width=30,
+                    relief=GROOVE,
+                    font=('Consolas', '10'))
+                self.remarktext.pack()  # side=TOP, expand=YES, fill=BOTH
+                remfrm.pack(expand=YES, fill=BOTH)  # 底部区域
+                
+            bottomfrm = ttk.Frame(self, padding=1)
+            create_botleftfrm(bottomfrm)
+            create_botrightfrm(bottomfrm)
+            create_botmidfrm(bottomfrm)
+            bottomfrm.pack(side=BOTTOM)  # 顶部区域
 
         create_topfrm()  # 先打包的最后被裁切
-        create_midfrm()
         create_bottomfrm()
-
+        create_midfrm()
+        
     def createlayout(self):
         self.pack(side=RIGHT, expand=YES, fill=Y)  # BOTH
 
@@ -117,36 +129,34 @@ class MoveArea(View, ttk.Frame):
         self.bind('<Next>', self.onPgdnKey)
         self.bind('<Home>', self.onHomeKey)
         self.bind('<End>', self.onEndKey)
-        self.walklistbox.bind('<Double-1>',
+        self.mvcanvas.bind('<Double-1>',
                               self.onMouseLeftclick)  # 用buttom-1不成功！
 
     def onUpKey(self, event):
-        self.walks.move_refresh(-1)
+        self.board.movestep(-1)
 
     def onDownKey(self, event):
-        self.walks.move_refresh()
+        self.board.movestep()
 
     def onPgupKey(self, event):
-        self.walks.move_refresh(-20)
+        self.board.movestep(-10)
 
     def onPgdnKey(self, event):
-        self.walks.move_refresh(20)
+        self.board.movestep(10)
 
     def onHomeKey(self, event):
-        self.walks.move_refresh(-self.walks.length)
+        self.board.movefirst(True)
 
     def onEndKey(self, event):
-        self.walks.move_refresh(self.walks.length)
+        self.board.movelast()
 
     def onMouseLeftclick(self, event):
         # 接收点击信息
         self.focus_set()
-        selections = self.walklistbox.curselection()
-        if selections:
-            self.walks.move_refresh(int(selections[0]) - 1 - self.walks.cursor)
-
+        
+        
     def updateview(self):
-        def __setinfo():
+        def __drawinfo():
             info = self.board.info
             infotext = [
                 info.get('Event', ''), '{}  {}  {}'.format(
@@ -154,30 +164,39 @@ class MoveArea(View, ttk.Frame):
                     info.get('Black', '')), '{} 奕于 {}'.format(
                         info.get('Date', ''), info.get('Site', ''))
             ]
-            for n, label in enumerate(self.infolabel):
-                label.config(text=infotext[n])
+            #for n, label in enumerate(self.infolabel):
+            #    label.config(text=infotext[n])
 
-        def __setboutstr():
+        def __drawmvstr():
+            '''
             boutstr = self.walks.getboutstrs_ltbox() #getboutstr(True)
             boutstr.insert(0, '=====开始======')
             self.listvar.set(boutstr)
+            '''
+            pass
 
-        def __selection():
+        def __drawselection():
+            '''
             no = self.walks.cursor + 1
             wklb = self.walklistbox
             wklb.selection_clear(0, wklb.size())
             wklb.selection_set(no)
             wklb.see(no)
+            '''
+            pass
 
-        def __setremark():
+        def __drawremark():
+            '''
             self.remarktext.delete('1.0', END)
             if not self.walks.isstart:
                 self.remarktext.insert('1.0', self.walks.curremark())
+            '''
+            pass
 
-        __setinfo()
-        __setboutstr()
-        __selection()
-        __setremark()
+        __drawinfo()
+        __drawmvstr()
+        __drawselection()
+        __drawremark()
 
 
 #
