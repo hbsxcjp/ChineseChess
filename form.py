@@ -15,7 +15,7 @@ class MainForm(View, ttk.Frame):
     '棋盘与棋子视图类'
 
     def __init__(self, master, config, filename):
-        self.board = Board()
+        self.board = Board(filename)
         View.__init__(self, self.board)
         ttk.Frame.__init__(self, master, padding=2)
 
@@ -25,7 +25,6 @@ class MainForm(View, ttk.Frame):
         self.createbindings()
 
         self.board.loadviews([self, self.bdcanvas]) #, self.movearea
-        self.board.readfile(filename)
         self.makemenu()
         self.master.protocol('WM_DELETE_WINDOW', self.quitmain)
         #self.updateview()

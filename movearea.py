@@ -2,117 +2,106 @@
 中国象棋软件着法区域类型
 '''
 
-MoveWidth=200
-MoveHeight=200
-
 from config import *
 from board import *
 
 
 class MoveArea(View, ttk.Frame):
+
+    canvawidth = 200
+    canvasheight = 500
+    cellwidth = 70
+    cellheight = 30
+    cellbd = 6
+
     def __init__(self, master, model):
         View.__init__(self, model)
         ttk.Frame.__init__(self, master, padding=2)
 
+        self.create_vars()
         self.createwidgets()
         self.createlayout()
         self.createbindings()
         self.updateview()
-
+        
+    def create_vars(self):
+        self.infovars = {}
+        for name, value in self.board.info.items():
+            var = StringVar()
+            var.set(value)
+            self.infovars[name] = var
+        
     def createwidgets(self):
     
         def create_topfrm():
-            topfrm = ttk.Frame(self, padding=2, width=210)#
-            Label(
-                topfrm, text=self.board.info['Title']).pack()
-                # font='Helvetica -14 bold' 
-            topfrm.pack(side=TOP)  # 顶部区域 , fill=X side=TOP
+            topfrm = ttk.Frame(self, padding=2)
+            Label(topfrm, # font='Helvetica -14 bold' 
+                text=self.infovars['Title'].get()).pack(fill=X)
+            topfrm.pack(side=TOP)
 
         def create_midfrm():
-            #midfrm = ttk.Frame(self, padding=2)
+            
+            def __initdraw():
+                self.mvcanvas.create_oval(self.cellwidth//2+self.cellbd, self.cellbd,
+                        self.cellwidth+self.cellwidth//2-self.cellbd,
+                        self.cellheight-self.cellbd, width=2, outline='red')
+                self.mvcanvas.create_text(self.cellwidth, self.cellheight//2, text='开始')
+                
             midfrm = LabelFrame(
                 self,
                 relief=GROOVE,
-                text=' 图示着法 ',
+                text=' 棋谱着法 ',
                 padx=2,
-                pady=2,
+                pady=1,
                 labelanchor='nw')
             vbar = Scrollbar(midfrm, orient=VERTICAL)
             hbar = Scrollbar(midfrm, orient=HORIZONTAL)            
-            mvcanvas = Canvas(
+            self.mvcanvas = Canvas(
                 midfrm,
                 relief=SUNKEN,
-                width=MoveWidth,
-                height=MoveHeight,
-                scrollregion=(0, 0, MoveWidth*2, MoveHeight*2),
-                #highlightthickness=0,
+                #width=self.canvawidth,
+                #height=self.canvasheight,
+                #scrollregion=(0, 0, self.canvawidth*2, self.canvasheight*2),
+                highlightthickness=2,
                 yscrollcommand=vbar.set,
-                xscrollcommand=hbar.set)  # width=13
-            vbar.config(command=mvcanvas.yview)
-            hbar.config(command=mvcanvas.xview)
-            self.mvcanvas = mvcanvas                
+                xscrollcommand=hbar.set) 
+            vbar.config(command=self.mvcanvas.yview)
+            hbar.config(command=self.mvcanvas.xview)               
             vbar.pack(side=RIGHT, fill=Y)
             hbar.pack(side=BOTTOM, fill=X)            
-            mvcanvas.pack(side=LEFT) #fill=BOTH
-            midfrm.pack(expand=YES, fill=BOTH) #  
+            self.mvcanvas.pack(side=LEFT)#, expand=YES, fill=BOTH
+            __initdraw()
+            midfrm.pack(side=TOP)#,expand=YES fill=BOTH
 
         def create_bottomfrm():
         
-            def __button(master, name, wid, com, sid):
+            def __button(master, name, com, sid):
                 Button(
-                    master, text=name, width=wid,
+                    master, text=name, width=7,
                     command=com, relief=GROOVE).pack(side=sid) #, SUNKEN
 
-            def create_botleftfrm(bottomfrm):
-                botleftfrm = ttk.Frame(bottomfrm, padding=1)
-                buttdate = [
-                    ('对换位置', 8, lambda: self.board.changeside('rotate'),
-                     BOTTOM),
-                    ('左右对称', 8, lambda: self.board.changeside('symmetry'),
-                     BOTTOM), ('对换棋局', 8, lambda: self.board.changeside(),
-                               BOTTOM), ('打印棋局', 8, lambda: print(self.board),
-                                         BOTTOM)
-                ]
-                for name, wid, com, sid in buttdate:
-                    __button(botleftfrm, name, wid, com, sid)
-                botleftfrm.pack(side=LEFT)  #, fill=BOTH, expand=YES
-                
             def create_botrightfrm(bottomfrm):
-                botrightfrm = ttk.Frame(bottomfrm, padding=1)
+                botrightfrm = ttk.Frame(bottomfrm, padding=2)
                 buttdate = [
-                    ('最后局面', 8, lambda: self.onEndKey(None),
-                     BOTTOM), ('下一着', 8, lambda: self.onDownKey(None), BOTTOM),
-                    ('上一着', 8, lambda: self.onUpKey(None),
-                     BOTTOM), ('起始局面', 8, lambda: self.onHomeKey(None),
-                               BOTTOM)
+                    ('最后局面', lambda: self.onEndKey(None),
+                     RIGHT), ('下一着', lambda: self.onDownKey(None), RIGHT),
+                    ('上一着', lambda: self.onUpKey(None),
+                     RIGHT), ('开始局面', lambda: self.onHomeKey(None),
+                               RIGHT),          
+                    ('对换位置', lambda: self.board.changeside('rotate'),
+                     LEFT),
+                    ('左右对称', lambda: self.board.changeside('symmetry'),
+                     LEFT), ('对换棋局', lambda: self.board.changeside(),
+                               LEFT), ('打印棋局', lambda: print(self.board),
+                                         LEFT)
                 ]
-                for name, wid, com, sid in buttdate:
-                    __button(botrightfrm, name, wid, com, sid)
-                botrightfrm.pack(side=RIGHT)  #, fill=BOTH, expand=YES
-                
-            def create_botmidfrm(bottomfrm):
-                remfrm = LabelFrame(
-                    bottomfrm,
-                    relief=GROOVE,
-                    text=' 评注：',
-                    padx=2,
-                    pady=2,
-                    labelanchor='nw')
-                self.remarktext = Text(
-                    remfrm,
-                    padx=2,
-                    pady=1,
-                    height=6,
-                    width=30,
-                    relief=GROOVE,
-                    font=('Consolas', '10'))
-                self.remarktext.pack()  # side=TOP, expand=YES, fill=BOTH
-                remfrm.pack(expand=YES, fill=BOTH)  # 底部区域
-                
+                for name, com, sid in buttdate:
+                    __button(botrightfrm, name, com, sid)
+                Label(botrightfrm, text='  ').pack(side=LEFT)
+                botrightfrm.pack(side=RIGHT)     
+            
             bottomfrm = ttk.Frame(self, padding=1)
-            create_botleftfrm(bottomfrm)
             create_botrightfrm(bottomfrm)
-            create_botmidfrm(bottomfrm)
             bottomfrm.pack(side=BOTTOM)  # 顶部区域
 
         create_topfrm()  # 先打包的最后被裁切
@@ -120,7 +109,7 @@ class MoveArea(View, ttk.Frame):
         create_midfrm()
         
     def createlayout(self):
-        self.pack(side=RIGHT, expand=YES, fill=Y)  # BOTH
+        self.pack(side=RIGHT)  #Y, expand=YES, fill=BOTH 
 
     def createbindings(self):
         self.bind('<Up>', self.onUpKey)
@@ -129,8 +118,8 @@ class MoveArea(View, ttk.Frame):
         self.bind('<Next>', self.onPgdnKey)
         self.bind('<Home>', self.onHomeKey)
         self.bind('<End>', self.onEndKey)
-        self.mvcanvas.bind('<Double-1>',
-                              self.onMouseLeftclick)  # 用buttom-1不成功！
+        self.mvcanvas.bind('<Button-1>',
+                              self.onMouseLeftclick)  # Double-1
 
     def onUpKey(self, event):
         self.board.movestep(-1)
@@ -167,13 +156,47 @@ class MoveArea(View, ttk.Frame):
             #for n, label in enumerate(self.infolabel):
             #    label.config(text=infotext[n])
 
-        def __drawmvstr():
-            '''
-            boutstr = self.walks.getboutstrs_ltbox() #getboutstr(True)
-            boutstr.insert(0, '=====开始======')
-            self.listvar.set(boutstr)
-            '''
-            pass
+        def __drawmvstr():    
+        
+            def __mvstr(move, isother=False):
+                row, col = move.stepno, move.maxcol + 1
+                precol = move.prev.maxcol + 1 if isother else col
+                self.mvcanvas.create_line(
+                        precol*self.cellwidth+self.cellwidth//2-self.cellbd 
+                        if isother else col*self.cellwidth,
+                        row*self.cellheight-self.cellbd,
+                        col*self.cellwidth-self.cellwidth//2+self.cellbd
+                        if isother else col*self.cellwidth,
+                        row*self.cellheight+self.cellbd)
+                recid = self.mvcanvas.create_rectangle(
+                        col*self.cellwidth-self.cellwidth//2+self.cellbd,
+                        row*self.cellheight+self.cellbd,
+                        col*self.cellwidth+self.cellwidth//2-self.cellbd,
+                        (row+1)*self.cellheight-self.cellbd,
+                        width=1)
+                strid = self.mvcanvas.create_text(col*self.cellwidth,
+                        row*self.cellheight+self.cellheight//2, text=move.zhstr)
+                self.mvid[recid] = self.mvid[strid] = move
+                if move.next_:
+                    __mvstr(move.next_)
+                if move.other:
+                    __mvstr(move.other, True)
+            
+            self.canvasheight = (self.board.maxrow + 2) * self.cellheight
+            self.canvawidth = (self.board.maxcol + 2) * self.cellwidth
+            self.mvcanvas.config(width=self.canvawidth, height=self.canvasheight,
+                    scrollregion=(0, 0, self.canvawidth, self.canvasheight))
+            for i in range(1, self.board.maxrow, 2):
+                self.mvcanvas.create_text(self.cellwidth//4,
+                        i*self.cellheight+self.cellheight//2,
+                        text='{:3d}'.format((i+1) // 2))  # 字中心点
+                if (i+1) // 2 % 2 == 0:
+                    self.mvcanvas.create_line(0, (i+2)*self.cellheight,
+                        (self.board.maxcol + 2) * self.cellwidth,
+                        (i+2)*self.cellheight, fill='red')
+            self.mvid = {}
+            if self.board.rootmove.next_:
+                __mvstr(self.board.rootmove.next_) 
 
         def __drawselection():
             '''

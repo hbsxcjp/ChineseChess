@@ -276,7 +276,7 @@ class Move(object):
         self.othcol = 0 # 变着广度
         
         self.maxcol = 0 # 图中列位置（需结合board确定）
-        self.zhstr = zhstr if not prev else '1.开始' # 中文描述（需结合board确定）
+        self.zhstr = zhstr if prev else '1.开始' # 中文描述（需结合board确定）
         
     def __str__(self):
         return '{}_{}({}) [{} {}] {}'.format(self.stepno, self.othcol, self.maxcol,

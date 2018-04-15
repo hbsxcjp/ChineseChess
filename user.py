@@ -4,7 +4,7 @@
 
 
 from form import * # 视图
-filename = 'c:\\棋谱文件\\示例文件.xml\\布局陷阱--飞相局对金钩炮.xml' # 4四量拨千斤
+filename = 'c:\\棋谱文件\\示例文件.xml\\第01局.xml' #4四量拨千斤.xml' #  
 
 
 class User(object):

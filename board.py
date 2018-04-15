@@ -572,8 +572,8 @@ class Board(object):
             return
         prevmoves = self.getprevmoves(move)[1:]
         self.movefirst()
-        for move in prevmoves:
-            self.movepiece(move.fseat, move.tseat)
+        for mv in prevmoves:
+            self.movepiece(mv.fseat, mv.tseat)
         self.cureatpiece = self.movepiece(move.fseat, move.tseat)
         self.curmove = move
         self.notifyviews()
@@ -585,19 +585,16 @@ class Board(object):
         self.curmove.other = None
 
     def addmove(self, fseat, tseat, remark='', isother=False):
-        move = Move(self.curmove, fseat, tseat, remark)
-        if isother:
-            self.maxcol += 1 # 在视图中的列数
-        move.maxcol = self.maxcol
+        move = Move(self.curmove.prev if isother else self.curmove,
+                fseat, tseat, remark)
         self.setzhstr(move)
         if isother:
             self.curmove.setother(move)
-            self.othcol = max(self.othcol, move.othcol)
             self.moveother()
         else:
             self.curmove.setnext(move)
-            self.maxrow = max(self.maxrow, move.stepno)
             self.moveforward(False, True)
+        self.__setcols()
                 
     def __fen(self, piecechars=None):
         def __linetonums():
@@ -885,7 +882,7 @@ class Board(object):
                 move.setnext(Move(move))
                 __readmove(move.next_)
             if (ChildTag & 0x40) != 0: # 有右子树
-                move.setother(Move(move))
+                move.setother(Move(move.prev))
                 __readmove(move.other)
 
         infofmt = '2B2BL8B32BH2B2L4B8H64p64p64p16p16p16p16p64p16p16p32p16p16p528B'
@@ -911,7 +908,7 @@ class Board(object):
                 move.remark = fileobj.read(rlength).decode()
             self.__setcounts(move) # 设置内部计数值
             if hasothernextrem & 0x80:
-                move.setother(Move(move))
+                move.setother(Move(move.prev))
                 __readmove(move.other)
             if hasothernextrem & 0x40:
                 move.setnext(Move(move))
@@ -943,7 +940,7 @@ class Board(object):
             self.__setcounts(move) # 设置内部计数值         
 
             if len(elem[i]) > 0: # 有子元素(变着)
-                move.setother(Move(move))
+                move.setother(Move(move.prev))
                 __readelem(elem[i], 0, move.other)
             i += 1
             if len(elem) > i:
@@ -969,7 +966,7 @@ class Board(object):
             def __readmoves(move, mvstr, isother):  # 非递归                
                 lastmove = move
                 for i, (mstr, remark) in enumerate(moverg.findall(mvstr)):
-                    newmove = Move(lastmove)
+                    newmove = Move(move.prev if isother else move)
                     if fmt == 'ICCS':
                         newmove.setseat_ICCS(mstr)
                     elif fmt == 'zh':
@@ -1013,7 +1010,7 @@ class Board(object):
             def __readmove(move, row, col, isother=False):
                 zhstr = moverg.findall(moves[row][col])                
                 if zhstr:
-                    newmove = Move(move)
+                    newmove = Move(move.prev if isother else move)
                     newmove.stepno = row
                     newmove.zhstr = zhstr[0][:4]
                     newmove.remark = rems.get((row, col), '')
@@ -1237,9 +1234,12 @@ class Board(object):
             
     def loadviews(self, views):
         self.views = views
+        self.notifyviews()
 
     def notifyviews(self):
         '通知视图更新'
+        if not hasattr(self, 'views'):
+            return
         for view in self.views:
             view.updateview()
 
@@ -1256,11 +1256,11 @@ def testtransdir():
     
     board = Board()
     for dir in dirfrom[:2]:    
-        for fext in fexts[3:]:
-            for text in texts[1:2]:
+        for fext in fexts[:]:
+            for text in texts[:]:
                 if text == fext:
                     continue
-                for fmt in fmts[1:2]: # 设置输入文件格式  
+                for fmt in fmts[:]: # 设置输入文件格式  
                     board.transdir(dir+fext, dir+text, text, fmt)
            
             
