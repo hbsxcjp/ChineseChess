@@ -59,8 +59,8 @@ class MoveArea(View, ttk.Frame):
             self.mvcanvas = Canvas(
                 midfrm,
                 relief=SUNKEN,
-                #width=self.canvawidth,
-                #height=self.canvasheight,
+                width=456,
+                height=536,
                 #scrollregion=(0, 0, self.canvawidth*2, self.canvasheight*2),
                 highlightthickness=2,
                 yscrollcommand=vbar.set,
@@ -69,9 +69,9 @@ class MoveArea(View, ttk.Frame):
             hbar.config(command=self.mvcanvas.xview)               
             vbar.pack(side=RIGHT, fill=Y)
             hbar.pack(side=BOTTOM, fill=X)            
-            self.mvcanvas.pack(side=LEFT)#, expand=YES, fill=BOTH
+            self.mvcanvas.pack()#,side=LEFT expand=YES, fill=BOTH
             __initdraw()
-            midfrm.pack(side=TOP)#,expand=YES fill=BOTH
+            midfrm.pack()#side=TOP,expand=YES fill=BOTH
 
         def create_bottomfrm():
         
@@ -80,11 +80,13 @@ class MoveArea(View, ttk.Frame):
                     master, text=name, width=7,
                     command=com, relief=GROOVE).pack(side=sid) #, SUNKEN
 
-            def create_botrightfrm(bottomfrm):
-                botrightfrm = ttk.Frame(bottomfrm, padding=2)
+            def create_buttonfrm(bottomfrm):
+                buttonfrm = ttk.Frame(bottomfrm, padding=0)
                 buttdate = [
                     ('最后局面', lambda: self.onEndKey(None),
                      RIGHT), ('下一着', lambda: self.onDownKey(None), RIGHT),
+                    ('变  着', lambda: self.onRightKey(None),
+                     RIGHT), 
                     ('上一着', lambda: self.onUpKey(None),
                      RIGHT), ('开始局面', lambda: self.onHomeKey(None),
                                RIGHT),          
@@ -92,16 +94,15 @@ class MoveArea(View, ttk.Frame):
                      LEFT),
                     ('左右对称', lambda: self.board.changeside('symmetry'),
                      LEFT), ('对换棋局', lambda: self.board.changeside(),
-                               LEFT), ('打印棋局', lambda: print(self.board),
-                                         LEFT)
+                               LEFT)
                 ]
                 for name, com, sid in buttdate:
-                    __button(botrightfrm, name, com, sid)
-                Label(botrightfrm, text='  ').pack(side=LEFT)
-                botrightfrm.pack(side=RIGHT)     
+                    __button(buttonfrm, name, com, sid)
+                Label(buttonfrm, text='  ').pack(side=LEFT)
+                buttonfrm.pack(side=RIGHT)     
             
             bottomfrm = ttk.Frame(self, padding=1)
-            create_botrightfrm(bottomfrm)
+            create_buttonfrm(bottomfrm)
             bottomfrm.pack(side=BOTTOM)  # 顶部区域
 
         create_topfrm()  # 先打包的最后被裁切
@@ -114,6 +115,8 @@ class MoveArea(View, ttk.Frame):
     def createbindings(self):
         self.bind('<Up>', self.onUpKey)
         self.bind('<Down>', self.onDownKey)
+        self.bind('<Left>', self.onUpKey)
+        self.bind('<Right>', self.onRightKey)
         self.bind('<Prior>', self.onPgupKey)
         self.bind('<Next>', self.onPgdnKey)
         self.bind('<Home>', self.onHomeKey)
@@ -127,6 +130,9 @@ class MoveArea(View, ttk.Frame):
     def onDownKey(self, event):
         self.board.movestep()
 
+    def onRightKey(self, event):
+        self.board.moveother()
+        
     def onPgupKey(self, event):
         self.board.movestep(-10)
 
@@ -184,8 +190,7 @@ class MoveArea(View, ttk.Frame):
             
             self.canvasheight = (self.board.maxrow + 2) * self.cellheight
             self.canvawidth = (self.board.maxcol + 2) * self.cellwidth
-            self.mvcanvas.config(width=self.canvawidth, height=self.canvasheight,
-                    scrollregion=(0, 0, self.canvawidth, self.canvasheight))
+            self.mvcanvas.config(scrollregion=(0, 0, self.canvawidth, self.canvasheight))
             for i in range(1, self.board.maxrow, 2):
                 self.mvcanvas.create_text(self.cellwidth//4,
                         i*self.cellheight+self.cellheight//2,

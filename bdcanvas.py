@@ -301,6 +301,9 @@ class BdCanvas(View, Canvas):
 
         def __moveeffect():
             curcolor = self.board.curcolor
+            if not (self.board.getkingseat(RED_P)
+                    and self.board.getkingseat(BLACK_P)): # '将帅不在棋盘上'
+                return
             kingpie = self.board.getkingpiece(curcolor)
             otherkingpie = self.board.getkingpiece(not curcolor)
             self.coords(kingpie.eatimgid, OutsideXY)
@@ -318,15 +321,14 @@ class BdCanvas(View, Canvas):
                     tag='walk')  # , width=4
                 playsound('CHECK2')
             elif not self.board.isstart:
-                eatpiece = self.board.cureatpiece
+                eatpiece = self.board.curmove.eatpiece
                 playsound('MOVE' if not bool(eatpiece) else (
                     'CAPTURE2' if eatpiece.isStronge else 'CAPTURE'))# is BlankPie
 
         self.__canvastexts()
         __drawallpies()
         __drawtraces()
-        if self.board.getkingseat(RED_P): # '将帅在棋盘上'
-            __moveeffect()
+        __moveeffect()
 
 
 #

@@ -228,8 +228,7 @@ class Board(object):
                     'Version': ''}
         self.rootmove = Move()
         self.curmove = self.rootmove
-        self.firstcolor = RED_P
-        self.cureatpiece = BlankPie    
+        self.firstcolor = RED_P 
         self.movcount = -1 # 消除根节点
         self.remcount = 0 # 注解数量
         self.remlenmax = 0 # 注解最大长度
@@ -237,16 +236,24 @@ class Board(object):
         self.maxrow = 0 # 存储最大着法深度
         self.maxcol = 0 # 存储视图最大列数        
         
-    def setpiece(self, seat, piece):
+    def __takepiece(self, seat):
+        piece = self.seat_pies[seat]
+        piece.setseat(None)
+        return piece
+        
+    def __fillpiece(self, seat, piece):
         self.seat_pies[seat] = piece
         piece.setseat(seat)
 
-    def movepiece(self, fseat, tseat, backpiece=BlankPie):
-        eatpiece = self.seat_pies[tseat]
-        eatpiece.setseat(None)
-        self.setpiece(tseat, self.seat_pies[fseat])
-        self.setpiece(fseat, backpiece)
+    def movego(self, fseat, tseat):
+        eatpiece = self.__takepiece(tseat)
+        self.__fillpiece(tseat, self.seat_pies[fseat])
+        self.seat_pies[fseat] = BlankPie
         return eatpiece
+
+    def moveback(self, tseat, fseat, backpiece):
+        self.__fillpiece(fseat, self.seat_pies[tseat])
+        self.__fillpiece(tseat, backpiece)
 
     def setbottomside(self):
         self.bottomside = (RED_P if self.getrow(
@@ -317,10 +324,10 @@ class Board(object):
         piece = self.getpiece(fseat)
         color = piece.color
         for tseat in piece.getmvseats(self):
-            topiece = self.movepiece(fseat, tseat)
+            topiece = self.movego(fseat, tseat)
             if not self.iskilled(color):
                 result.append(tseat)
-            self.movepiece(tseat, fseat, topiece)
+            self.moveback(tseat, fseat, topiece)
         return result
         
     def isdied(self, color):
@@ -330,7 +337,7 @@ class Board(object):
 
     def __setseatpieces(self, seatpieces):
         self.__clearseatpieces()
-        [self.setpiece(seat, piece) for seat, piece in seatpieces.items()]
+        [self.__fillpiece(seat, piece) for seat, piece in seatpieces.items()]
         self.setbottomside()
 
     def __sortpawnseats(self, isbottomside, pawnseats):
@@ -486,10 +493,10 @@ class Board(object):
         '根据board设置树节点的zhstr'
         def __zhstr(move, isother=False):
             self.setzhstr(move)
-            eatpiece = self.movepiece(move.fseat, move.tseat)
+            eatpiece = self.movego(move.fseat, move.tseat)
             if move.next_:
                 __zhstr(move.next_)
-            self.movepiece(move.tseat, move.fseat, eatpiece)
+            self.moveback(move.tseat, move.fseat, eatpiece)
             if move.other:
                 __zhstr(move.other, True)
                 
@@ -526,7 +533,7 @@ class Board(object):
         if self.curmove.next_ is None:
             return
         self.curmove = self.curmove.next_   
-        self.cureatpiece = self.movepiece(self.curmove.fseat, 
+        self.curmove.eatpiece = self.movego(self.curmove.fseat, 
                 self.curmove.tseat)
         if updateview:
             self.notifyviews()
@@ -534,8 +541,8 @@ class Board(object):
     def movebackward(self, updateview=False):                    
         if self.curmove.prev is None:
             return
-        self.movepiece(self.curmove.tseat, 
-                self.curmove.fseat, self.cureatpiece)
+        self.moveback(self.curmove.tseat, 
+                self.curmove.fseat, self.curmove.eatpiece)
         self.curmove = self.curmove.prev
         if updateview:
             self.notifyviews()
@@ -544,10 +551,11 @@ class Board(object):
         '移动到当前节点的另一变着'
         if self.curmove.other is None:
             return        
+        curmove = self.curmove.other   
         self.movebackward()
-        self.curmove = self.curmove.other   
-        self.cureatpiece = self.movepiece(self.curmove.fseat, 
-                self.curmove.tseat)
+        self.curmove = curmove
+        curmove.eatpiece = self.movego(curmove.fseat, 
+                curmove.tseat)
         self.notifyviews()
 
     def movefirst(self, updateview=False):
@@ -573,8 +581,8 @@ class Board(object):
         prevmoves = self.getprevmoves(move)[1:]
         self.movefirst()
         for mv in prevmoves:
-            self.movepiece(mv.fseat, mv.tseat)
-        self.cureatpiece = self.movepiece(move.fseat, move.tseat)
+            self.movego(mv.fseat, mv.tseat)
+        move.eatpiece = self.movego(move.fseat, move.tseat)
         self.curmove = move
         self.notifyviews()
             
@@ -666,7 +674,6 @@ class Board(object):
         __setfen(afens[0])
         self.firstcolor = BLACK_P if (afens[1] == 'b') else RED_P
         self.curmove = self.rootmove
-        self.cureatpiece = BlankPie
         self.notifyviews()
 
     def changeside(self, changetype='exchange'):
@@ -1060,11 +1067,11 @@ class Board(object):
             #print(move.zhstr)
             self.setmvseat(move)
             self.__transcolor()
-            eatpiece = self.movepiece(move.fseat, move.tseat)
+            eatpiece = self.movego(move.fseat, move.tseat)
             if move.next_:
                 __setseat(move.next_)                
             self.__transcolor()
-            self.movepiece(move.tseat, move.fseat, eatpiece)
+            self.moveback(move.tseat, move.fseat, eatpiece)
             if move.other:            
                 __setseat(move.other)          
                     
