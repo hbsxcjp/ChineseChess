@@ -44,7 +44,17 @@ blankboard = '''
 '''
 # yapf: disable
 # 边框粗线
-        
+
+ 
+class View(object):
+    def __init__(self, model):
+        self.board = model
+
+    def updateview(self):
+        # 更新视图（由数据模型发起）
+        pass
+
+         
 def multrepl(text, xdict):
     '一次替换多个子字符串（字典定义）（方法来源于PythonCook）'
     rx = re.compile('|'.join(map(re.escape, xdict)))  # 模式
@@ -90,15 +100,6 @@ def playsound(soundname):
     winsound.PlaySound(soundpath + soundname + '.WAV', winsound.SND_ASYNC)
 
 
-class View(object):
-    def __init__(self, model):
-        self.board = model
-
-    def updateview(self):
-        # 更新视图（由数据模型发起）
-        pass
-
-        
 initdbsql = '''
     BEGIN;
     CREATE TABLE IF NOT EXISTS manual(

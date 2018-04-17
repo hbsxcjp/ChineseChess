@@ -24,9 +24,9 @@ class MainForm(View, ttk.Frame):
         self.createlayout()
         self.createbindings()
 
-        self.board.loadviews([self, self.bdcanvas]) #, self.movearea
         self.makemenu()
         self.master.protocol('WM_DELETE_WINDOW', self.quitmain)
+        self.board.loadviews([self, self.bdcanvas, self.movearea]) #
         #self.updateview()
 
     def createwidgets(self, board):

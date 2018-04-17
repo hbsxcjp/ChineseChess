@@ -517,11 +517,12 @@ class Board(object):
         return self.curmove.next_ is None
                 
     def getprevmoves(self, move):
-        result = []
+        result = [move]
         while move.prev is not None:
             result.append(move.prev)
+            move = move.prev
         result.reverse()
-        return result
+        return result[1:]
                 
     def getnextmoves(self, move):
         result = [move]
@@ -575,15 +576,20 @@ class Board(object):
             movefun()
         self.notifyviews()
         
+    def moveto(self, move):
+        if move is self.rootmove:
+            return
+        move.eatpiece = self.movego(move.fseat, move.tseat)
+        self.curmove = move                
+        self.notifyviews()
+            
     def moveassign(self, move):
         if move is self.rootmove:
             return
-        prevmoves = self.getprevmoves(move)[1:]
+        prevmoves = self.getprevmoves(move)
         self.movefirst()
         for mv in prevmoves:
             self.movego(mv.fseat, mv.tseat)
-        move.eatpiece = self.movego(move.fseat, move.tseat)
-        self.curmove = move
         self.notifyviews()
             
     def cutnext(self):
@@ -601,7 +607,7 @@ class Board(object):
             self.moveother()
         else:
             self.curmove.setnext(move)
-            self.moveforward(False, True)
+            self.moveforward(True)
         self.__setcols()
                 
     def __fen(self, piecechars=None):

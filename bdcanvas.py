@@ -42,7 +42,7 @@ class BdCanvas(View, Canvas):
         self.createlayout()
         self.createbindings()
         self.initattr()
-        self.updateview()
+        #self.updateview()
 
     def initattr(self):
         self.bottomside = None
