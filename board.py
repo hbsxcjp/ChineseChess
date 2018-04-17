@@ -245,13 +245,13 @@ class Board(object):
         self.seat_pies[seat] = piece
         piece.setseat(seat)
 
-    def movego(self, fseat, tseat):
+    def __go(self, fseat, tseat):
         eatpiece = self.__takepiece(tseat)
         self.__fillpiece(tseat, self.seat_pies[fseat])
         self.seat_pies[fseat] = BlankPie
         return eatpiece
 
-    def moveback(self, tseat, fseat, backpiece):
+    def __back(self, tseat, fseat, backpiece):
         self.__fillpiece(fseat, self.seat_pies[tseat])
         self.__fillpiece(tseat, backpiece)
 
@@ -324,10 +324,10 @@ class Board(object):
         piece = self.getpiece(fseat)
         color = piece.color
         for tseat in piece.getmvseats(self):
-            topiece = self.movego(fseat, tseat)
+            topiece = self.__go(fseat, tseat)
             if not self.iskilled(color):
                 result.append(tseat)
-            self.moveback(tseat, fseat, topiece)
+            self.__back(tseat, fseat, topiece)
         return result
         
     def isdied(self, color):
@@ -493,10 +493,10 @@ class Board(object):
         '根据board设置树节点的zhstr'
         def __zhstr(move, isother=False):
             self.setzhstr(move)
-            eatpiece = self.movego(move.fseat, move.tseat)
+            eatpiece = self.__go(move.fseat, move.tseat)
             if move.next_:
                 __zhstr(move.next_)
-            self.moveback(move.tseat, move.fseat, eatpiece)
+            self.__back(move.tseat, move.fseat, eatpiece)
             if move.other:
                 __zhstr(move.other, True)
                 
@@ -522,41 +522,26 @@ class Board(object):
             result.append(move.prev)
             move = move.prev
         result.reverse()
-        return result[1:]
-                
-    def getnextmoves(self, move):
-        result = [move]
-        while result[-1].next_ is not None:
-            result.append(result[-1].next_)
         return result
                 
-    def moveforward(self, updateview=False):
-        if self.curmove.next_ is None:
-            return
-        self.curmove = self.curmove.next_   
-        self.curmove.eatpiece = self.movego(self.curmove.fseat, 
-                self.curmove.tseat)
-        if updateview:
-            self.notifyviews()
-        
-    def movebackward(self, updateview=False):                    
+    def movegoto(self, move):
+        move.eatpiece = self.__go(move.fseat, move.tseat)
+        self.curmove = move
+            
+    def movebackward(self):                    
         if self.curmove.prev is None:
             return
-        self.moveback(self.curmove.tseat, 
+        self.__back(self.curmove.tseat, 
                 self.curmove.fseat, self.curmove.eatpiece)
         self.curmove = self.curmove.prev
-        if updateview:
-            self.notifyviews()
         
     def moveother(self):
         '移动到当前节点的另一变着'
         if self.curmove.other is None:
             return        
-        curmove = self.curmove.other   
+        tomove = self.curmove.other   
         self.movebackward()
-        self.curmove = curmove
-        curmove.eatpiece = self.movego(curmove.fseat, 
-                curmove.tseat)
+        self.movegoto(tomove)
         self.notifyviews()
 
     def movefirst(self, updateview=False):
@@ -567,29 +552,26 @@ class Board(object):
     
     def movelast(self):
         while self.curmove.next_ is not None:
-            self.moveforward()
+            self.movegoto(self.curmove.next_)
         self.notifyviews()
         
     def movestep(self, inc=1):
-        movefun = self.movebackward if inc < 0 else self.moveforward
+    
+        def __moveforward():
+            if self.curmove.next_ is None:
+                return
+            self.movegoto(self.curmove.next_)
+            
+        movefun = self.movebackward if inc < 0 else __moveforward
         for _ in range(abs(inc)):
             movefun()
         self.notifyviews()
         
-    def moveto(self, move):
-        if move is self.rootmove:
-            return
-        move.eatpiece = self.movego(move.fseat, move.tseat)
-        self.curmove = move                
-        self.notifyviews()
-            
     def moveassign(self, move):
         if move is self.rootmove:
             return
-        prevmoves = self.getprevmoves(move)
         self.movefirst()
-        for mv in prevmoves:
-            self.movego(mv.fseat, mv.tseat)
+        [self.movegoto(mv) for mv in self.getprevmoves(move)]
         self.notifyviews()
             
     def cutnext(self):
@@ -607,7 +589,8 @@ class Board(object):
             self.moveother()
         else:
             self.curmove.setnext(move)
-            self.moveforward(True)
+            self.movegoto(move)
+            self.notifyviews()
         self.__setcols()
                 
     def __fen(self, piecechars=None):
@@ -713,14 +696,19 @@ class Board(object):
             seatpieces = {piece.seat: self.pieces.getothersidepiece(piece)
                     for piece in self.getlivepieces()}
         else:
-            __changeseat(__rotateseat if changetype == 'rotate'
+            transfun = (__rotateseat if changetype == 'rotate'
                     else __symmetryseat)
-            seatpieces = {piece.seat: piece for piece in self.getlivepieces()}
+            __changeseat(transfun)
+            seatpieces = {transfun(piece.seat): piece
+                    for piece in self.getlivepieces()}
         self.__setseatpieces(seatpieces)
         if changetype != 'rotate':
             self.__setzhstrs()
-        self.moveassign(curmove)
-    
+        if curmove is not self.rootmove:
+            self.moveassign(curmove)
+        else:
+            self.notifyviews()
+        
     def __setcounts(self, move):
         self.movcount += 1
         if move.remark:
@@ -1073,11 +1061,11 @@ class Board(object):
             #print(move.zhstr)
             self.setmvseat(move)
             self.__transcolor()
-            eatpiece = self.movego(move.fseat, move.tseat)
+            eatpiece = self.__go(move.fseat, move.tseat)
             if move.next_:
                 __setseat(move.next_)                
             self.__transcolor()
-            self.moveback(move.tseat, move.fseat, eatpiece)
+            self.__back(move.tseat, move.fseat, eatpiece)
             if move.other:            
                 __setseat(move.other)          
                     

@@ -93,14 +93,16 @@ class MoveArea(View, ttk.Frame):
                      RIGHT), ('开始', lambda: self.onHomeKey(None),
                                RIGHT),          
                     ('换位', lambda: self.board.changeside('rotate'),
+                     LEFT), # 预留
+                    ('换位', lambda: self.board.changeside('rotate'),
                      LEFT),
-                    ('换手', lambda: self.board.changeside('symmetry'),
+                    ('左右', lambda: self.board.changeside('symmetry'),
                      LEFT), ('换棋', lambda: self.board.changeside(),
                                LEFT)
                 ]
                 for name, com, sid in buttdate:
                     __button(buttonfrm, name, com, sid)
-                Label(buttonfrm, text='  ').pack(side=LEFT)
+                Label(buttonfrm, text='      ').pack(side=LEFT)
                 buttonfrm.pack(side=RIGHT)     
             
             bottomfrm = ttk.Frame(self, padding=1)
@@ -139,8 +141,9 @@ class MoveArea(View, ttk.Frame):
             while tomove.other and tomove.other is not curmove:
                 tomove = tomove.other
             self.board.movebackward()
-            self.board.moveto(tomove)
-        
+            self.board.movegoto(tomove)
+            self.board.notifyviews()
+            
     def onRightKey(self, event):
         self.board.moveother()
         
