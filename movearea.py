@@ -5,15 +5,15 @@
 from config import *
 from board import *
 
+cellwidth = 82
+cellheight = 40
+cellbd = 8
+
 
 class MoveArea(View, ttk.Frame):
 
     #canvawidth = 200
     #canvasheight = 500
-    cellwidth = 82
-    cellheight = 40
-    cellbd = 8
-
     def __init__(self, master, model):
         View.__init__(self, model)
         ttk.Frame.__init__(self, master, padding=2)
@@ -39,14 +39,7 @@ class MoveArea(View, ttk.Frame):
                 text=self.infovars['Title'].get()).pack(fill=X) # , font='Helvetica -14 bold'
             topfrm.pack(side=TOP)
 
-        def create_midfrm():
-            
-            def __initdraw():
-                self.mvcanvas.create_oval(self.cellwidth//2+self.cellbd, self.cellbd,
-                        self.cellwidth+self.cellwidth//2-self.cellbd,
-                        self.cellheight-self.cellbd, width=2) # , outline='red'
-                self.mvcanvas.create_text(self.cellwidth, self.cellheight//2, text='开始', font='-size 10')
-                
+        def create_midfrm():            
             midfrm = LabelFrame(
                 self,
                 relief=GROOVE,
@@ -61,7 +54,7 @@ class MoveArea(View, ttk.Frame):
                 relief=SUNKEN,
                 width=456,
                 height=536,
-                #scrollregion=(0, 0, self.canvawidth*2, self.canvasheight*2),
+                #scrollregion=(0, 0, canvawidth*2, canvasheight*2),
                 highlightthickness=2,
                 yscrollcommand=vbar.set,
                 xscrollcommand=hbar.set) 
@@ -70,7 +63,6 @@ class MoveArea(View, ttk.Frame):
             vbar.pack(side=RIGHT, fill=Y)
             hbar.pack(side=BOTTOM, fill=X)            
             self.mvcanvas.pack()#,side=LEFT expand=YES, fill=BOTH
-            __initdraw()
             midfrm.pack()#side=TOP,expand=YES fill=BOTH
 
         def create_bottomfrm():
@@ -125,7 +117,7 @@ class MoveArea(View, ttk.Frame):
         self.bind('<Next>', self.onPgdnKey)
         self.bind('<Home>', self.onHomeKey)
         self.bind('<End>', self.onEndKey)
-        self.mvcanvas.bind('<Button-1>',
+        self.mvcanvas.bind('<ButtonPress-1>',
                               self.onMouseLeftclick)  # Double-1
 
     def onUpKey(self, event):
@@ -140,7 +132,7 @@ class MoveArea(View, ttk.Frame):
             tomove = curmove.prev.next_
             while tomove.other and tomove.other is not curmove:
                 tomove = tomove.other
-            self.board.movebackward()
+            self.board.movebackto()
             self.board.movegoto(tomove)
             self.board.notifyviews()
             
@@ -162,7 +154,11 @@ class MoveArea(View, ttk.Frame):
     def onMouseLeftclick(self, event):
         # 接收点击信息
         self.focus_set()
-        
+        canx, cany = self.mvcanvas.canvasx(event.x), self.mvcanvas.canvasy(event.y)
+        curid = self.mvcanvas.find_closest(canx, cany)
+        if not (curid and curid[0] in self.mvid):
+            return
+        self.board.moveassign(self.mvid[curid[0]])
         
     def updateview(self):
         def __drawinfo():
@@ -183,44 +179,51 @@ class MoveArea(View, ttk.Frame):
                 precol = move.prev.maxcol + 1 if isother else col
                 wid = 2 if move in prevmoves else 1
                 lineid = self.mvcanvas.create_line(
-                        precol*self.cellwidth+self.cellwidth//2-self.cellbd 
-                        if isother else col*self.cellwidth,
-                        row*self.cellheight-self.cellbd,
-                        col*self.cellwidth-self.cellwidth//2+self.cellbd
-                        if isother else col*self.cellwidth,
-                        row*self.cellheight+self.cellbd,
-                        width=wid, tag='mv')
+                        precol*cellwidth+cellwidth//2-cellbd 
+                        if isother else col*cellwidth,
+                        row*cellheight-cellbd,
+                        col*cellwidth-cellwidth//2+cellbd
+                        if isother else col*cellwidth,
+                        row*cellheight+cellbd,
+                        width=wid)
                 recid = self.mvcanvas.create_rectangle(
-                        col*self.cellwidth-self.cellwidth//2+self.cellbd,
-                        row*self.cellheight+self.cellbd,
-                        col*self.cellwidth+self.cellwidth//2-self.cellbd,
-                        (row+1)*self.cellheight-self.cellbd,
-                        width=wid, tag='mv')
-                strid = self.mvcanvas.create_text(col*self.cellwidth,
-                        row*self.cellheight+self.cellheight//2, text=move.zhstr, font='-size 10', tag='mv')
+                        col*cellwidth-cellwidth//2+cellbd,
+                        row*cellheight+cellbd,
+                        col*cellwidth+cellwidth//2-cellbd,
+                        (row+1)*cellheight-cellbd,
+                        width=wid)
+                strid = self.mvcanvas.create_text(col*cellwidth,
+                        row*cellheight+cellheight//2,
+                        text=move.zhstr, font='-size 10')
                 self.mvid[recid] = self.mvid[strid] = move
                 if move.next_:
                     __mvstr(move.next_)
                 if move.other:
                     __mvstr(move.other, True)
             
-            self.mvcanvas.delete('mv')
-            self.canvasheight = (self.board.maxrow + 2) * self.cellheight
-            self.canvawidth = (self.board.maxcol + 2) * self.cellwidth
-            self.mvcanvas.config(scrollregion=(0, 0, self.canvawidth, self.canvasheight))
+            self.mvcanvas.delete('all')
+            canvasheight = (self.board.maxrow + 2) * cellheight
+            canvawidth = (self.board.maxcol + 2) * cellwidth
+            self.mvcanvas.config(scrollregion=(0, 0, canvawidth, canvasheight))
             for i in range(1, self.board.maxrow, 2):
-                self.mvcanvas.create_text(self.cellwidth//4,
-                        i*self.cellheight+self.cellheight//2,
-                        text='{:3d}'.format((i+1) // 2), font='Helvetica -14', tag='mv')  # 字中心点
+                self.mvcanvas.create_text(cellwidth//4,
+                        i*cellheight+cellheight//2,
+                        text='{:3d}'.format((i+1) // 2), font='Helvetica -14')
                 if (i+1) // 2 % 2 == 0:
-                    self.mvcanvas.create_line(0, (i+2)*self.cellheight,
-                        (self.board.maxcol + 2) * self.cellwidth,
-                        (i+2)*self.cellheight, fill='red', tag='mv')
+                    self.mvcanvas.create_line(0, (i+2)*cellheight,
+                        (self.board.maxcol + 2) * cellwidth,
+                        (i+2)*cellheight, fill='red')
+                        
             self.mvid = {}
-            prevmoves = set(self.board.getprevmoves(self.board.curmove))
+            recid = self.mvcanvas.create_oval(cellwidth//2+cellbd,
+                        cellbd,
+                        cellwidth+cellwidth//2-cellbd,
+                        cellheight-cellbd, width=2) # , outline='red'
+            strid = self.mvcanvas.create_text(cellwidth, cellheight//2, text='开始', font='-size 10')
+            self.mvid[recid] = self.mvid[strid] = self.board.rootmove
+            prevmoves = set(self.board.getprevmoves())
             if self.board.rootmove.next_:
                 __mvstr(self.board.rootmove.next_)
-                
 
         def __drawselection():
             '''

@@ -516,7 +516,9 @@ class Board(object):
     def islast(self):
         return self.curmove.next_ is None
                 
-    def getprevmoves(self, move):
+    def getprevmoves(self, move=None):
+        if not move:
+            move = self.curmove
         result = [move]
         while move.prev is not None:
             result.append(move.prev)
@@ -528,9 +530,7 @@ class Board(object):
         move.eatpiece = self.__go(move.fseat, move.tseat)
         self.curmove = move
             
-    def movebackward(self):                    
-        if self.curmove.prev is None:
-            return
+    def movebackto(self):
         self.__back(self.curmove.tseat, 
                 self.curmove.fseat, self.curmove.eatpiece)
         self.curmove = self.curmove.prev
@@ -540,46 +540,51 @@ class Board(object):
         if self.curmove.other is None:
             return        
         tomove = self.curmove.other   
-        self.movebackward()
+        self.movebackto()
         self.movegoto(tomove)
         self.notifyviews()
 
     def movefirst(self, updateview=False):
+        moved = False
         while self.curmove is not self.rootmove:
-            self.movebackward()
-        if updateview:
+            self.movebackto()
+            moved = True
+        if moved and updateview:
             self.notifyviews()
     
     def movelast(self):
+        moved = False
         while self.curmove.next_ is not None:
             self.movegoto(self.curmove.next_)
-        self.notifyviews()
+            moved = True
+        if moved:    
+            self.notifyviews()
         
     def movestep(self, inc=1):
     
-        def __moveforward():
+        def __movegoto():
             if self.curmove.next_ is None:
                 return
             self.movegoto(self.curmove.next_)
+            return True
             
-        movefun = self.movebackward if inc < 0 else __moveforward
-        for _ in range(abs(inc)):
-            movefun()
-        self.notifyviews()
+        def __movebackto():
+            if self.curmove.prev is None:
+                return
+            self.movebackto()
+            return True
+        
+        movefun = __movebackto if inc < 0 else __movegoto
+        if any([movefun() for _ in range(abs(inc))]):
+            self.notifyviews()
         
     def moveassign(self, move):
-        if move is self.rootmove:
+        if move is self.curmove:
             return
         self.movefirst()
         [self.movegoto(mv) for mv in self.getprevmoves(move)]
         self.notifyviews()
             
-    def cutnext(self):
-        self.curmove.next_ = None
-
-    def cutother(self):
-        self.curmove.other = None
-
     def addmove(self, fseat, tseat, remark='', isother=False):
         move = Move(self.curmove.prev if isother else self.curmove,
                 fseat, tseat, remark)
@@ -593,6 +598,12 @@ class Board(object):
             self.notifyviews()
         self.__setcols()
                 
+    def cutnext(self):
+        self.curmove.next_ = None
+
+    def cutother(self):
+        self.curmove.other = None
+
     def __fen(self, piecechars=None):
         def __linetonums():
             '下划线字符串对应数字字符元组 列表'
