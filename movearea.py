@@ -5,7 +5,7 @@
 from config import *
 from board import *
 
-cellwidth = 82
+cellwidth = 80
 cellheight = 40
 cellbd = 8
 
@@ -47,21 +47,21 @@ class MoveArea(View, ttk.Frame):
                 padx=2,
                 pady=1,
                 labelanchor='nw')
-            vbar = Scrollbar(midfrm, orient=VERTICAL)
-            hbar = Scrollbar(midfrm, orient=HORIZONTAL)            
+            self.vbar = Scrollbar(midfrm, orient=VERTICAL)
+            self.hbar = Scrollbar(midfrm, orient=HORIZONTAL)            
             self.mvcanvas = Canvas(
                 midfrm,
                 relief=SUNKEN,
-                width=456,
+                width=442,
                 height=536,
                 #scrollregion=(0, 0, canvawidth*2, canvasheight*2),
                 highlightthickness=2,
-                yscrollcommand=vbar.set,
-                xscrollcommand=hbar.set) 
-            vbar.config(command=self.mvcanvas.yview)
-            hbar.config(command=self.mvcanvas.xview)               
-            vbar.pack(side=RIGHT, fill=Y)
-            hbar.pack(side=BOTTOM, fill=X)            
+                yscrollcommand=self.vbar.set,
+                xscrollcommand=self.hbar.set) 
+            self.vbar.config(command=self.mvcanvas.yview)
+            self.hbar.config(command=self.mvcanvas.xview)               
+            self.vbar.pack(side=RIGHT, fill=Y)
+            self.hbar.pack(side=BOTTOM, fill=X)            
             self.mvcanvas.pack()#,side=LEFT expand=YES, fill=BOTH
             midfrm.pack()#side=TOP,expand=YES fill=BOTH
 
@@ -84,8 +84,7 @@ class MoveArea(View, ttk.Frame):
                     ('后退', lambda: self.onUpKey(None),
                      RIGHT), ('开始', lambda: self.onHomeKey(None),
                                RIGHT),          
-                    ('换位', lambda: self.board.changeside('rotate'),
-                     LEFT), # 预留
+                    #('换位', lambda: self.board.changeside('rotate'), LEFT), # 预留
                     ('换位', lambda: self.board.changeside('rotate'),
                      LEFT),
                     ('左右', lambda: self.board.changeside('symmetry'),
@@ -191,7 +190,8 @@ class MoveArea(View, ttk.Frame):
                         row*cellheight+cellbd,
                         col*cellwidth+cellwidth//2-cellbd,
                         (row+1)*cellheight-cellbd,
-                        width=wid)
+                        width=wid,
+                        fill='gray70' if move is self.board.curmove else '')
                 strid = self.mvcanvas.create_text(col*cellwidth,
                         row*cellheight+cellheight//2,
                         text=move.zhstr, font='-size 10')
@@ -212,41 +212,34 @@ class MoveArea(View, ttk.Frame):
                 if (i+1) // 2 % 2 == 0:
                     self.mvcanvas.create_line(0, (i+2)*cellheight,
                         (self.board.maxcol + 2) * cellwidth,
-                        (i+2)*cellheight, fill='red')
+                        (i+2)*cellheight, fill='gray70')
                         
             self.mvid = {}
             recid = self.mvcanvas.create_oval(cellwidth//2+cellbd,
                         cellbd,
                         cellwidth+cellwidth//2-cellbd,
-                        cellheight-cellbd, width=2) # , outline='red'
-            strid = self.mvcanvas.create_text(cellwidth, cellheight//2, text='开始', font='-size 10')
+                        cellheight-cellbd, width=2, fill='gray70') # , outline='red'
+            strid = self.mvcanvas.create_text(cellwidth, cellheight//2,
+                    text='开始', font='-size 10')
             self.mvid[recid] = self.mvid[strid] = self.board.rootmove
             prevmoves = set(self.board.getprevmoves())
             if self.board.rootmove.next_:
                 __mvstr(self.board.rootmove.next_)
 
-        def __drawselection():
-            '''
-            no = self.walks.cursor + 1
-            wklb = self.walklistbox
-            wklb.selection_clear(0, wklb.size())
-            wklb.selection_set(no)
-            wklb.see(no)
-            '''
-            pass
+            row, col = self.board.curmove.stepno, self.board.curmove.maxcol
+            self.mvcanvas.yview_moveto((row-11)/(self.board.maxrow+2)) # 移动到一个比例
+            self.mvcanvas.xview_moveto((col- 4)/(self.board.maxcol+2))
 
-        def __drawremark():
+            
             '''
             self.remarktext.delete('1.0', END)
             if not self.walks.isstart:
                 self.remarktext.insert('1.0', self.walks.curremark())
             '''
-            pass
+            
 
         __drawinfo()
         __drawmvstr()
-        __drawselection()
-        __drawremark()
 
 
 #
