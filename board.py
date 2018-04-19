@@ -949,6 +949,7 @@ class Board(object):
                 else:
                     move.zhstr = nstr
             move.remark = elem[i].tail.strip()
+            
             self.__setcounts(move) # 设置内部计数值         
 
             if len(elem[i]) > 0: # 有子元素(变着)
@@ -1268,11 +1269,11 @@ def testtransdir():
     
     board = Board()
     for dir in dirfrom[:2]:    
-        for fext in fexts[:]:
+        for fext in fexts[3:]:
             for text in texts[:]:
                 if text == fext:
                     continue
-                for fmt in fmts[:]: # 设置输入文件格式  
+                for fmt in fmts[1:2]: # 设置输入文件格式  
                     board.transdir(dir+fext, dir+text, text, fmt)
            
             

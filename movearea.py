@@ -36,7 +36,8 @@ class MoveArea(View, ttk.Frame):
         def create_topfrm():
             topfrm = ttk.Frame(self, padding=2)
             Label(topfrm, # font='Helvetica -14 bold' 
-                text=self.infovars['Title'].get()).pack(fill=X) # , font='Helvetica -14 bold'
+                text='{} {}'.format(self.board.filename,
+                self.infovars['Title'].get())).pack(fill=X) # , font='Helvetica -14 bold'
             topfrm.pack(side=TOP)
 
         def create_midfrm():            
@@ -53,13 +54,15 @@ class MoveArea(View, ttk.Frame):
                 midfrm,
                 relief=SUNKEN,
                 width=442,
-                height=536,
+                height=508,
                 #scrollregion=(0, 0, canvawidth*2, canvasheight*2),
                 highlightthickness=2,
                 yscrollcommand=self.vbar.set,
-                xscrollcommand=self.hbar.set) 
+                xscrollcommand=self.hbar.set)
+            self.remtxt = Text(midfrm, width=60, height=2)
             self.vbar.config(command=self.mvcanvas.yview)
-            self.hbar.config(command=self.mvcanvas.xview)               
+            self.hbar.config(command=self.mvcanvas.xview)
+            self.remtxt.pack(side=BOTTOM)
             self.vbar.pack(side=RIGHT, fill=Y)
             self.hbar.pack(side=BOTTOM, fill=X)            
             self.mvcanvas.pack()#,side=LEFT expand=YES, fill=BOTH
@@ -76,19 +79,22 @@ class MoveArea(View, ttk.Frame):
                 buttonfrm = ttk.Frame(bottomfrm, padding=0)
                 buttdate = [
                     ('结尾', lambda: self.onEndKey(None),
-                     RIGHT), ('前进', lambda: self.onDownKey(None), RIGHT),
+                     RIGHT), 
+                    ('前进', lambda: self.onDownKey(None), RIGHT),
                     ('右变', lambda: self.onRightKey(None),
                      RIGHT), 
                     ('左变', lambda: self.onLeftKey(None),
                      RIGHT), 
                     ('后退', lambda: self.onUpKey(None),
-                     RIGHT), ('开始', lambda: self.onHomeKey(None),
+                     RIGHT), 
+                    ('开始', lambda: self.onHomeKey(None),
                                RIGHT),          
                     #('换位', lambda: self.board.changeside('rotate'), LEFT), # 预留
                     ('换位', lambda: self.board.changeside('rotate'),
                      LEFT),
                     ('左右', lambda: self.board.changeside('symmetry'),
-                     LEFT), ('换棋', lambda: self.board.changeside(),
+                     LEFT), 
+                    ('换棋', lambda: self.board.changeside(),
                                LEFT)
                 ]
                 for name, com, sid in buttdate:
@@ -160,6 +166,7 @@ class MoveArea(View, ttk.Frame):
         self.board.moveassign(self.mvid[curid[0]])
         
     def updateview(self):
+    
         def __drawinfo():
             info = self.board.info
             infotext = [
@@ -225,16 +232,29 @@ class MoveArea(View, ttk.Frame):
             prevmoves = set(self.board.getprevmoves())
             if self.board.rootmove.next_:
                 __mvstr(self.board.rootmove.next_)
-
-            row, col = self.board.curmove.stepno, self.board.curmove.maxcol
-            self.mvcanvas.yview_moveto((row-11)/(self.board.maxrow+2)) # 移动到一个比例
-            self.mvcanvas.xview_moveto((col- 4)/(self.board.maxcol+2))
-
+                
+            self.remtxt.delete('1.0', 'end')
+            if self.board.curmove.remark:
+                self.remtxt.insert('1.0', self.board.curmove.remark)
+            self.mvcanvas.xview_moveto((self.board.curmove.maxcol-4)/(self.board.maxcol+2))
+            self.mvcanvas.yview_moveto((self.board.curmove.stepno-10)/(self.board.maxrow+2))
+            # 移动到一个比例
             
             '''
-            self.remarktext.delete('1.0', END)
-            if not self.walks.isstart:
-                self.remarktext.insert('1.0', self.walks.curremark())
+            #print(self.hbar.get())
+            #print(self.vbar.get())
+
+            hpos, vpos = self.hbar.get(), self.vbar.get()
+            rowpos = self.board.curmove.stepno/(self.board.maxrow+2)
+            colpos = self.board.curmove.maxcol/(self.board.maxcol+2)
+            if colpos > hpos + 4/(self.board.maxcol+2):
+                self.mvcanvas.xview_moveto(hpos+1/(self.board.maxcol+2))
+            elif colpos < hpos - 4/(self.board.maxcol+2):
+                self.mvcanvas.xview_moveto(hpos-1/(self.board.maxcol+2))
+            if rowpos > vpos + 12/(self.board.maxrow+2):
+                self.mvcanvas.yview_moveto(vpos+2/(self.board.maxrow+2)) # 移动到一个比例
+            elif rowpos > vpos - 12/(self.board.maxcol+2):
+                self.mvcanvas.yview_moveto(vpos-2/(self.board.maxrow+2))
             '''
             
 
