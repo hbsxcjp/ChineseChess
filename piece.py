@@ -87,7 +87,7 @@ class Piece(object):
 
     def getallseats(self, board):
         '全部活动范围集合(默认：车马炮的活动范围)'
-        return board.allseats
+        return Seats.allseats
 
     def intersectionseats(self, mvseats, board):
         '棋子规则移动范围与全部移动范围的交集，再筛除本方棋子占用范围'
@@ -117,28 +117,28 @@ class BlankPie(Piece):
 
 class King(Piece):
     def getallseats(self, board):
-        return board.kingseats[board.getside(self.color)]
+        return Seats.kingseats[board.getside(self.color)]
 
     def getmvseats(self, board):
         return self.intersectionseats(
-            board.getkingmvseats(self.seat), board)
+            Seats.getkingmvseats(self.seat), board)
 
 
 class Advisor(Piece):
     def getallseats(self, board):
-        return board.advisorseats[board.getside(self.color)]
+        return Seats.advisorseats[board.getside(self.color)]
 
     def getmvseats(self, board):
         return self.intersectionseats(
-            board.getadvisormvseats(self.seat), board)
+            Seats.getadvisormvseats(self.seat), board)
 
 
 class Bishop(Piece):
     def getallseats(self, board):
-        return board.bishopseats[board.getside(self.color)]
+        return Seats.bishopseats[board.getside(self.color)]
 
     def getmvseats(self, board):
-        move_centreseats = board.getbishopmove_centreseats(self.seat)
+        move_centreseats = Seats.getbishopmove_centreseats(self.seat)
         return {
             seat
             for seat in self.intersectionseats(move_centreseats.keys(), board)
@@ -148,7 +148,7 @@ class Bishop(Piece):
 
 class Knight(Piece):
     def getmvseats(self, board):
-        move_legseats = board.getknightmove_legseats(self.seat)
+        move_legseats = Seats.getknightmove_legseats(self.seat)
         return {
             seat
             for seat in self.intersectionseats(move_legseats.keys(), board)
@@ -159,7 +159,7 @@ class Knight(Piece):
 class Rook(Piece):
     def getmvseats(self, board):
         result = set()
-        lines = board.rookcannonmoveseat_lines(self.seat)
+        lines = Seats.rookcannonmoveseat_lines(self.seat)
         for seatline in lines:
             for seat in seatline:
                 if board.isblank(seat):
@@ -174,7 +174,7 @@ class Rook(Piece):
 class Cannon(Piece):
     def getmvseats(self, board):
         result = set()
-        lines = board.rookcannonmoveseat_lines(self.seat)
+        lines = Seats.rookcannonmoveseat_lines(self.seat)
         for seatline in lines:
             skip = False
             for seat in seatline:
@@ -192,7 +192,7 @@ class Cannon(Piece):
 
 class Pawn(Piece):
     def getallseats(self, board):
-        return board.pawnseats[board.getside(self.color)]
+        return Seats.pawnseats[board.getside(self.color)]
 
     def getmvseats(self, board):
         row = self.seat[0]
@@ -200,7 +200,7 @@ class Pawn(Piece):
         return {
             (r, c)
             for r, c in self.intersectionseats(
-                board.getpawnmvseats(self.seat), board)
+                Seats.getpawnmvseats(self.seat), board)
             if (isbottomside and r >= row) or (not isbottomside and r <= row)
         }
 
@@ -258,17 +258,142 @@ class Pieces(object):
             piece.imgid = imgids[n]
 
 
-BlankPie = BlankPie(BlankChar)
+BlankPie = BlankPie(BlankChar)  # 单例对象
 
+
+class Seats(object):
+    # 棋子位置类
+    
+    sideseats = {
+        BOTTOM_SIDE: {(row, col)
+                      for row in range(MinRowNo_B, MaxRowNo_B + 1)
+                      for col in range(NumCols)},
+        TOP_SIDE: {(row, col)
+                   for row in range(MinRowNo_T, MaxRowNo_T + 1)
+                   for col in range(NumCols)}
+    }
+
+    allseats = sideseats[BOTTOM_SIDE] | sideseats[TOP_SIDE]
+
+    kingseats = {
+        BOTTOM_SIDE: {(row, col)
+                      for row in range(MinRow_KB, MaxRow_KB + 1)
+                      for col in range(MinCol_K, MaxCol_K + 1)},
+        TOP_SIDE: {(row, col)
+                   for row in range(MinRow_KT, MaxRow_KT + 1)
+                   for col in range(MinCol_K, MaxCol_K + 1)}
+    }
+
+    advisorseats = {
+        BOTTOM_SIDE: {(row, col)
+                      for row, col in kingseats[BOTTOM_SIDE]
+                      if (row + col) % 2 == 1},
+        TOP_SIDE: {(row, col)
+                   for row, col in kingseats[TOP_SIDE] if (row + col) % 2 == 0}
+    }
+
+    bishopseats = {
+        BOTTOM_SIDE: {(row, col)
+                      for row, col in sideseats[BOTTOM_SIDE]
+                      if (row % 2 == 0) and (row - col) in (2, -2, -6)},
+        TOP_SIDE: {(row, col)
+                   for row, col in sideseats[TOP_SIDE]
+                   if (row % 2 == 1) and (row - col) in (-1, 3, 7)}
+    }
+
+    pawnseats = {
+        TOP_SIDE:
+        sideseats[BOTTOM_SIDE] |
+        ({(row, col)
+          for row in range(MinRowNo_T, MinRowNo_T + 2)
+          for col in range(MinColNo, MaxColNo + 1, 2)}),
+        BOTTOM_SIDE:
+        sideseats[TOP_SIDE] |
+        ({(row, col)
+          for row in range(MaxRowNo_B - 1, MaxRowNo_B + 1)
+          for col in range(MinColNo, MaxColNo + 1, 2)})
+    }
+    
+    #sorted_allseats = sorted(allseats)
+
+    def getindex(cls, seat):
+        #return cls.sorted_allseats.index(seat)
+        return seat[0]*9 + seat[1]
+
+    def getseat(cls, index):
+        #return cls.sorted_allseats[index]
+        return (index//9, index%9)
+
+    def getrow(cls, seat):
+        return seat[0]
+
+    def getcol(cls, seat):
+        return seat[1]
+
+    def issamecol(cls, seat, otherseat):
+        return seat[1] == otherseat[1]
+
+    def getsamecolseats(cls, seat, otherseat):
+        row, col = seat
+        step = 1 if row < otherseat[0] else -1
+        return [(r, col) for r in range(row + step, otherseat[0], step)]
+
+    def getkingmvseats(cls, seat):
+        row, col = seat
+        return {(row, col + 1), (row, col - 1), (row - 1, col), (row + 1, col)}
+
+    def getadvisormvseats(cls, seat):
+        row, col = seat
+        return {(row + 1, col + 1), (row - 1, col + 1), (row - 1, col - 1),
+                (row + 1, col - 1)}
+
+    def getbishopmove_centreseats(cls, seat):
+        '获取移动、象心行列值'
+        row, col = seat
+        mvseats = {(row + 2, col + 2), (row - 2, col + 2),
+                     (row - 2, col - 2), (row + 2, col - 2)}
+        return {(r, c): ((row + r) // 2, (col + c) // 2) for r, c in mvseats}
+
+    def getknightmove_legseats(cls, seat):
+        '获取移动、马腿行列值'
+
+        def __legx(first, to):
+            x = to - first
+            return first + ((x // 2) if abs(x) == 2 else 0)
+
+        row, col = seat
+        mvseats = {(row + 2, col - 1), (row + 2, col + 1),
+                     (row + 1, col + 2), (row - 1, col + 2), (row - 2,
+                                                              col + 1),
+                     (row - 2, col - 1), (row - 1, col - 2), (row + 1,
+                                                              col - 2)}
+        return {(r, c): (__legx(row, r), __legx(col, c)) for r, c in mvseats}
+
+    def rookcannonmoveseat_lines(cls, seat):
+        '车炮可走的四个方向位置'
+        row, col = seat
+        return (
+            [(row, c) for c in range(col - 1, MinColNo - 1, -1)],  # 左边位置列表
+            [(r, col) for r in range(row - 1, MinRowNo_B - 1, -1)],  # 下边位置列表
+            [(row, c) for c in range(col + 1, MaxColNo + 1)],  # 右边位置列表
+            [(r, col) for r in range(row + 1, MaxRowNo_T + 1)])  # 上边位置列表
+
+    def getpawnmvseats(cls, seat):
+        row, col = seat
+        return {(row, col + 1), (row, col - 1), (row - 1, col), (row + 1, col)}
+
+        
+Seats = Seats() # 单例对象
+        
 
 class Move(object):
     '象棋着法树节点类'
         
-    def __init__(self, prev=None, fseat=(0, 0), tseat=(0, 0), remark='', zhstr=''):
+    def __init__(self, prev=None):
         self.prev = prev
-        self.fseat = fseat
-        self.tseat = tseat
-        self.remark = remark
+        self.fseat = (0, 0)
+        self.tseat = (0, 0)
+        self.remark = ''
         
         self.next_ = None
         self.other = None
@@ -276,7 +401,7 @@ class Move(object):
         self.othcol = 0 # 变着广度
         
         self.maxcol = 0 # 图中列位置（需结合board确定）
-        self.zhstr = zhstr if prev else '1.开始' # 中文描述（需结合board确定）
+        self.zhstr = '' if prev else '1.开始' # 中文描述（需结合board确定）
         
     def __str__(self):
         return '{}_{}({}) [{} {}] {}'.format(self.stepno, self.othcol, self.maxcol,
