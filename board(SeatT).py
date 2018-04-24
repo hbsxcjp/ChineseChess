@@ -10,7 +10,7 @@ class Board(object):
     '棋盘类'
 
     def __init__(self, filename=''):
-        self.seats = [BlankPie] * NumCols * NumRows
+        self.seats = dict.fromkeys(Seats.allseats, BlankPie)
         self.pieces = Pieces()
         self.bottomside = RED_P
         self.readfile(filename)
@@ -28,9 +28,9 @@ class Board(object):
                 list(line.strip()) for line in blankboard.strip().splitlines()
             ]
             for piece in self.getlivepieces():
-                seat = self.getseat(piece)
-                linestr[(MaxRowNo_T - Seats.getrow(seat)) *
-                        2][Seats.getcol(seat) * 2] = __getname(piece)
+                seat = piece.seat
+                linestr[(MaxRowNo_T - self.getrow(seat)) *
+                        2][self.getcol(seat) * 2] = __getname(piece)
             return [''.join(line) for line in linestr]
 
         frontstr = '\n'
@@ -69,7 +69,8 @@ class Board(object):
         return '\n'.join([self.__infostr(), str(self), totalstr, walkstr, remstr])
 
     def __clearseatpieces(self):
-        self.seats = [BlankPie] * NumCols * NumRows
+        self.seats = dict.fromkeys(Seats.allseats, BlankPie)
+        self.pieces.clear()
         
     def __clear(self):
         self.__clearseatpieces()
@@ -102,17 +103,26 @@ class Board(object):
         self.remlenmax = 0 # 注解最大长度
         self.othcol = 0 # 存储最大变着层数
         self.maxrow = 0 # 存储最大着法深度
-        self.maxcol = 0 # 存储视图最大列数 
+        self.maxcol = 0 # 存储视图最大列数        
         
+    def __takepiece(self, seat):
+        piece = self.seats[seat]
+        piece.setseat(None)
+        return piece
+        
+    def __fillpiece(self, seat, piece):
+        self.seats[seat] = piece
+        piece.setseat(seat)
+
     def __go(self, fseat, tseat):
-        eatpiece = self.seats[tseat]
-        self.seats[tseat] = self.seats[fseat]
+        eatpiece = self.__takepiece(tseat)
+        self.__fillpiece(tseat, self.seats[fseat])
         self.seats[fseat] = BlankPie
         return eatpiece
 
-    def __back(self, fseat, tseat, backpiece):
-        self.seats[fseat] = self.seats[tseat]
-        self.seats[tseat] = backpiece
+    def __back(self, tseat, fseat, backpiece):
+        self.__fillpiece(fseat, self.seats[tseat])
+        self.__fillpiece(tseat, backpiece)
 
     def setbottomside(self):
         self.bottomside = (RED_P if Seats.getrow(
@@ -122,10 +132,7 @@ class Board(object):
         return BOTTOM_SIDE == self.getside(color)
 
     def isblank(self, seat):
-        return self.seats[seat] is BlankPie
-
-    def getseat(self, piece):
-        return self.seats.index(piece)
+        return not bool(self.seats[seat]) # is BlankPie
 
     def getpiece(self, seat):
         return self.seats[seat]
@@ -140,13 +147,13 @@ class Board(object):
         return self.pieces.getkingpiece(color)
 
     def getkingseat(self, color):
-        return self.getseat(self.getkingpiece(color))
+        return self.getkingpiece(color).seat
 
     def getlivepieces(self):
-        return [piece for piece in self.seats if piece is not BlankPie]
+        return self.pieces.getlivepieces()
 
     def geteatedpieces(self):
-        return self.pieces.allpieces - set(self.getlivepieces())
+        return self.pieces.geteatedpieces()
 
     def getlivesidepieces(self, color):
         return {piece for piece in self.getlivepieces() if piece.color == color}
@@ -161,7 +168,7 @@ class Board(object):
         return {
             piece
             for piece in self.getlivesidenamepieces(color, name)
-            if Seats.getcol(self.getseat(piece)) == col
+            if Seats.getcol(piece.seat) == col
         }
 
     def iskilled(self, color):
@@ -182,24 +189,24 @@ class Board(object):
     def canmvseats(self, fseat):
         '获取棋子可走的位置, 不能被将军'
         result = []
+        #fseat, color = piece.seat, piece.color
         piece = self.getpiece(fseat)
         color = piece.color
         for tseat in piece.getmvseats(self):
             topiece = self.__go(fseat, tseat)
             if not self.iskilled(color):
                 result.append(tseat)
-            self.__back(fseat, tseat, topiece)
+            self.__back(tseat, fseat, topiece)
         return result
         
     def isdied(self, color):
         return not any([
-            self.canmvseats(self.getseat(piece)) for piece in self.getlivesidepieces(color)
+            self.canmvseats(piece.seat) for piece in self.getlivesidepieces(color)
         ])
 
     def __setseatpieces(self, seatpieces):
         self.__clearseatpieces()
-        for seat, piece in seatpieces.items():
-            self.seats[seat] = piece
+        [self.__fillpiece(seat, piece) for seat, piece in seatpieces.items()]
         self.setbottomside()
 
     def __sortpawnseats(self, isbottomside, pawnseats):
@@ -253,7 +260,7 @@ class Board(object):
         name = zhstr[0]
         if name in CharToNames.values():
             seats = sorted([
-                self.getseat(piece)
+                piece.seat
                 for piece in self.getlivesidenamecolpieces(
                     color, name, __chcol_col(zhstr[1]))
             ])
@@ -268,7 +275,7 @@ class Board(object):
             # 未获得棋子, 查找某个排序（前后中一二三四五）某方某个名称棋子
             index, name = ChineseToNum[zhstr[0]], zhstr[1]
             seats = sorted(
-                [self.getseat(pie) for pie in self.getlivesidenamepieces(color, name)])
+                [pie.seat for pie in self.getlivesidenamepieces(color, name)])
             assert len(seats) >= 2, 'color: %s name: %s 棋子列表少于2个! \n%s' % (     color, name, self)
             fseat = __indexname_fromseat(index, name, seats)
 
@@ -294,9 +301,9 @@ class Board(object):
         frompiece = self.getpiece(fseat)
         color, name = frompiece.color, frompiece.name
         isbottomside = self.isbottomside(color)
-        fromrow, fromcol = Seats.getrow(fseat), Seats.getcol(fseat)
+        fromrow, fromcol = self.getrow(fseat), self.getcol(fseat)
         seats = sorted([
-            self.getseat(pie)
+            pie.seat
             for pie in self.getlivesidenamecolpieces(color, name, fromcol)
         ])
         length = len(seats)
@@ -305,7 +312,7 @@ class Board(object):
                 seats = self.__sortpawnseats(
                     isbottomside,
                     sorted([
-                        self.getseat(pie)
+                        pie.seat
                         for pie in self.getlivesidenamepieces(color, name)
                     ]))
                 length = len(seats)
@@ -317,7 +324,7 @@ class Board(object):
             #仕(士)和相(象)不用“前”和“后”区别，因为能退的一定在前，能进的一定在后
             firstStr = name + __col_chcol(color, fromcol)
 
-        torow, tocol = Seats.getrow(tseat), Seats.getcol(tseat)
+        torow, tocol = self.getrow(tseat), self.getcol(tseat)
         chcol = __col_chcol(color, tocol)
         tochar = ('平' if torow == fromrow else
                   ('进' if isbottomside == (torow > fromrow) else '退'))
@@ -358,7 +365,7 @@ class Board(object):
             eatpiece = self.__go(move.fseat, move.tseat)
             if move.next_:
                 __zhstr(move.next_)
-            self.__back(move.fseat, move.tseat, eatpiece)
+            self.__back(move.tseat, move.fseat, eatpiece)
             if move.other:
                 __zhstr(move.other, True)
                 
@@ -393,8 +400,8 @@ class Board(object):
         self.curmove = move
             
     def movebackto(self):
-        self.__back(self.curmove.fseat, self.curmove.tseat, 
-                self.curmove.eatpiece)
+        self.__back(self.curmove.tseat, 
+                self.curmove.fseat, self.curmove.eatpiece)
         self.curmove = self.curmove.prev
         
     def moveother(self):
@@ -568,13 +575,13 @@ class Board(object):
         self.movefirst()
         if changetype == 'exchange':
             self.__transcolor()
-            seatpieces = {self.getseat(piece): self.pieces.getothersidepiece(piece)
+            seatpieces = {piece.seat: self.pieces.getothersidepiece(piece)
                     for piece in self.getlivepieces()}
         else:
             transfun = (__rotateseat if changetype == 'rotate'
                     else __symmetryseat)
             __changeseat(transfun)
-            seatpieces = {transfun(self.getseat(piece)): piece
+            seatpieces = {transfun(piece.seat): piece
                     for piece in self.getlivepieces()}
         self.__setseatpieces(seatpieces)
         if changetype != 'rotate':
@@ -710,7 +717,7 @@ class Board(object):
                     
             def __bytetoseat(a, b):
                 xy = __subbyte(a, b)
-                return rowcol_seat(xy % 10, xy // 10) #(xy % 10, xy // 10)
+                return (xy % 10, xy // 10)
                     
             def __readbytes(size):
                 pos = fileobj.tell()
@@ -778,7 +785,7 @@ class Board(object):
     
         def __readmove(move):
             hasothernextrem, fi, ti = movestruct1.unpack(fileobj.read(3))
-            move.setseats(fi, ti)
+            move.setseat_i(fi, ti)
             if hasothernextrem & 0x20:
                 rlength = movestruct2.unpack(fileobj.read(2))[0]
                 move.remark = fileobj.read(rlength).decode()
@@ -941,7 +948,7 @@ class Board(object):
             if move.next_:
                 __setseat(move.next_)                
             self.__transcolor()
-            self.__back(move.fseat, move.tseat, eatpiece)
+            self.__back(move.tseat, move.fseat, eatpiece)
             if move.other:            
                 __setseat(move.other)          
                     
@@ -971,7 +978,7 @@ class Board(object):
     def __saveasbin(self, filename):
     
         def __addmoves(move):
-            fint, tint = move.seats
+            fint, tint = move.binint
             rembytes = move.remark.strip().encode()
             hasothernextrem = ((0x80 if move.other else 0) |
                                 (0x40 if move.next_ else 0) |
@@ -1000,6 +1007,37 @@ class Board(object):
         except:
             print('错误：写入 {} 文件不成功！'.format(filename))
 
+    def __saveaspgn(self, filename, fmt):
+    
+        def __movestr(fmt):
+               
+            def __remarkstr(move):
+                rem = move.remark
+                return '' if not rem else '\n{{{}}}\n'.format(rem)
+            
+            def __addstrl(move, isother=False):
+                prestr = ('({0}. {1}'.format((move.stepno + 1) // 2, 
+                        '... ' if move.stepno % 2 == 0 else '')
+                        if isother else
+                        (' ' if move.stepno % 2 == 0 else 
+                        '{}. '.format((move.stepno + 1) // 2)))
+                movestrl.append('{0}{1} {2}'.format(prestr,
+                        move.ICCSzhstr(fmt), __remarkstr(move)))                
+                if move.other:
+                    __addstrl(move.other, True)
+                    movestrl.append(') ')                   
+                if move.next_:
+                    __addstrl(move.next_)
+        
+            movestrl = [__remarkstr(self.rootmove)]
+            if self.rootmove.next_:
+                __addstrl(self.rootmove.next_)          
+            return movestrl
+            
+        self.info['Format'] = fmt
+        open(filename, 'w').write(repr(self) if fmt == 'cc' else 
+                '\n'.join([self.__infostr(), ''.join(__movestr(fmt))]))
+            
     def __saveasxml(self, filename, fmt):
             
         def __createlem(name, value='', remark=''):
@@ -1031,37 +1069,6 @@ class Board(object):
         xmlindent(rootelem)  # 美化
         ET.ElementTree(rootelem).write(filename, encoding='utf-8')
         
-    def __saveaspgn(self, filename, fmt):
-    
-        def __movestr(fmt):
-               
-            def __remarkstr(move):
-                rem = move.remark
-                return '' if not rem else '\n{{{}}}\n'.format(rem)
-            
-            def __addstrl(move, isother=False):
-                prestr = ('({0}. {1}'.format((move.stepno + 1) // 2, 
-                        '... ' if move.stepno % 2 == 0 else '')
-                        if isother else
-                        (' ' if move.stepno % 2 == 0 else 
-                        '{}. '.format((move.stepno + 1) // 2)))
-                movestrl.append('{0}{1} {2}'.format(prestr,
-                        move.ICCSzhstr(fmt), __remarkstr(move)))                
-                if move.other:
-                    __addstrl(move.other, True)
-                    movestrl.append(') ')                   
-                if move.next_:
-                    __addstrl(move.next_)
-        
-            movestrl = [__remarkstr(self.rootmove)]
-            if self.rootmove.next_:
-                __addstrl(self.rootmove.next_)          
-            return movestrl
-            
-        self.info['Format'] = fmt
-        open(filename, 'w').write(repr(self) if fmt == 'cc' else 
-                '\n'.join([self.__infostr(), ''.join(__movestr(fmt))]))
-                    
     def writefile(self, filename, ext, fmt='ICCS'):
         if ext == '.bin':
             self.__saveasbin(filename)
@@ -1133,11 +1140,11 @@ def testtransdir():
     
     board = Board()
     for dir in dirfrom[:2]:    
-        for fext in fexts[2:]:
-            for text in texts[:]:
+        for fext in fexts[3:]:
+            for text in texts[:1]:
                 if text == fext:
                     continue
-                for fmt in fmts[:]: # 设置输入文件格式  
+                for fmt in fmts[1:2]: # 设置输入文件格式  
                     board.transdir(dir+fext, dir+text, text, fmt)
            
             

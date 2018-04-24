@@ -10,7 +10,14 @@ from user import User # 用户
 class Test(unittest.TestCase):
 
     def test_form(self):
+        import time
+        start = time.time()
+        
         user = User(1, 'cjp')
+        
+        end = time.time()
+        print('usetime: %0.3fs' % (end - start))
+        
         user.application.mainloop()
         pass
 
