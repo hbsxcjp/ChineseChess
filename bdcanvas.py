@@ -74,7 +74,7 @@ class BdCanvas(View, Canvas):
         self.delete('side_tag')
         for x, y, astr in __textxys(self.bottomside):
             self.create_text(
-                x, y, font=('Consolas', '10'), text=astr, tag='side_tag')
+                x, y, text=astr, tag='side_tag') #font=('Consolas', '10'), 
 
     def createwidgets(self):
         def __canvasrects():
@@ -105,7 +105,7 @@ class BdCanvas(View, Canvas):
 
         def __createimgs(bdimgname, pimgpath):
             self.imgs = []  # 棋盘、棋子、痕迹图像，tag='bd','pie','from','to', 'trace',
-            self.pieimgids = {}  # 存储棋子图像的imgid
+            #self.pieimgids = {}  # 存储棋子图像的imgid
             #print('棋盘图像文件：', bdimgname)
             self.imgs.append(PhotoImage(file=bdimgname))
             self.create_image(
@@ -120,15 +120,12 @@ class BdCanvas(View, Canvas):
             self.create_image(OutsideXY, image=self.imgs[-1], tag='from')
             self.create_image(OutsideXY, image=self.imgs[-1], tag='to')
 
-            pieimgids = []
-            for char in Pieces.Chars:
+            for piece in self.board.pieces.allpieces():
                 self.imgs.append(
-                    PhotoImage(file=pimgpath + Config.imgflnames[char]))
-                pieimgids.append(
-                    self.create_image(
-                        OutsideXY, image=self.imgs[-1], tag='pie'))
-            self.board.pieces.setpieimgids(pieimgids)
-
+                    PhotoImage(file=pimgpath + Config.imgflnames[piece.char]))
+                piece.imgid = self.create_image(
+                        OutsideXY, image=self.imgs[-1], tag='pie')
+                
             for color, char in {RED_P: 'KING', BLACK_P: 'king'}.items():
                 self.imgs.append(
                     PhotoImage(file=pimgpath + Config.imgflnames[char]))
@@ -218,7 +215,7 @@ class BdCanvas(View, Canvas):
         self.setlocatedseat(Seats.getrow(self.locatedseat), MaxColNo)
 
     def setlocatedseat(self, row, col):
-        self.locatedseat = rowcol_seat(row, col)
+        self.locatedseat = Seats.getseat(row, col)
         self.coords('to' if self.selectedseat else 'from', self.seat_xy(self.locatedseat))
         
     def onspaceKey(self, event, mouseclick=False):

@@ -12,7 +12,6 @@ class Board(object):
     def __init__(self, filename=''):
         self.seats = [BlankPie] * NumCols * NumRows
         self.pieces = Pieces()
-        self.bottomside = RED_P
         self.readfile(filename)
 
     def __str__(self):
@@ -29,7 +28,7 @@ class Board(object):
             ]
             for piece in self.getlivepieces():
                 seat = self.getseat(piece)
-                linestr[(MaxRowNo_T - Seats.getrow(seat)) *
+                linestr[(9 - Seats.getrow(seat)) *
                         2][Seats.getcol(seat) * 2] = __getname(piece)
             return [''.join(line) for line in linestr]
 
@@ -68,11 +67,12 @@ class Board(object):
         remstr = '\n'.join(remstrs)
         return '\n'.join([self.__infostr(), str(self), totalstr, walkstr, remstr])
 
-    def __clearseatpieces(self):
-        self.seats = [BlankPie] * NumCols * NumRows
+    def __clearseats(self):
+        for seat in range(NumCols * NumRows):
+            self.seats[seat] = BlankPie
         
     def __clear(self):
-        self.__clearseatpieces()
+        self.__clearseats()
         
         self.info = {'Author': '',
                     'Black': '',
@@ -96,30 +96,16 @@ class Board(object):
                     'Version': ''}
         self.rootmove = Move()
         self.curmove = self.rootmove
-        self.firstcolor = RED_P 
+        #self.firstcolor = RED_P 
         self.movcount = -1 # 消除根节点
         self.remcount = 0 # 注解数量
         self.remlenmax = 0 # 注解最大长度
         self.othcol = 0 # 存储最大变着层数
         self.maxrow = 0 # 存储最大着法深度
-        self.maxcol = 0 # 存储视图最大列数 
-        
-    def __go(self, fseat, tseat):
-        eatpiece = self.seats[tseat]
-        self.seats[tseat] = self.seats[fseat]
-        self.seats[fseat] = BlankPie
-        return eatpiece
-
-    def __back(self, fseat, tseat, backpiece):
-        self.seats[fseat] = self.seats[tseat]
-        self.seats[tseat] = backpiece
-
-    def setbottomside(self):
-        self.bottomside = (RED_P if Seats.getrow(
-            self.getkingseat(RED_P)) < MaxRowNo_B else BLACK_P)
+        self.maxcol = 0 # 存储视图最大列数         
 
     def isbottomside(self, color):
-        return BOTTOM_SIDE == self.getside(color)
+        return self.bottomside == color
 
     def isblank(self, seat):
         return self.seats[seat] is BlankPie
@@ -146,7 +132,7 @@ class Board(object):
         return [piece for piece in self.seats if piece is not BlankPie]
 
     def geteatedpieces(self):
-        return self.pieces.allpieces() - set(self.getlivepieces())
+        return set(self.pieces.allpieces()) - set(self.getlivepieces())
 
     def getlivesidepieces(self, color):
         return {piece for piece in self.getlivepieces() if piece.color == color}
@@ -166,8 +152,8 @@ class Board(object):
 
     def iskilled(self, color):
         othercolor = not color
-        kingseat, otherseat = self.getkingseat(color), self.getkingseat(
-            othercolor)
+        kingseat = self.getkingseat(color)
+        otherseat = self.getkingseat(othercolor)
         if Seats.issamecol(kingseat, otherseat):  # 将帅是否对面
             if all([
                     self.isblank(seat)
@@ -195,12 +181,6 @@ class Board(object):
         return not any([
             self.canmvseats(self.getseat(piece)) for piece in self.getlivesidepieces(color)
         ])
-
-    def __setseatpieces(self, seatpieces):
-        self.__clearseatpieces()
-        for seat, piece in seatpieces.items():
-            self.seats[seat] = piece
-        self.setbottomside()
 
     def __sortpawnseats(self, isbottomside, pawnseats):
         '多兵排序'
@@ -236,8 +216,8 @@ class Board(object):
         def __linename_toseat(fseat, movdir, tocol, tochar):
             '获取直线走子toseat'
             row, col = Seats.getrow(fseat), Seats.getcol(fseat)
-            return (rowcol_seat(row, tocol)
-                    if movdir == 0 else rowcol_seat(
+            return (Seats.getseat(row, tocol)
+                    if movdir == 0 else Seats.getseat(
                         row + movdir * ChineseToNum[tochar], col))
 
         def __obliquename_toseat(fseat, movdir, tocol, isAdvisorBishop):
@@ -246,7 +226,7 @@ class Board(object):
             step = tocol - col  # 相距1或2列
             inc = abs(step) if isAdvisorBishop else (2
                                                      if abs(step) == 1 else 1)
-            return rowcol_seat(row + movdir * inc, tocol)
+            return Seats.getseat(row + movdir * inc, tocol)
 
         color, zhstr = self.curcolor, move.zhstr
         isbottomside = self.isbottomside(color)
@@ -293,6 +273,8 @@ class Board(object):
         fseat, tseat = move.fseat, move.tseat
         frompiece = self.getpiece(fseat)
         color, name = frompiece.color, frompiece.name
+        #assert color == self.curcolor, "走棋的颜色不对？"
+        
         isbottomside = self.isbottomside(color)
         fromrow, fromcol = Seats.getrow(fseat), Seats.getcol(fseat)
         seats = sorted([
@@ -364,7 +346,7 @@ class Board(object):
                 
         if self.rootmove.next_: # and self.movcount < 300: # 步数太多则太慢
             __zhstr(self.rootmove.next_) # 驱动调用递归函数
-        
+            
     @property
     def curcolor(self):
         return self.firstcolor if (
@@ -387,6 +369,16 @@ class Board(object):
             move = move.prev
         result.reverse()
         return result
+                
+    def __go(self, fseat, tseat):
+        eatpiece = self.seats[tseat]
+        self.seats[tseat] = self.seats[fseat]
+        self.seats[fseat] = BlankPie
+        return eatpiece
+
+    def __back(self, fseat, tseat, backpiece):
+        self.seats[fseat] = self.seats[tseat]
+        self.seats[tseat] = backpiece
                 
     def movegoto(self, move):
         move.eatpiece = self.__go(move.fseat, move.tseat)
@@ -497,6 +489,13 @@ class Board(object):
         assert self.info['FEN'] == fen, '\n原始:{}\n生成:{}'.format(self.info['FEN'], fen)
         return fen
 
+    def __setseatpieces(self, seatpieces):
+        self.__clearseats()
+        for seat, piece in seatpieces.items():
+            self.seats[seat] = piece
+        self.bottomside = (RED_P if Seats.getrow(
+            self.getkingseat(RED_P)) < 3 else BLACK_P)
+
     def setfen(self, fen=''):
     
         def __setfen(_fen):
@@ -527,8 +526,8 @@ class Board(object):
             #print(_fen, len(_fen))
             assert isvalid, info
 
-            seatchars = {Seats.getseat(n): char for n, char in enumerate(charls)}
-            self.__setseatpieces(self.pieces.getseatpieces(seatchars))
+            seatchars = {Seats.seat(n): char for n, char in enumerate(charls)}
+            self.__setseatpieces(self.pieces.seatpieces(seatchars))
 
         if not fen:
             fen = self.info['FEN']
@@ -542,14 +541,6 @@ class Board(object):
 
     def changeside(self, changetype='exchange'):
         
-        def __rotateseat(seat):
-            row, col = seat
-            return (abs(row - MaxRowNo_T), abs(col - MaxColNo))
-
-        def __symmetryseat(seat):
-            row, col = seat
-            return (row, abs(col - MaxColNo))
-
         def __changeseat(transfun):            
             '根据transfun改置每个move的fseat,tseat'
             
@@ -568,11 +559,11 @@ class Board(object):
         self.movefirst()
         if changetype == 'exchange':
             self.__transcolor()
-            seatpieces = {self.getseat(piece): self.pieces.getothersidepiece(piece)
+            seatpieces = {self.getseat(piece): self.pieces.getothsidepiece(piece)
                     for piece in self.getlivepieces()}
         else:
-            transfun = (__rotateseat if changetype == 'rotate'
-                    else __symmetryseat)
+            transfun = (Seats.rotateseat if changetype == 'rotate'
+                    else Seats.symmetryseat)
             __changeseat(transfun)
             seatpieces = {transfun(self.getseat(piece)): piece
                     for piece in self.getlivepieces()}
@@ -710,7 +701,7 @@ class Board(object):
                     
             def __bytetoseat(a, b):
                 xy = __subbyte(a, b)
-                return rowcol_seat(xy % 10, xy // 10) #(xy % 10, xy // 10)
+                return Seats.getseat(xy % 10, xy // 10) #(xy % 10, xy // 10)
                     
             def __readbytes(size):
                 pos = fileobj.tell()
@@ -1132,11 +1123,11 @@ def testtransdir():
     
     board = Board()
     for dir in dirfrom[:2]:    
-        for fext in fexts[3:]:
+        for fext in fexts[1:2]:
             for text in texts[:]:
                 if text == fext:
                     continue
-                for fmt in fmts[1:2]: # 设置输入文件格式  
+                for fmt in fmts[:1]: # 设置输入文件格式  
                     board.transdir(dir+fext, dir+text, text, fmt)
            
             
