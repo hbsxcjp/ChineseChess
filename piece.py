@@ -248,14 +248,14 @@ class SeatsL(object):
         return self.getcol(seat) == self.getcol(otherseat)
 
     def getsamecolseats(self, seat, otherseat):
-        step = NumCols if row < otherseat[0] else -NumCols
+        step = NumCols if self.getrow(seat) < self.getrow(otherseat) else -NumCols
         return [s for s in range(seat + step, otherseat, step)]
 
     def getkingmvseats(self, seat):
         return {seat + 1, seat - 1, seat + NumCols, seat - NumCols}
 
     def getadvisormvseats(self, seat):
-        row, col = seat
+        row, col = self.getrow(seat), self.getcol(seat)
         return {seat + NumCols + 1, seat + NumCols - 1, seat - NumCols + 1,
                 seat - NumCols - 1}
 
@@ -351,7 +351,7 @@ class Piece(object):
         '棋子规则移动范围与全部移动范围的交集，再筛除本方棋子占用范围'
         return {
             seat
-            for seat in (self.getallseats(board) & mvseats)
+            for seat in (self.getallseats(board) & set(mvseats))
             if board.getcolor(seat) != self.color
         }
 
@@ -453,15 +453,15 @@ class Pawn(Piece):
         return Seats.pawnseats[board.getside(self.color)]
 
     def getmvseats(self, board):
+        result = set()
         seat = board.getseat(self)
         row = Seats.getrow(seat)
         isbottomside = board.isbottomside(self.color)
-        return {
-            (r, c)
-            for r, c in self.intersectionseats(
-                Seats.getpawnmvseats(seat), board)
-            if (isbottomside and r >= row) or (not isbottomside and r <= row)
-        }
+        for s in self.intersectionseats(Seats.getpawnmvseats(seat), board):
+            r = Seats.getrow(s)
+            if (isbottomside and r >= row) or (not isbottomside and r <= row):
+                result.add(s)
+        return result
 
 
 class Pieces(object):
@@ -519,8 +519,8 @@ class Move(object):
         
     def __init__(self, prev=None):
         self.prev = prev
-        self.fseat = None
-        self.tseat = None
+        self.fseat = 0
+        self.tseat = 0
         self.remark = ''
         
         self.next_ = None
@@ -533,11 +533,7 @@ class Move(object):
         
     def __str__(self):
         return '{}_{}({}) [{} {}] {}'.format(self.stepno, self.othcol, self.maxcol,
-                self.fseat, self.tseat, self.zhstr)
-        
-    @property
-    def seats(self):
-        return (self.fseat, self.tseat)
+                self.fseat, self.tseat, self.zhstr)        
                 
     def ICCSzhstr(self, fmt):
         return ('' if self.stepno == 0 else
@@ -545,10 +541,7 @@ class Move(object):
                     colchars[Seats.getcol(self.fseat)],
                     Seats.getrow(self.fseat),
                     colchars[Seats.getcol(self.tseat)],
-                    Seats.getrow(self.tseat))) if fmt == 'ICCS' else self.zhstr
-         
-    def setseats(self, fi, ti):
-        self.fseat, self.tseat = fi, ti
+                    Seats.getrow(self.tseat))) if fmt == 'ICCS' else self.zhstr         
             
     def setseat_ICCS(self, ICCSstr):
         fcol, frow, tcol, trow = ICCSstr

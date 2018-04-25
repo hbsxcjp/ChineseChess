@@ -146,7 +146,7 @@ class Board(object):
         return [piece for piece in self.seats if piece is not BlankPie]
 
     def geteatedpieces(self):
-        return self.pieces.allpieces - set(self.getlivepieces())
+        return self.pieces.allpieces() - set(self.getlivepieces())
 
     def getlivesidepieces(self, color):
         return {piece for piece in self.getlivepieces() if piece.color == color}
@@ -236,8 +236,8 @@ class Board(object):
         def __linename_toseat(fseat, movdir, tocol, tochar):
             '获取直线走子toseat'
             row, col = Seats.getrow(fseat), Seats.getcol(fseat)
-            return ((row, tocol)
-                    if movdir == 0 else (
+            return (rowcol_seat(row, tocol)
+                    if movdir == 0 else rowcol_seat(
                         row + movdir * ChineseToNum[tochar], col))
 
         def __obliquename_toseat(fseat, movdir, tocol, isAdvisorBishop):
@@ -246,7 +246,7 @@ class Board(object):
             step = tocol - col  # 相距1或2列
             inc = abs(step) if isAdvisorBishop else (2
                                                      if abs(step) == 1 else 1)
-            return (row + movdir * inc, tocol)
+            return rowcol_seat(row + movdir * inc, tocol)
 
         color, zhstr = self.curcolor, move.zhstr
         isbottomside = self.isbottomside(color)
@@ -778,7 +778,7 @@ class Board(object):
     
         def __readmove(move):
             hasothernextrem, fi, ti = movestruct1.unpack(fileobj.read(3))
-            move.setseats(fi, ti)
+            move.fseat, move.tseat = fi, ti
             if hasothernextrem & 0x20:
                 rlength = movestruct2.unpack(fileobj.read(2))[0]
                 move.remark = fileobj.read(rlength).decode()
@@ -971,12 +971,11 @@ class Board(object):
     def __saveasbin(self, filename):
     
         def __addmoves(move):
-            fint, tint = move.seats
             rembytes = move.remark.strip().encode()
             hasothernextrem = ((0x80 if move.other else 0) |
                                 (0x40 if move.next_ else 0) |
                                 (0x20 if rembytes else 0))
-            resbytes.extend(movestruct1.pack(hasothernextrem, fint, tint))
+            resbytes.extend(movestruct1.pack(hasothernextrem, move.fseat, move.tseat))
             if rembytes:
                 resbytes.extend(movestruct2.pack(len(rembytes)))
                 resbytes.extend(rembytes)  # rbytes已经是字节串，不需要再pack
@@ -1133,11 +1132,11 @@ def testtransdir():
     
     board = Board()
     for dir in dirfrom[:2]:    
-        for fext in fexts[2:]:
+        for fext in fexts[3:]:
             for text in texts[:]:
                 if text == fext:
                     continue
-                for fmt in fmts[:]: # 设置输入文件格式  
+                for fmt in fmts[1:2]: # 设置输入文件格式  
                     board.transdir(dir+fext, dir+text, text, fmt)
            
             

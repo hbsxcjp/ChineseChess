@@ -46,7 +46,7 @@ class BdCanvas(View, Canvas):
 
     def initattr(self):
         self.bottomside = None
-        self.locatedseat = (0, 0)
+        self.locatedseat = 0 # (0, 0)
         self.selectedseat = None
 
     def __canvastexts(self):
@@ -157,13 +157,8 @@ class BdCanvas(View, Canvas):
         self.bind('<Return>', self.onspaceKey)
         self.bind('<ButtonPress-1>', self.onMouseLeftclick)  # 绑定点击事件
 
-    def xy_seat(self, x, y):
-        return (
-            NumRows - abs(y + PieHeight // 2 - BoardStartY) // PieHeight - 1,
-            abs(x + PieWidth // 2 - BoardStartX) // PieWidth)
-
     def seat_xy(self, seat):
-        row, col = seat # Board.getrow(seat), Board.getcol(seat)
+        row, col = Seats.getrow(seat), Seats.getcol(seat)
         return (BoardStartX + col * PieWidth,
                 BoardStartY + (NumRows - row - 1) * PieHeight)
 
@@ -189,42 +184,42 @@ class BdCanvas(View, Canvas):
         return (x, y)
 
     def onLeftKey(self, event):
-        col = Board.getcol(self.locatedseat)
-        self.setlocatedseat((
-                Board.getrow(self.locatedseat), col - 1
-                if col > MinColNo else MaxColNo))
+        col = Seats.getcol(self.locatedseat)
+        self.setlocatedseat(
+                Seats.getrow(self.locatedseat), col - 1
+                if col > MinColNo else MaxColNo)
 
     def onRightKey(self, event):
-        col = Board.getcol(self.locatedseat)
-        self.setlocatedseat((
-                Board.getrow(self.locatedseat), col + 1
-                if col < MaxColNo else MinColNo))
+        col = Seats.getcol(self.locatedseat)
+        self.setlocatedseat(
+                Seats.getrow(self.locatedseat), col + 1
+                if col < MaxColNo else MinColNo)
 
     def onUpKey(self, event):
-        row = Board.getrow(self.locatedseat)
-        self.setlocatedseat((row + 1 if row < MaxRowNo_T else MinRowNo_B,
-                             Board.getcol(self.locatedseat)))
+        row = Seats.getrow(self.locatedseat)
+        self.setlocatedseat(row + 1 if row < MaxRowNo_T else MinRowNo_B,
+                             Seats.getcol(self.locatedseat))
 
     def onDownKey(self, event):
-        row = Board.getrow(self.locatedseat)
-        self.setlocatedseat((row - 1 if row > MinRowNo_B else MaxRowNo_T,
-                             Board.getcol(self.locatedseat)))
+        row = Seats.getrow(self.locatedseat)
+        self.setlocatedseat(row - 1 if row > MinRowNo_B else MaxRowNo_T,
+                             Seats.getcol(self.locatedseat))
 
     def onHomeKey(self, event):
-        self.setlocatedseat((MaxRowNo_T, Board.getcol(self.locatedseat)))
+        self.setlocatedseat(MaxRowNo_T, Seats.getcol(self.locatedseat))
 
     def onEndKey(self, event):
-        self.setlocatedseat((MinRowNo_B, Board.getcol(self.locatedseat)))
+        self.setlocatedseat(MinRowNo_B, Seats.getcol(self.locatedseat))
 
     def onDeleteKey(self, event):
-        self.setlocatedseat((Board.getrow(self.locatedseat), MinColNo))
+        self.setlocatedseat(Seats.getrow(self.locatedseat), MinColNo)
 
     def onPgdnKey(self, event):
-        self.setlocatedseat((Board.getrow(self.locatedseat), MaxColNo))
+        self.setlocatedseat(Seats.getrow(self.locatedseat), MaxColNo)
 
-    def setlocatedseat(self, seat):
-        self.locatedseat = seat
-        self.coords('to' if self.selectedseat else 'from', self.seat_xy(seat))
+    def setlocatedseat(self, row, col):
+        self.locatedseat = rowcol_seat(row, col)
+        self.coords('to' if self.selectedseat else 'from', self.seat_xy(self.locatedseat))
         
     def onspaceKey(self, event, mouseclick=False):
     
@@ -258,7 +253,9 @@ class BdCanvas(View, Canvas):
         if self.board.isdied(self.board.curcolor):  # 已被将死
             return
         if mouseclick:
-            self.setlocatedseat(self.xy_seat(event.x, event.y))
+            row = NumRows - abs(event.y + PieHeight // 2 - BoardStartY) // PieHeight - 1
+            col = abs(event.x + PieWidth // 2 - BoardStartX) // PieWidth            
+            self.setlocatedseat(row, col)
         if (self.board.getcolor(self.locatedseat)
                 == self.board.curcolor):
             __drawselectedseat()
@@ -276,7 +273,7 @@ class BdCanvas(View, Canvas):
     
         def __drawallpies():
             [
-                self.coords(pie.imgid, self.seat_xy(pie.seat))
+                self.coords(pie.imgid, self.seat_xy(self.board.getseat(pie)))
                 for pie
                 in self.board.getlivepieces()
             ]
@@ -310,12 +307,12 @@ class BdCanvas(View, Canvas):
             self.coords(otherkingpie.eatimgid, OutsideXY)
             if self.board.isdied(curcolor):  # 将死后，将帅图像更改
                 self.coords(kingpie.imgid, OutsideXY)
-                self.coords(kingpie.eatimgid, self.seat_xy(kingpie.seat))
+                self.coords(kingpie.eatimgid, self.seat_xy(self.board.getseat(kingpie)))
                 playsound('WIN')
             elif self.board.iskilled(curcolor):  # 走棋后，将军
                 color = 'black' if curcolor == RED_P else 'red'
                 self.create_oval(
-                    self.getoval_xy(kingpie.seat),
+                    self.getoval_xy(self.board.getseat(kingpie)),
                     outline=color,
                     fill=color,
                     tag='walk')  # , width=4
