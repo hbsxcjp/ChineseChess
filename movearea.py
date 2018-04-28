@@ -137,8 +137,8 @@ class MoveArea(View, ttk.Frame):
             tomove = curmove.prev.next_
             while tomove.other and tomove.other is not curmove:
                 tomove = tomove.other
-            self.board.movebackto()
-            self.board.movegoto(tomove)
+            self.board.moveback()
+            self.board.movego(tomove)
             self.board.notifyviews()
             
     def onRightKey(self, event):

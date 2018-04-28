@@ -10,8 +10,9 @@ class Board(object):
     '棋盘类'
 
     def __init__(self, filename=''):
-        self.seats = [BlankPie] * NumCols * NumRows
+        self.seats = []
         self.pieces = Pieces()
+        self.rootmove = None
         self.readfile(filename)
 
     def __str__(self):
@@ -22,18 +23,14 @@ class Board(object):
             return (rookcannonpawn_name.get(name, name)
                     if piece.color == BLACK_P else name)
 
-        def __fillingname():
-            linestr = [
-                list(line.strip()) for line in blankboard.strip().splitlines()
-            ]
-            for piece in self.getlivepieces():
-                seat = self.getseat(piece)
-                linestr[(9 - Seats.getrow(seat)) *
-                        2][Seats.getcol(seat) * 2] = __getname(piece)
-            return [''.join(line) for line in linestr]
-
-        frontstr = '\n'
-        return '{}{}{}'.format(frontstr, frontstr.join(__fillingname()), '\n')
+        linestr = [
+            list(line.strip()) for line in blankboard.strip().splitlines()
+        ]
+        for piece in self.getlivepieces():
+            seat = self.getseat(piece)
+            linestr[(9 - Seats.getrow(seat)) *
+                    2][Seats.getcol(seat) * 2] = __getname(piece)
+        return '\n{}\n'.format('\n'.join([''.join(line) for line in linestr]))
         
     def __infostr(self):
         return '\n'.join(['[{} "{}"]'.format(key, self.info[key])
@@ -66,14 +63,8 @@ class Board(object):
         walkstr = '\n'.join([''.join(line) for line in linestr])
         remstr = '\n'.join(remstrs)
         return '\n'.join([self.__infostr(), str(self), totalstr, walkstr, remstr])
-
-    def __clearseats(self):
-        for seat in range(NumCols * NumRows):
-            self.seats[seat] = BlankPie
         
-    def __clear(self):
-        self.__clearseats()
-        
+    def __clearinfomove(self):
         self.info = {'Author': '',
                     'Black': '',
                     'BlackTeam': '',
@@ -96,7 +87,7 @@ class Board(object):
                     'Version': ''}
         self.rootmove = Move()
         self.curmove = self.rootmove
-        #self.firstcolor = RED_P 
+        self.firstcolor = RED_P 
         self.movcount = -1 # 消除根节点
         self.remcount = 0 # 注解数量
         self.remlenmax = 0 # 注解最大长度
@@ -178,9 +169,10 @@ class Board(object):
         return result
         
     def isdied(self, color):
-        return not any([
-            self.canmvseats(self.getseat(piece)) for piece in self.getlivesidepieces(color)
-        ])
+        for piece in self.getlivesidepieces(color):
+            if self.canmvseats(self.getseat(piece)):
+                return False
+        return True
 
     def __sortpawnseats(self, isbottomside, pawnseats):
         '多兵排序'
@@ -272,9 +264,7 @@ class Board(object):
 
         fseat, tseat = move.fseat, move.tseat
         frompiece = self.getpiece(fseat)
-        color, name = frompiece.color, frompiece.name
-        #assert color == self.curcolor, "走棋的颜色不对？"
-        
+        color, name = frompiece.color, frompiece.name        
         isbottomside = self.isbottomside(color)
         fromrow, fromcol = Seats.getrow(fseat), Seats.getcol(fseat)
         seats = sorted([
@@ -308,44 +298,9 @@ class Board(object):
         lastStr = tochar + tochcol
         move.zhstr = '{}{}'.format(firstStr, lastStr)
         '''
-        self.setmvseat(move)
+        self.setmvseat(move) # 不能成功断言，可能与curcolor值有关？2018.4.26
         assert (fseat, tseat) == (move.fseat, move.tseat), ('棋谱着法: %s   生成着法: %s 不等！' % ((fseat, tseat), (move.fseat, move.tseat)))
         '''
-        
-    def __setcols(self):
-        '根据rootmove设置othcol,maxcol,maxrow'
-        def __cols(move, isother=False):
-            move.maxcol = self.maxcol # 在视图中的列数
-            self.othcol = max(self.othcol, move.othcol)
-            self.maxrow = max(self.maxrow, move.stepno)
-            if move.next_:
-                __cols(move.next_)
-            if move.other:
-                self.maxcol += 1
-                __cols(move.other, True)
-    
-        self.othcol = 0 # 存储最大变着层数
-        self.maxrow = 0 # 存储最大着法深度
-        self.maxcol = 0 # 存储视图最大列数
-        if self.rootmove.next_:
-            __cols(self.rootmove.next_) # 驱动调用递归函数
-
-    def __transcolor(self):
-        self.firstcolor = not self.firstcolor
-        
-    def __setzhstrs(self):
-        '根据board设置树节点的zhstr'
-        def __zhstr(move, isother=False):
-            self.setzhstr(move)
-            eatpiece = self.__go(move.fseat, move.tseat)
-            if move.next_:
-                __zhstr(move.next_)
-            self.__back(move.fseat, move.tseat, eatpiece)
-            if move.other:
-                __zhstr(move.other, True)
-                
-        if self.rootmove.next_: # and self.movcount < 300: # 步数太多则太慢
-            __zhstr(self.rootmove.next_) # 驱动调用递归函数
             
     @property
     def curcolor(self):
@@ -380,11 +335,11 @@ class Board(object):
         self.seats[fseat] = self.seats[tseat]
         self.seats[tseat] = backpiece
                 
-    def movegoto(self, move):
+    def movego(self, move):
         move.eatpiece = self.__go(move.fseat, move.tseat)
         self.curmove = move
             
-    def movebackto(self):
+    def moveback(self):
         self.__back(self.curmove.fseat, self.curmove.tseat, 
                 self.curmove.eatpiece)
         self.curmove = self.curmove.prev
@@ -394,14 +349,14 @@ class Board(object):
         if self.curmove.other is None:
             return        
         tomove = self.curmove.other   
-        self.movebackto()
-        self.movegoto(tomove)
+        self.moveback()
+        self.movego(tomove)
         self.notifyviews()
 
     def movefirst(self, updateview=False):
         moved = False
         while self.curmove is not self.rootmove:
-            self.movebackto()
+            self.moveback()
             moved = True
         if moved and updateview:
             self.notifyviews()
@@ -409,9 +364,9 @@ class Board(object):
     def movelast(self):
         moved = False
         while self.curmove.next_ is not None:
-            self.movegoto(self.curmove.next_)
+            self.movego(self.curmove.next_)
             moved = True
-        if moved:    
+        if moved:
             self.notifyviews()
         
     def movestep(self, inc=1):
@@ -419,13 +374,13 @@ class Board(object):
         def __movegoto():
             if self.curmove.next_ is None:
                 return
-            self.movegoto(self.curmove.next_)
+            self.movego(self.curmove.next_)
             return True
             
         def __movebackto():
             if self.curmove.prev is None:
                 return
-            self.movebackto()
+            self.moveback()
             return True
         
         movefun = __movebackto if inc < 0 else __movegoto
@@ -436,7 +391,7 @@ class Board(object):
         if move is self.curmove:
             return
         self.movefirst()
-        [self.movegoto(mv) for mv in self.getprevmoves(move)]
+        [self.movego(mv) for mv in self.getprevmoves(move)]
         self.notifyviews()
             
     def addmove(self, fseat, tseat, remark='', isother=False):
@@ -450,7 +405,7 @@ class Board(object):
             self.moveother()
         else:
             self.curmove.setnext(move)
-            self.movegoto(move)
+            self.movego(move)
             self.notifyviews()
         self.__setcols()
                 
@@ -466,9 +421,7 @@ class Board(object):
             return [('_' * i, str(i)) for i in range(9, 0, -1)]
             
         if not piecechars:
-            piecechars = [
-                piece.char for seat, piece in sorted(self.seats.items())
-            ]
+            piecechars = [piece.char for piece in self.seats]
         charls = [
             piecechars[rowno * NumCols:(rowno + 1) * NumCols]
             for rowno in range(NumRows)
@@ -490,7 +443,7 @@ class Board(object):
         return fen
 
     def __setseatpieces(self, seatpieces):
-        self.__clearseats()
+        self.seats = [BlankPie] * NumCols * NumRows
         for seat, piece in seatpieces.items():
             self.seats[seat] = piece
         self.bottomside = (RED_P if Seats.getrow(
@@ -558,7 +511,7 @@ class Board(object):
         curmove = self.curmove
         self.movefirst()
         if changetype == 'exchange':
-            self.__transcolor()
+            self.firstcolor = not self.firstcolor
             seatpieces = {self.getseat(piece): self.pieces.getothsidepiece(piece)
                     for piece in self.getlivepieces()}
         else:
@@ -920,23 +873,52 @@ class Board(object):
         if fmt == 'cc':
             __readmove_cc(movestr)
         else:
-            __readmove_ICCSzh(movestr, fmt)            
-       
+            __readmove_ICCSzh(movestr, fmt)
+        
+    def __setcols(self):
+        '根据rootmove设置othcol,maxcol,maxrow'
+        def __cols(move, isother=False):
+            move.maxcol = self.maxcol # 在视图中的列数
+            self.othcol = max(self.othcol, move.othcol)
+            self.maxrow = max(self.maxrow, move.stepno)
+            if move.next_:
+                __cols(move.next_)
+            if move.other:
+                self.maxcol += 1
+                __cols(move.other, True)
+    
+        self.othcol = 0 # 存储最大变着层数
+        self.maxrow = 0 # 存储最大着法深度
+        self.maxcol = 0 # 存储视图最大列数
+        if self.rootmove.next_:
+            __cols(self.rootmove.next_) # 驱动调用递归函数
+        
+    def __setzhstrs(self):
+        '根据board设置树节点的zhstr'
+        def __zhstr(move, isother=False):
+            self.setzhstr(move)
+            self.movego(move)
+            if move.next_:
+                __zhstr(move.next_)
+            self.moveback()
+            if move.other:
+                __zhstr(move.other, True)
+                
+        if self.rootmove.next_: # and self.movcount < 300: # 步数太多则太慢
+            __zhstr(self.rootmove.next_) # 驱动调用递归函数
+            
     def readfile(self, filename):
     
         def __setseat(move):
-            #print(move.zhstr)
             self.setmvseat(move)
-            self.__transcolor()
-            eatpiece = self.__go(move.fseat, move.tseat)
+            self.movego(move)
             if move.next_:
-                __setseat(move.next_)                
-            self.__transcolor()
-            self.__back(move.fseat, move.tseat, eatpiece)
+                __setseat(move.next_)
+            self.moveback()
             if move.other:            
-                __setseat(move.other)          
+                __setseat(move.other)
                     
-        self.__clear()
+        self.__clearinfomove()
         if not (filename and os.path.exists(filename) and os.path.isfile(filename)):
             return
         self.dirname = os.path.splitdrive(os.path.dirname(filename))[1]
@@ -1123,11 +1105,11 @@ def testtransdir():
     
     board = Board()
     for dir in dirfrom[:2]:    
-        for fext in fexts[1:2]:
-            for text in texts[:]:
+        for fext in fexts[1:3]:
+            for text in texts[1:3]:
                 if text == fext:
                     continue
-                for fmt in fmts[:1]: # 设置输入文件格式  
+                for fmt in fmts[:2]: # 设置输入文件格式  
                     board.transdir(dir+fext, dir+text, text, fmt)
            
             

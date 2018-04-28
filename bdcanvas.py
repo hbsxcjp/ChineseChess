@@ -184,35 +184,35 @@ class BdCanvas(View, Canvas):
         col = Seats.getcol(self.locatedseat)
         self.setlocatedseat(
                 Seats.getrow(self.locatedseat), col - 1
-                if col > MinColNo else MaxColNo)
+                if col > 0 else 8)
 
     def onRightKey(self, event):
         col = Seats.getcol(self.locatedseat)
         self.setlocatedseat(
                 Seats.getrow(self.locatedseat), col + 1
-                if col < MaxColNo else MinColNo)
+                if col < 8 else 0)
 
     def onUpKey(self, event):
         row = Seats.getrow(self.locatedseat)
-        self.setlocatedseat(row + 1 if row < MaxRowNo_T else MinRowNo_B,
+        self.setlocatedseat(row + 1 if row < 9 else 0,
                              Seats.getcol(self.locatedseat))
 
     def onDownKey(self, event):
         row = Seats.getrow(self.locatedseat)
-        self.setlocatedseat(row - 1 if row > MinRowNo_B else MaxRowNo_T,
+        self.setlocatedseat(row - 1 if row > 0 else 9,
                              Seats.getcol(self.locatedseat))
 
     def onHomeKey(self, event):
-        self.setlocatedseat(MaxRowNo_T, Seats.getcol(self.locatedseat))
+        self.setlocatedseat(9, Seats.getcol(self.locatedseat))
 
     def onEndKey(self, event):
-        self.setlocatedseat(MinRowNo_B, Seats.getcol(self.locatedseat))
+        self.setlocatedseat(0, Seats.getcol(self.locatedseat))
 
     def onDeleteKey(self, event):
-        self.setlocatedseat(Seats.getrow(self.locatedseat), MinColNo)
+        self.setlocatedseat(Seats.getrow(self.locatedseat), 0)
 
     def onPgdnKey(self, event):
-        self.setlocatedseat(Seats.getrow(self.locatedseat), MaxColNo)
+        self.setlocatedseat(Seats.getrow(self.locatedseat), 8)
 
     def setlocatedseat(self, row, col):
         self.locatedseat = Seats.getseat(row, col)
