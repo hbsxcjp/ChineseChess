@@ -163,7 +163,7 @@ class MoveArea(View, ttk.Frame):
         curid = self.mvcanvas.find_closest(canx, cany)
         if not (curid and curid[0] in self.mvid):
             return
-        self.board.moveassign(self.mvid[curid[0]])
+        self.board.movethis(self.mvid[curid[0]])
         
     def updateview(self):
     

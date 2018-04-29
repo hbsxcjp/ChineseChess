@@ -41,15 +41,16 @@ class BdCanvas(View, Canvas):
         self.createwidgets()
         self.createlayout()
         self.createbindings()
-        self.initattr()
+        self.initdata()
         #self.updateview()
 
-    def initattr(self):
+    def initdata(self):
         self.bottomside = None
         self.locatedseat = 0 # (0, 0)
         self.selectedseat = None
 
     def __canvastexts(self):
+    
         def __textxys(bottomside):
             '图形框内文字坐标'
             PondTopTextX, PondTopTextY = ImgBdStartX // 2, CanvasHeight // 2 - PieHeight // 2
@@ -77,7 +78,9 @@ class BdCanvas(View, Canvas):
                 x, y, text=astr, tag='side_tag') #font=('Consolas', '10'), 
 
     def createwidgets(self):
+    
         def __canvasrects():
+        
             def __rectxys():
                 # 图形框坐标
                 TopPondXY = (PieBdWidth, PieBdWidth,
@@ -234,7 +237,7 @@ class BdCanvas(View, Canvas):
             self.tag_raise('walk', 'pie')
             playsound('CLICK')  # 5: 选择声音
 
-        def __movepie(fseat, tseat):
+        def __movepiece(fseat, tseat):
             def __change():
                 if askyesno('提示', '改变当前着法，' '将删除原棋局的全部后续着法！\n是否删除？'):
                     self.board.cutnext()
@@ -257,7 +260,7 @@ class BdCanvas(View, Canvas):
                 == self.board.curcolor):
             __drawselectedseat()
         elif self.selectedseat:
-            __movepie(self.selectedseat, self.locatedseat)
+            __movepiece(self.selectedseat, self.locatedseat)
 
     def onMouseLeftclick(self, event):
         self.focus_set()
@@ -295,8 +298,10 @@ class BdCanvas(View, Canvas):
 
         def __moveeffect():
             curcolor = self.board.curcolor
-            if not (self.board.getkingseat(RED_P)
-                    and self.board.getkingseat(BLACK_P)): # '将帅不在棋盘上'
+            try:
+                (self.board.getkingseat(RED_P)
+                    and self.board.getkingseat(BLACK_P)) # '将帅不在棋盘上'
+            except:
                 return
             kingpie = self.board.getkingpiece(curcolor)
             otherkingpie = self.board.getkingpiece(not curcolor)

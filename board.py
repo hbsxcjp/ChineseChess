@@ -122,24 +122,24 @@ class Board(object):
     def getlivepieces(self):
         return [piece for piece in self.seats if piece is not BlankPie]
 
+    def getlivesidepieces(self, color):
+        return [piece for piece in self.getlivepieces() if piece.color == color]
+
+    def getsidenameseats(self, color, name):
+        return [
+            self.getseat(piece)
+            for piece in self.getlivesidepieces(color) if piece.name == name
+        ]
+
+    def getsidenamecolseats(self, color, name, col):
+        return [
+            seat
+            for seat in self.getsidenameseats(color, name)
+            if Seats.getcol(seat) == col
+        ]
+
     def geteatedpieces(self):
         return set(self.pieces.allpieces()) - set(self.getlivepieces())
-
-    def getlivesidepieces(self, color):
-        return {piece for piece in self.getlivepieces() if piece.color == color}
-
-    def getlivesidenamepieces(self, color, name):
-        return {
-            piece
-            for piece in self.getlivesidepieces(color) if piece.name == name
-        }
-
-    def getlivesidenamecolpieces(self, color, name, col):
-        return {
-            piece
-            for piece in self.getlivesidenamepieces(color, name)
-            if Seats.getcol(self.getseat(piece)) == col
-        }
 
     def iskilled(self, color):
         othercolor = not color
@@ -188,47 +188,15 @@ class Board(object):
     def setmvseat(self, move):
         '根据中文纵线着法描述取得源、目标位置: (fseat, tseat)'
 
-        def __chcol_col(zhcol):
+        def __zhcol_col(zhcol):
             return (NumCols - ChineseToNum[zhcol]
                     if isbottomside else ChineseToNum[zhcol] - 1)
-
-        def __movzh_movdir(movchar):
-            '根据中文行走方向取得棋子的内部数据方向（进：1，退：-1，平：0）'
-            return ChineseToNum[movchar] * (1 if isbottomside else -1)
-
-        def __indexname_fromseat(index, name, seats):
-            if name in PawnNames:
-                seats = self.__sortpawnseats(isbottomside, seats)  # 获取多兵的列
-                if len(seats) > 3:
-                    index -= 1  # 修正index
-            elif isbottomside:
-                seats = seats[::-1]
-            return seats[index]
-
-        def __linename_toseat(fseat, movdir, tocol, tochar):
-            '获取直线走子toseat'
-            row, col = Seats.getrow(fseat), Seats.getcol(fseat)
-            return (Seats.getseat(row, tocol)
-                    if movdir == 0 else Seats.getseat(
-                        row + movdir * ChineseToNum[tochar], col))
-
-        def __obliquename_toseat(fseat, movdir, tocol, isAdvisorBishop):
-            '获取斜线走子：仕、相、马toseat'
-            row, col = Seats.getrow(fseat), Seats.getcol(fseat)
-            step = tocol - col  # 相距1或2列
-            inc = abs(step) if isAdvisorBishop else (2
-                                                     if abs(step) == 1 else 1)
-            return Seats.getseat(row + movdir * inc, tocol)
 
         color, zhstr = self.curcolor, move.zhstr
         isbottomside = self.isbottomside(color)
         name = zhstr[0]
         if name in CharToNames.values():
-            seats = sorted([
-                self.getseat(piece)
-                for piece in self.getlivesidenamecolpieces(
-                    color, name, __chcol_col(zhstr[1]))
-            ])
+            seats = self.getsidenamecolseats(color, name, __zhcol_col(zhstr[1]))
             assert bool(seats), ('没有找到棋子 => %s color:%s name: %s\n%s' %
                                  (zhstr, color, name, self))
 
@@ -239,17 +207,33 @@ class Board(object):
         else:
             # 未获得棋子, 查找某个排序（前后中一二三四五）某方某个名称棋子
             index, name = ChineseToNum[zhstr[0]], zhstr[1]
-            seats = sorted(
-                [self.getseat(pie) for pie in self.getlivesidenamepieces(color, name)])
+            seats = self.getsidenameseats(color, name)
             assert len(seats) >= 2, 'color: %s name: %s 棋子列表少于2个! \n%s' % (     color, name, self)
-            fseat = __indexname_fromseat(index, name, seats)
+            
+            if name in PawnNames:
+                seats = self.__sortpawnseats(isbottomside, seats)  # 获取多兵的列
+                if len(seats) > 3:
+                    index -= 1  # 修正index
+            elif isbottomside:
+                seats = seats[::-1]
+            fseat = seats[index]
 
-        movdir = __movzh_movdir(zhstr[2])
-        tocol = __chcol_col(zhstr[3])
-        tseat = (__linename_toseat(fseat, movdir, tocol, zhstr[3])
-                  if name in LineMovePieceNames else __obliquename_toseat(
-                      fseat, movdir, tocol, name in AdvisorBishopNames))
-        move.fseat, move.tseat = fseat, tseat
+        movdir = ChineseToNum[zhstr[2]] * (1 if isbottomside else -1)
+        # '根据中文行走方向取得棋子的内部数据方向（进：1，退：-1，平：0）'
+        tocol = __zhcol_col(zhstr[3])
+        if name in LineMovePieceNames:
+            #'获取直线走子toseat'
+            row = Seats.getrow(fseat)
+            move.tseat = (Seats.getseat(row, tocol) if movdir == 0
+                            else Seats.getseat(row + movdir * ChineseToNum[zhstr[3]],
+                            Seats.getcol(fseat)))           
+        else:
+            #'获取斜线走子：仕、相、马toseat'
+            step = tocol - Seats.getcol(fseat)  # 相距1或2列            
+            inc = abs(step) if name in AdvisorBishopNames else (2
+                                                     if abs(step) == 1 else 1)
+            move.tseat = Seats.getseat(Seats.getrow(fseat) + movdir * inc, tocol)
+        move.fseat = fseat
         '''
         self.setzhstr(move)
         assert zhstr == move.zhstr, ('棋谱着法: %s   生成着法: %s 不等！' % (
@@ -267,19 +251,13 @@ class Board(object):
         color, name = frompiece.color, frompiece.name        
         isbottomside = self.isbottomside(color)
         fromrow, fromcol = Seats.getrow(fseat), Seats.getcol(fseat)
-        seats = sorted([
-            self.getseat(pie)
-            for pie in self.getlivesidenamecolpieces(color, name, fromcol)
-        ])
+        seats = self.getsidenamecolseats(color, name, fromcol)
         length = len(seats)
         if length > 1 and name in StrongePieceNames:
             if name in PawnNames:
                 seats = self.__sortpawnseats(
                     isbottomside,
-                    sorted([
-                        self.getseat(pie)
-                        for pie in self.getlivesidenamepieces(color, name)
-                    ]))
+                    self.getsidenameseats(color, name))
                 length = len(seats)
             elif isbottomside:  # '车', '马', '炮'
                 seats = seats[::-1]
@@ -322,8 +300,7 @@ class Board(object):
         while move.prev is not None:
             result.append(move.prev)
             move = move.prev
-        result.reverse()
-        return result
+        return result[::-1]
                 
     def __go(self, fseat, tseat):
         eatpiece = self.seats[tseat]
@@ -387,7 +364,7 @@ class Board(object):
         if any([movefun() for _ in range(abs(inc))]):
             self.notifyviews()
         
-    def moveassign(self, move):
+    def movethis(self, move):
         if move is self.curmove:
             return
         self.movefirst()
@@ -405,15 +382,15 @@ class Board(object):
             self.moveother()
         else:
             self.curmove.setnext(move)
-            self.movego(move)
-            self.notifyviews()
-        self.__setcols()
+            self.movestep()
+        self.__setmvinfo()
                 
     def cutnext(self):
         self.curmove.next_ = None
 
     def cutother(self):
-        self.curmove.other = None
+        if self.curmove.other:
+            self.curmove.other = self.curmove.other.other
 
     def __fen(self, piecechars=None):
         def __linetonums():
@@ -438,7 +415,7 @@ class Board(object):
         assignmove = self.curmove
         self.movefirst()
         fen = self.__mergefen(self.__fen(), self.curcolor == BLACK_P)
-        self.moveassign(assignmove)
+        self.movethis(assignmove)
         assert self.info['FEN'] == fen, '\n原始:{}\n生成:{}'.format(self.info['FEN'], fen)
         return fen
 
@@ -522,9 +499,9 @@ class Board(object):
                     for piece in self.getlivepieces()}
         self.__setseatpieces(seatpieces)
         if changetype != 'rotate':
-            self.__setzhstrs()
+            self.__setmvinfo()
         if curmove is not self.rootmove:
-            self.moveassign(curmove)
+            self.movethis(curmove)
         else:
             self.notifyviews()
         
@@ -875,49 +852,31 @@ class Board(object):
         else:
             __readmove_ICCSzh(movestr, fmt)
         
-    def __setcols(self):
-        '根据rootmove设置othcol,maxcol,maxrow'
-        def __cols(move, isother=False):
+    def __setmvinfo(self, haszhstr=False):
+    
+        '根据board设置树节点的zhstr或seat'
+        def __set(move):
+            setfunc(move)            
             move.maxcol = self.maxcol # 在视图中的列数
             self.othcol = max(self.othcol, move.othcol)
             self.maxrow = max(self.maxrow, move.stepno)
+            self.movego(move)
             if move.next_:
-                __cols(move.next_)
+                __set(move.next_)
+            self.moveback()
             if move.other:
                 self.maxcol += 1
-                __cols(move.other, True)
-    
+                __set(move.other)
+        
+        setfunc = self.setmvseat if haszhstr else self.setzhstr
         self.othcol = 0 # 存储最大变着层数
         self.maxrow = 0 # 存储最大着法深度
         self.maxcol = 0 # 存储视图最大列数
-        if self.rootmove.next_:
-            __cols(self.rootmove.next_) # 驱动调用递归函数
-        
-    def __setzhstrs(self):
-        '根据board设置树节点的zhstr'
-        def __zhstr(move, isother=False):
-            self.setzhstr(move)
-            self.movego(move)
-            if move.next_:
-                __zhstr(move.next_)
-            self.moveback()
-            if move.other:
-                __zhstr(move.other, True)
-                
         if self.rootmove.next_: # and self.movcount < 300: # 步数太多则太慢
-            __zhstr(self.rootmove.next_) # 驱动调用递归函数
-            
+            __set(self.rootmove.next_) # 驱动调用递归函数            
+                    
     def readfile(self, filename):
     
-        def __setseat(move):
-            self.setmvseat(move)
-            self.movego(move)
-            if move.next_:
-                __setseat(move.next_)
-            self.moveback()
-            if move.other:            
-                __setseat(move.other)
-                    
         self.__clearinfomove()
         if not (filename and os.path.exists(filename) and os.path.isfile(filename)):
             return
@@ -933,13 +892,9 @@ class Board(object):
         elif ext == '.pgn':
             self.__readpgn(filename)
             
-        self.__setcols()
         self.setfen()
-        if (ext in {'.xml', '.pgn'} and self.info['Format'] in {'zh', 'cc'}
-            and self.rootmove.next_):
-            __setseat(self.rootmove.next_) # 驱动调用递归函数
-        else:
-            self.__setzhstrs()
+        self.__setmvinfo(ext in {'.xml', '.pgn'}
+                and self.info['Format'] in {'zh', 'cc'})
             
     def __saveasbin(self, filename):
     
@@ -1042,10 +997,9 @@ class Board(object):
         elif ext == '.pgn':
             self.__saveaspgn(filename, fmt)
 
-    def transdir(self, dirfrom, dirto, text, pgnfmt):
+    def transdir(self, dirfrom, dirto, text, fmt):
                
-        count = [0, 0, 0]
-        def __transdir(dirfrom, dirto, text, pgnfmt):
+        def __transdir(dirfrom, dirto, text, fmt):
             fcount = dcount = 0
             if not os.path.exists(dirto):
                 os.mkdir(dirto)
@@ -1060,7 +1014,7 @@ class Board(object):
                         self.readfile(pathfrom)
                         filenameto = os.path.join(dirto, 
                                 os.path.splitext(os.path.basename(pathfrom))[0] + text)
-                        self.writefile(filenameto, text, pgnfmt)
+                        self.writefile(filenameto, text, fmt)
                         count[0] += self.movcount
                         count[1] += self.remcount
                         count[2] = max(count[2], self.remlenmax)                        
@@ -1070,14 +1024,16 @@ class Board(object):
                         open(pathto, 'w').write(data)
                         fcount += 1
                 else:
-                    below = __transdir(pathfrom, pathto, text, pgnfmt)
+                    below = __transdir(pathfrom, pathto, text, fmt)
                     fcount += below[0]
                     dcount += below[1]
                     dcount += 1
             return (fcount, dcount)
             
-        fcount, dcount = __transdir(dirfrom, dirto, text, pgnfmt)
-        print('{}==>：{}_{} 共有{}个文件，{}个目录转换成功！'.format(dirfrom, text, pgnfmt, fcount, dcount))
+        count = [0, 0, 0]
+        fcount, dcount = __transdir(dirfrom, dirto, text, fmt)
+        print('{}==>：{}_{} 共有{}个文件，{}个目录转换成功！'.format(
+                dirfrom, text, fmt, fcount, dcount))
         print('着法数量：{}，注释数量：{}, 注释最大长度：{}'.format(
                 count[0], count[1], count[2]))
             
@@ -1109,7 +1065,7 @@ def testtransdir():
             for text in texts[1:3]:
                 if text == fext:
                     continue
-                for fmt in fmts[:2]: # 设置输入文件格式  
+                for fmt in fmts[1:2]: # 设置输入文件格式  
                     board.transdir(dir+fext, dir+text, text, fmt)
            
             
