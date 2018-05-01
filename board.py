@@ -1010,14 +1010,13 @@ class Board(object):
                 if os.path.isfile(pathfrom): # 文件
                     extension = os.path.splitext(os.path.basename(pathfrom))[1]
                     if extension in ('.xqf', '.bin', '.xml', '.pgn'):
-                        #print(pathfrom, count)   
-                        self.readfile(pathfrom)
+                        board = Board(pathfrom)                        
                         filenameto = os.path.join(dirto, 
                                 os.path.splitext(os.path.basename(pathfrom))[0] + text)
-                        self.writefile(filenameto, text, fmt)
-                        count[0] += self.movcount
-                        count[1] += self.remcount
-                        count[2] = max(count[2], self.remlenmax)                        
+                        count[0] += board.movcount
+                        count[1] += board.remcount
+                        count[2] = max(count[2], board.remlenmax)
+                        dirtoboard.append((filenameto, text, fmt, board))
                         fcount += 1
                     elif extension == '.txt':
                         data = open(pathfrom).read()
@@ -1031,12 +1030,17 @@ class Board(object):
             return (fcount, dcount)
             
         count = [0, 0, 0]
+        dirtoboard = []
         fcount, dcount = __transdir(dirfrom, dirto, text, fmt)
+        #'''
+        for filenameto, text, fmt, board in dirtoboard:
+            board.writefile(filenameto, text, fmt)            
         print('{}==>：{}_{} 共有{}个文件，{}个目录转换成功！'.format(
                 dirfrom, text, fmt, fcount, dcount))
         print('着法数量：{}，注释数量：{}, 注释最大长度：{}'.format(
                 count[0], count[1], count[2]))
-            
+        #'''
+        
     def loadviews(self, views):
         self.views = views
         self.notifyviews()
@@ -1059,14 +1063,14 @@ def testtransdir():
     texts = ['.bin', '.xml', '.pgn']
     fmts = ['ICCS', 'zh', 'cc']
     
-    board = Board()
+    bd = Board()
     for dir in dirfrom[:2]:    
         for fext in fexts[1:3]:
             for text in texts[1:3]:
                 if text == fext:
                     continue
                 for fmt in fmts[1:2]: # 设置输入文件格式  
-                    board.transdir(dir+fext, dir+text, text, fmt)
+                    bd.transdir(dir+fext, dir+text, text, fmt)
            
             
 if __name__ == '__main__':
