@@ -106,13 +106,20 @@ class Seats(object):
                 seat - NumCols + 1, seat - NumCols - 1}
 
     def bishopmv_censeats(self, seat):
-        '获取移动、象心行列值'
-        mvseats = [seat + 2 * NumCols + 2, seat - 2 * NumCols + 2, 
+        '获取移动、象心行列值'        
+        row = self.getrow(seat)
+        col = self.getcol(seat)
+        if col == MaxColNo:
+            mvseats = [seat + 2 * NumCols - 2, seat - 2 * NumCols - 2]
+        elif col == MinColNo:
+            mvseats = [seat + 2 * NumCols + 2, seat - 2 * NumCols + 2]
+        elif (row == 0 or row == 5):
+            mvseats = [seat + 2 * NumCols + 2, seat + 2 * NumCols - 2]
+        elif (row == 4 or row == 9):
+            mvseats = [seat - 2 * NumCols + 2, seat - 2 * NumCols - 2]
+        else:
+            mvseats = [seat + 2 * NumCols + 2, seat - 2 * NumCols + 2, 
                     seat + 2 * NumCols - 2, seat - 2 * NumCols - 2]
-        if self.getcol(seat) == MaxColNo:
-            mvseats = mvseats[2:]
-        elif self.getcol(seat) == MinColNo:
-            mvseats = mvseats[:2]        
         return {s: (seat + s) // 2 for s in mvseats}
 
     def knightmv_legseats(self, seat):
@@ -128,20 +135,35 @@ class Seats(object):
                 return first + 1
             else:
                 return first - 1
-            
+
+        row = self.getrow(seat)    
         col = self.getcol(seat)
-        mvseats = [seat + NumCols + 2, seat - NumCols + 2,
-                    seat + 2 * NumCols + 1, seat - 2 * NumCols + 1,
-                    seat + 2 * NumCols - 1, seat - 2 * NumCols - 1,
-                    seat + NumCols - 2, seat - NumCols - 2]
-        if col == MaxColNo:
-            mvseats = mvseats[4:]
+        EN = seat + NumCols + 2
+        ES = seat - NumCols + 2
+        SE = seat - 2 * NumCols + 1
+        SW = seat - 2 * NumCols - 1
+        WS = seat - NumCols - 2
+        WN = seat + NumCols - 2
+        NW = seat + 2 * NumCols - 1
+        NE = seat + 2 * NumCols + 1
+        if col == MaxColNo: 
+            mvseats = {SW, WS, WN, NW}
         elif col == MaxColNo - 1:
-            mvseats = mvseats[2:]
+            mvseats = {SE, SW, WS, WN, NW, NE}
         elif col == MinColNo:
-            mvseats = mvseats[:4]
+            mvseats = {EN, ES, SE, NE}
         elif col == MinColNo + 1:
-            mvseats = mvseats[:6]
+            mvseats = {EN, ES, SE, SW, NW, NE}
+        else:
+            mvseats = {EN, ES, SE, SW, WS, WN, NW, NE}
+        if row == 9:
+            mvseats = mvseats & {ES, SE, SW, WS}
+        elif row == 8:
+            mvseats = mvseats & {EN, ES, SE, SW, WS, WN}
+        elif row == 0:
+            mvseats = mvseats & {EN, WN, NW, NE}
+        elif row == 1:
+            mvseats = mvseats & {EN, ES, WS, WN, NW, NE}
         return {s: __leg(seat, s) for s in mvseats}
 
     def rookcannonmvseat_lines(self, seat):
