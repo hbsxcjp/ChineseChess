@@ -1,0 +1,34 @@
+<root>
+	<所有用户>
+		<option>
+			<face>
+				<pimg>
+					<木刻>WOOD/</木刻>
+					<精致>POLISH/</精致>
+					<光泽>DELICATE/</光泽>
+					<卡通>COMIC/</卡通>
+				</pimg>
+				<bdimg>
+					<栎木>WOOD.JPG</栎木>
+					<白色大理石>WHITE.JPG</白色大理石>
+					<再生纸>SHEET.JPG</再生纸>
+					<画布>CANVAS.JPG</画布>
+					<水滴>DROPS.JPG</水滴>
+					<绿色大理石>GREEN.JPG</绿色大理石>
+					<浅红象棋>QIANHONG.GIF</浅红象棋>
+				</bdimg>
+			</face>
+		</option>
+	</所有用户>
+	<cjp>
+		<file>
+			<lastfile />
+		</file>
+		<option>
+			<action openlast="yes" />
+			<sound open="yes" />
+			<cartoon open="no" />
+			<face bdimgname="./IMAGES_L/WOOD.JPG" imgpath="./IMAGES_L/" pimgpath="./IMAGES_L/WOOD/" />
+		</option>
+	</cjp>
+</root>

@@ -1065,8 +1065,8 @@ def testtransdir():
     
     bd = Board()
     for dir in dirfrom[:2]:    
-        for fext in fexts[1:3]:
-            for text in texts[1:3]:
+        for fext in fexts[:1]:
+            for text in texts[:]:
                 if text == fext:
                     continue
                 for fmt in fmts[1:2]: # 设置输入文件格式  
